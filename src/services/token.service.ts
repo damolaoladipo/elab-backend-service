@@ -11,15 +11,18 @@ class TokenService {
   private expire: string;
 
   constructor() {
-    this.secret = process.env.JWT_SECRET as string;
-    this.expire = process.env.JWT_EXPIRY as string;
+    const secret = process.env.JWT_SECRET;
+    const expire = process.env.JWT_EXPIRY;
 
-    if (!this.secret) {
+    if (!secret) {
       throw new ErrorResponse("Error with JWT SECRET", 500, ["JWT secrets are not defined."]);
     }
-    if (!this.expire) {
+    if (!expire) {
       throw new ErrorResponse("Error ", 500, ["JWT_EXPIRY is not defined."]);
     }
+
+    this.secret = secret;
+    this.expire = expire;
   }
 
   /**
@@ -38,7 +41,7 @@ class TokenService {
           role: user.role,
         },
         this.secret,
-        { algorithm: "HS512", expiresIn: this.expire }
+        { algorithm: "HS512", expiresIn: this.expire as string }
       );
 
       await User.findByIdAndUpdate(user.id, { accessToken: token });

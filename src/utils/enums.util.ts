@@ -20,14 +20,18 @@ export enum UserType {
 }
 
 export enum DbModelsType {
-  USER = "user",
-  ROLE = "role",
+  ARCHIVE = "archive",
+  COMPANY = "company",
+  EVENT = "event",
   PERMISSION = "permission",
-  API_KEY = "ApiKey",
-  PLAN = "plan",
+  PROJECT = "project",
+  RESOURCE = "resource",
+  ROLE = "role",
   SUBSCRIPTION = "subscription",
   TRANSACTION = "transaction",
+  USER = "user",
 }
+
 
 export enum PasswordType {
   USERGENERATED = "user-generated",

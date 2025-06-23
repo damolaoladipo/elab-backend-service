@@ -172,3 +172,109 @@ export interface IEmailRequest {
   template?: string;
   attachments?: any[];
 }
+
+
+export interface IEvent extends Document {
+  name: string;
+  eventType: string; 
+  lcoation: string;
+  image: string;
+  description: string;
+  features: Array<string>;
+  startDate: Date;
+  endDate: Date;
+  //relationships
+  user: IUserDoc | ObjectId;
+  
+  // time stamps
+  createdAt: Date;
+  updatedAt: Date;
+  _version: number;
+  _id: ObjectId;
+  id: ObjectId;
+}
+
+
+export interface IProject extends Document {
+  name: string;
+  image: string;
+  description: string;
+  startDate: Date;
+  
+  //relationships
+  user: IUserDoc | ObjectId;
+  
+  // time stamps
+  createdAt: Date;
+  updatedAt: Date;
+  _version: number;
+  _id: ObjectId;
+  id: ObjectId;
+}
+
+
+
+export interface IArchive extends Document {
+  title: string;
+  image: string;
+  excerpt?: string;
+  description?: string;
+  link?: string
+  content: string;
+  author: string;
+  category: string;
+  tags: Array<string>;
+  type: string; // news, press release or insight 
+
+  //relationships
+  user: IUserDoc | ObjectId;
+  
+  // time stamps
+  createdAt: Date;
+  updatedAt: Date;
+  _version: number;
+  _id: ObjectId;
+  id: ObjectId;
+}
+
+export interface IResource extends Document {
+  title: string;
+  image: string;
+  description: string;
+  resource: string;
+  type: string; 
+  author: string;
+  category: string;
+  tags: Array<string>;
+
+    //relationships
+  user: IUserDoc | ObjectId;
+  
+  // time stamps
+  createdAt: Date;
+  updatedAt: Date;
+  _version: number;
+  _id: ObjectId;
+  id: ObjectId;
+}
+
+
+export interface ICompany extends Document {
+  name: string;
+  description: string;
+  logo: string;
+  status: string;
+  url: string;
+  email: string;
+  brochure: string;
+  
+  //relationships
+  user: IUserDoc | ObjectId;
+  
+  // time stamps
+  createdAt: Date;
+  updatedAt: Date;
+  _version: number;
+  _id: ObjectId;
+  id: ObjectId;
+}
