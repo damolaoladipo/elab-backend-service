@@ -761,65 +761,6 @@ class EmailService {
     return result;
   }
 
-  /**
-   * @description Process email request following the email algorithm
-   * @param {IEmailRequest} request - Email request details
-   * @returns {Promise<IResult>} Result object with status and message
-   */
-
-  private async tprocessEmailRequest(request: IEmailRequest): Promise<IResult> {
-    const result: IResult = { error: false, message: "", code: 200, data: {} };
-
-    try {
-      // 1. Validate request
-      await this.validateEmailRequest(request);
-
-      // 2. Queue email based on type
-      const priority = this.determineEmailPriority(request.type);
-      await this.emailQueue.add(request, priority);
-
-      // 3. Process and send email
-      const emailStatus = await this.sendEmail(request);
-
-      // // 4. Track performance
-      // await this.emailTracker.trackDelivery({
-      //   recipient: request.recipient,
-      //   status: emailStatus,
-      //   type: request.type
-      // });
-
-      result.message = "Email processed successfully";
-      result.data = { status: emailStatus };
-    } catch (error) {
-      result.error = true;
-      result.message = "Failed to process email";
-      result.code = 500;
-    }
-
-    return result;
-  }
-
-  /**
-   * @description Validate email request parameters
-   * @private
-   */
-  private async validateEmailRequest(request: IEmailRequest): Promise<void> {
-    const preferences = await userService.getNotificationPreferences(
-      request.recipient
-    );
-
-    if (!preferences) {
-      throw new Error("User preferences not found");
-    }
-
-    if (request.type === EmailType.MARKETING && !preferences.email) {
-      throw new Error("User opted out of marketing emails");
-    }
-
-    if (!request.subject || !request.content) {
-      throw new Error("Missing required email content");
-    }
-  }
 
   /**
    * @description Determine email priority based on type
@@ -879,25 +820,6 @@ class EmailService {
 
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  public async ssendPromotionalOffer(user: any, offer: any): Promise<IResult> {
-    const emailRequest: IEmailRequest = {
-      recipient: user.email,
-      subject: offer.title,
-      content: {
-        userName: user.firstName,
-        offerTitle: offer.title,
-        discount: offer.discount,
-        validUntil: offer.expiryDate,
-        promoCode: offer.code,
-        subscribeUrl: `${process.env.FRONTEND_URL}/subscribe?promo=${offer.code}`,
-      },
-      type: EmailType.MARKETING,
-      template: "promotional-offer",
-    };
-
-    return this.tprocessEmailRequest(emailRequest);
   }
 
     /**

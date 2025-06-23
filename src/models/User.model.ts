@@ -32,19 +32,9 @@ const UserSchema = new Schema<IUserDoc>(
       type: String,
       enum: Object.values(UserType),
     },
-    phoneNumber: { type: String, unique: true, sparse: true, default: null },
-    phoneCode: { type: String, default: "+234" },
-    country: { type: String },
-    countryPhone: { type: String },
 
     avatar: { type: String },
-    dateOfBirth: { type: Date },
-    gender: { type: String },
-    location: {
-      address: String,
-      city: String,
-      state: String,
-    },
+   
 
     Otp: { type: String },
     OtpExpiry: {
@@ -56,44 +46,14 @@ const UserSchema = new Schema<IUserDoc>(
 
     isSuper: { type: Boolean, default: false },
     isAdmin: { type: Boolean, default: false },
-    isUser: { type: Boolean, default: false },
     
-    loginInfo: {
-      ip: String,
-      deviceType: String,
-      platform: {
-        type: String,
-        enum: Object.values(AppChannel),
-      },
-      deviceInfo: {
-        manufacturer: String,
-        model: String,
-        osName: String,
-        osVersion: String,
-        browser: String,
-        browserVersion: String,
-        appVersion: String,
-      },
-      location: {
-        country: String,
-        city: String,
-        timezone: String,
-      },
-    },
-    lastLogin: { type: String },
     isActive: { type: Boolean, default: false },
     isActivated: { type: Boolean, default: false },
     isDeactivated: { type: Boolean, default: false },
     loginLimit: { type: Number, default: 5 },
     lockedUntil: { type: Date },
-    twoFactorEnabled: { type: Boolean, default: false },
+    lastLogin: { type: String },
 
-    // Notification Preferences
-    notificationPreferences: {
-      email: { type: Boolean, default: true },
-      push: { type: Boolean, default: true },
-      sms: { type: Boolean, default: false },
-    },
 
     // Relationships
     role: { type: Schema.Types.ObjectId, ref:DbModelsType.ROLE, index: true },

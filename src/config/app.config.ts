@@ -12,8 +12,6 @@ import helmet from "helmet";
 import hpp from "hpp";
 import cors from "cors";
 import v1Routes from "../routes/v1/routes.router";
-import prepPilotRoutes from "../routes/prepPilot/routes.router"
-// import userAgent from "express-useragent";
 
 
 
@@ -97,11 +95,8 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
 
 })
 
-// Shared API routes
-app.use('/v1', v1Routes)
 
-// prepPilot AI API routes
-app.use('/prep-pilot', prepPilotRoutes)
+app.use('/v1', v1Routes)
 
 app.use(errorHandler)
 

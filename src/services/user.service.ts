@@ -1,6 +1,5 @@
 import { Request } from "express";
 import { UAParser } from "ua-parser-js";
-import geoip from "geoip-lite";
 import { IBulkUser, IResult, IUserDoc } from "../utils/interface.util";
 import {
   Random,
@@ -301,8 +300,7 @@ class UserService {
             phoneCode: bulk.phoneCode,
           });
 
-          let phone = this.attachPhoneCode(bulk.phoneCode, bulk.phoneNumber);
-          user.countryPhone = phone;
+      
           await user.save();
 
           // encrypt password
@@ -461,32 +459,7 @@ class UserService {
   async updateLoginInfo(user: IUserDoc, req: Request): Promise<void> {
     const userAgent = req.headers["user-agent"];
     const parser = new UAParser(userAgent);
-    const device = parser.getDevice();
-    const os = parser.getOS();
-    const browser = parser.getBrowser();
-
-    // Get location info from IP
-    const geo = geoip.lookup(req.ip as string);
-
-    user.loginInfo = {
-      ip: req.ip?.toString() as string,
-      deviceType: userAgent as string,
-      platform: detectPlatform(device.type as string) ,
-      deviceInfo: {
-        manufacturer: device.vendor,
-        model: device.model,
-        osName: os.name as string,
-        osVersion: os.version as string,
-        browser: browser.name,
-        browserVersion: browser.version,
-        appVersion: req.headers["app-version"] as string,
-      },
-      location: {
-        country: geo?.country as string,
-        city: geo?.city as string,
-        timezone: geo?.timezone as string,
-      },
-    };
+    
     await user.save();
   }
 
@@ -701,54 +674,6 @@ class UserService {
     new ErrorResponse(`Role ${role} does not exist.`, 400, []);
   }
 
-  /**
-   * Gets user notification preferences
-   * @param userId - The ID of the user
-   * @returns Object containing notification preference settings
-   */
-  public async getNotificationPreferences(userId: string): Promise<{
-    email: boolean;
-    push: boolean;
-    sms: boolean;
-  }> {
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    return {
-      email: user.notificationPreferences?.email ?? true,
-      push: user.notificationPreferences?.push ?? true,
-      sms: user.notificationPreferences?.sms ?? true,
-    };
-  }
-
-  /**
-   * Updates user notification preferences
-   * @param userId - The ID of the user
-   * @param preferences - Object containing notification preferences to update
-   */
-  public async updateNotificationPreferences(
-    userId: string,
-    preferences: {
-      email?: boolean;
-      push?: boolean;
-      sms?: boolean;
-    }
-  ): Promise<void> {
-    const user = await User.findById(userId);
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    user.notificationPreferences = {
-      ...user.notificationPreferences,
-      ...preferences,
-    };
-
-    await user.save();
-  }
 }
 
 export default new UserService();
