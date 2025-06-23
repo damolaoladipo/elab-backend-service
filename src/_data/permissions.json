@@ -1,0 +1,66 @@
+[
+  {
+    "action": "user:create",
+    "description": "Permission to create new users in the system"
+  },
+  {
+    "action": "user:read",
+    "description": "Permission to read user information"
+  },
+  {
+    "action": "user:update",
+    "description": "Permission to update user information"
+  },
+  {
+    "action": "user:delete",
+    "description": "Permission to delete users from the system"
+  },
+  {
+    "action": "role:create",
+    "description": "Permission to create new roles in the system"
+  },
+  {
+    "action": "role:read",
+    "description": "Permission to read role information"
+  },
+  {
+    "action": "role:update",
+    "description": "Permission to update role information"
+  },
+  {
+    "action": "role:delete",
+    "description": "Permission to delete roles from the system"
+  },
+  {
+    "action": "permission:create",
+    "description": "Permission to create new permissions"
+  },
+  {
+    "action": "permission:read",
+    "description": "Permission to read permissions assigned to roles"
+  },
+  {
+    "action": "permission:update",
+    "description": "Permission to update permissions assigned to roles"
+  },
+  {
+    "action": "permission:delete",
+    "description": "Permission to delete permissions from the system"
+  },
+  {
+    "action": "permission:assign",
+    "description": "Permission to assign permissions to roles"
+  },
+  {
+    "action": "permission:revoke",
+    "description": "Permission to revoke permissions from roles"
+  },
+  {
+    "action": "audit:read",
+    "description": "Permission to read audit logs"
+  },
+  {
+    "action": "audit:delete",
+    "description": "Permission to delete audit logs"
+  }
+]

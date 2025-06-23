@@ -1,0 +1,30 @@
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+#build 
+build
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Ignore all .txt files
+.txt
+*/.txt
+/.txt
+*.txt
+*/.txt
+
+
+# system settings

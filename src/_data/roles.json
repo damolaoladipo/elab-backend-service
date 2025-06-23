@@ -1,0 +1,17 @@
+[
+  {
+    "name": "superadmin",
+    "slug": "super-admin",
+    "description": "Superadmin can access and manage everything in the system"
+  },
+  {
+    "name": "admin",
+    "slug": "admin",
+    "description": "Admin can manage the system, including users and roles, but not permissions."
+  },
+  {
+    "name": "user",
+    "slug": "user",
+    "description": "User can access their own data and perform basic actions"
+  }
+]
