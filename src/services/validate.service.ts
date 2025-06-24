@@ -16,7 +16,7 @@ class ValidationService {
   public async validateCreateEvent(data: CreateEventDTO): Promise<IResult> {
     if (!data.name) return this.error("name is required");
     if (!data.eventType) return this.error("eventType is required");
-    if (!data.lcoation) return this.error("lcoation is required");
+    if (!data.location) return this.error("location is required");
     if (!data.image) return this.error("image is required");
     if (!data.description) return this.error("description is required");
     if (!data.startDate) return this.error("startDate is required");

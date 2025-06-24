@@ -6,7 +6,7 @@ const EventSchema = new Schema<IEventDoc>(
   {
     name: { type: String, required: true },
     eventType: { type: String, required: true },
-    lcoation: { type: String, required: true },
+    location: { type: String, required: true },
     image: { type: String, required: true },
     description: { type: String, required: true },
     features: { type: [String], default: [] },

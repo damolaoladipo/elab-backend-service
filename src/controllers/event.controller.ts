@@ -5,7 +5,7 @@ import validationService from "../services/validate.service";
 import { CreateEventDTO, UpdateEventDTO } from "../dtos/event.dto";
 import eventRepository from "../repositories/event.repository";
 import userReposirtory from "../repositories/user.reposirtory";
-
+import { IEventDoc } from "../utils/interface.util";
 
 /**
  * @name createEvent
@@ -15,11 +15,10 @@ import userReposirtory from "../repositories/user.reposirtory";
  */
 export const createEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    
     const {
       name,
       eventType,
-      lcoation,
+      location,
       image,
       description,
       features,
@@ -36,7 +35,7 @@ export const createEvent = asyncHandler(
     const data = {
       name,
       eventType,
-      lcoation,
+      location,
       image,
       description,
       features,
@@ -50,7 +49,17 @@ export const createEvent = asyncHandler(
     res.status(200).json({
       error: false,
       errors: [],
-      data: event,
+      data: {
+        name: event.data.name,
+        eventType: event.data.eventType,
+        location: event.data.location,
+        image: event.data.image,
+        description: event.data.description,
+        features: event.data.features,
+        startDat: event.data.startDate,
+        endDate: event.data.endDate,
+        id: event.data._id,
+      },
       message: "Event created successfully.",
       status: 200,
     });
@@ -68,7 +77,7 @@ export const updateEvent = asyncHandler(
     const {
       name,
       eventType,
-      lcoation,
+      location,
       image,
       description,
       features,
@@ -85,7 +94,7 @@ export const updateEvent = asyncHandler(
     const data = {
       name,
       eventType,
-      lcoation,
+      location,
       image,
       description,
       features,
@@ -104,13 +113,22 @@ export const updateEvent = asyncHandler(
     res.status(200).json({
       error: false,
       errors: [],
-      data: result.data,
+      data: {
+        name: result.data.name,
+        eventType: result.data.eventType,
+        location: result.data.location,
+        image: result.data.image,
+        description: result.data.description,
+        features: result.data.features,
+        startDat: result.data.startDate,
+        endDate: result.data.endDate,
+        id: result.data._id,
+      },
       message: result.message,
       status: 200,
     });
   }
 );
-
 
 /**
  * @name getEventById
@@ -131,7 +149,17 @@ export const getEventById = asyncHandler(
     res.status(200).json({
       error: false,
       errors: [],
-      data: event,
+      data: {
+        name: event.name,
+        eventType: event.eventType,
+        location: event.location,
+        image: event.image,
+        description: event.description,
+        features: event.features,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        id: event._id,
+      },
       message: "Event fetched successfully.",
       status: 200,
     });
@@ -148,23 +176,34 @@ export const getUserEvents = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.params;
 
-     const user = await userReposirtory.findById(userId);
-        if (!user) {
-          return next(new ErrorResponse("Error", 404, ["User not found"]));
-        }
+    const user = await userReposirtory.findById(userId);
+    if (!user) {
+      return next(new ErrorResponse("Error", 404, ["User not found"]));
+    }
 
     const result = await eventRepository.getUserEvents(user._id);
 
     res.status(200).json({
       error: false,
       errors: [],
-      data: result.data,
+      data: {
+        events: result.data.map((event: IEventDoc) => ({
+          name: event.name,
+          eventType: event.eventType,
+          location: event.location,
+          image: event.image,
+          description: event.description,
+          features: event.features,
+          startDate: event.startDate,
+          endDate: event.endDate,
+          id: event._id,
+        })),
+      },
       message: "User events fetched successfully.",
       status: 200,
     });
   }
 );
-
 
 /**
  * @name getEvents
@@ -172,22 +211,29 @@ export const getUserEvents = asyncHandler(
  * @route GET /events
  * @access Public
  */
-export const getEvents = asyncHandler(
-  async (_req: Request, res: Response) => {
-    
-    const result = await eventRepository.getEvents();
+export const getEvents = asyncHandler(async (_req: Request, res: Response) => {
+  const result = await eventRepository.getEvents();
 
-    res.status(200).json({
-      error: false,
-      errors: [],
-      data: result.data,
-      message: "Events fetched successfully.",
-      status: 200,
-    });
-  }
-);
-
-
+  res.status(200).json({
+    error: false,
+    errors: [],
+    data: {
+      events: result.data.map((event: IEventDoc) => ({
+        name: event.name,
+        eventType: event.eventType,
+        location: event.location,
+        image: event.image,
+        description: event.description,
+        features: event.features,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        id: event._id,
+      })),
+    },
+    message: "Events fetched successfully.",
+    status: 200,
+  });
+});
 
 /**
  * @name deleteEvent

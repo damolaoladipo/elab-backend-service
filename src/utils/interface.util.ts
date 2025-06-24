@@ -177,7 +177,7 @@ export interface IEmailRequest {
 export interface IEventDoc extends Document {
   name: string;
   eventType: string; 
-  lcoation: string;
+  location: string;
   image: string; //upload file
   description: string;
   features: Array<string>;

@@ -3,7 +3,7 @@ import { ObjectId } from "mongoose";
 export interface CreateEventDTO {
   name: string;
   eventType: string;
-  lcoation: string;
+  location: string;
   image: string;
   description: string;
   features?: Array<string>;
@@ -15,7 +15,7 @@ export interface CreateEventDTO {
 export interface UpdateEventDTO {
   name?: string;
   eventType?: string;
-  lcoation?: string;
+  location?: string;
   image?: string;
   description?: string;
   features?: Array<string>;
