@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { IResult, IAdminDoc, } from "../utils/interface.util";
+import { IResult } from "../utils/interface.util";
 import { DecryptDataDTO, EncryptDataDTO } from "../dtos/system.dto";
 
 class SystemService {

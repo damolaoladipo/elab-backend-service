@@ -6,13 +6,10 @@
     "password": "p6vzsQH^51$B@;",
     "userType": "superadmin",
     "gender": "male",
-    "phoneNumber": "09061590172",
-    "phoneCode": "+234",
     "role": "superadmin",
     "isSuper": "true",
     "isActivated": "true",
     "isAdmin": "false",
-    "isUser": "true",
     "isActive": "true"
   }
 ]

@@ -1,6 +1,5 @@
 import { Router } from "express";
 import {
-  activateUserAccount,
   changePassword,
   forgotPassword,
   loginUser,
@@ -16,12 +15,11 @@ const authRouter = Router({ mergeParams: true });
 
 authRouter.post("/register", registerUser);
 authRouter.post("/login", loginUser);
-authRouter.post("/verify-otp", verifyOTP);
-authRouter.post("/resend-otp", resendOTP);
-authRouter.post("/activate", activateUserAccount);
 authRouter.post("/forgot-password", forgotPassword);
 authRouter.post("/reset-password", resetPassword);
 authRouter.post("/change-password", changePassword);
+authRouter.post("/verify-otp", verifyOTP);
+authRouter.post("/resend-otp", resendOTP);
 authRouter.post("/token", refreshToken);
 authRouter.post("/logout", logoutUser);
 

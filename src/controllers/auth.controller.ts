@@ -24,7 +24,6 @@ import tokenService from "../services/token.service";
 import { IUserDoc } from "../utils/interface.util";
 import otpService from "../services/otp.service";
 
-
 /**
  * @name registerUser
  * @description Registers a new user
@@ -54,8 +53,8 @@ export const registerUser = asyncHandler(
     const userExist = await User.findOne({ email: email.toLowerCase() });
     if (userExist) {
       return next(
-        new ErrorResponse("email already exist, use another email", 400, [ "Error" 
-          ,
+        new ErrorResponse("email already exist, use another email", 400, [
+          "Error",
         ])
       );
     }
@@ -91,112 +90,16 @@ export const registerUser = asyncHandler(
       return next(new ErrorResponse("Error", 404, ["user not created"]));
     }
 
-    const OTP = await userService.generateOTPCode(user, OtpType.REGISTER);
-
-    if (OTP) {
-      const sendOTP = await otpService.sendOTPEmail({
-        driver: EmailDriver.SENDGRID,
-        user: user,
-        template: EmailTemplate.VERIFY_EMAIL,
-        code: OTP,
-        options: {
-          otpType: VerifyOTP.REGISTER,
-          salute: `${user.firstName}`,
-          bodyOne:
-            "Verify your troott account using the One-Time Password code below",
-        },
-      });
-
-      if (sendOTP.error) {
-        return next(
-          new ErrorResponse("Error", sendOTP.code!, [sendOTP.message])
-        );
-      }
-    }
-
-    res.status(201).json({
-      error: false,
-      errors: [],
-      data: user,
-      message: "OTP has been sent to your email!",
-      status: 201,
-    });
-  }
-);
-
-// activate user using OTP
-/**
- * @name activateUserAccount
- * @description Activates a user account using OTP
- * @route POST /auth/activate
- * @access Public
- */
-export const activateUserAccount = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { email, OTP }: verifyOtpDTO = req.body;
-
-    if (!email || !OTP) {
-      return next(
-        new ErrorResponse("Error", 400, ["Email and OTP are required"])
-      );
-    }
-
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) {
-      return next(new ErrorResponse("Error", 404, ["User not found"]));
-    }
-    // Check if account is already active
-    if (user.isActive) {
-      return next(
-        new ErrorResponse("Error", 400, ["Account is already activated"])
-      );
-    }
-
-    const otpVerification = await userService.verifyOTP(email, OTP.toString());
-    if (otpVerification.error) {
-      return next(
-        new ErrorResponse("Error", otpVerification.code!, [
-          otpVerification.message,
-        ])
-      );
-    }
-
     // Activate the user account and Update login information
     await userService.activateAccount(user);
     await userService.updateLastLogin(user);
     await userService.updateLoginInfo(user, req);
 
-    // assign token to the user
-    const token = await tokenService.attachToken(user);
-    if (token.error) {
-      return next(new ErrorResponse("Error", token.code!, [token.message]));
-    }
-
-    // Send welcome email after activation
-    const welcomeEmail = await emailService.sendUserWelcomeEmail(user);
-    if (welcomeEmail.error) {
-      return next(
-        new ErrorResponse("Error", welcomeEmail.code, [welcomeEmail.message])
-      );
-    }
-
-    await user.save();
-
     res.status(200).json({
       error: false,
       errors: [],
-      data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          userType: user.userType,
-          isActive: user.isActive,
-        },
-        token: token.data.token,
-      },
-      message: "Account activated successfully",
+      data: user,
+      message: "user registered successfully",
       status: 200,
     });
   }
@@ -326,38 +229,6 @@ export const logoutUser = asyncHandler(
 );
 
 /**
- * @name RefreshToken
- * @description Automatically generates a new token for a user if the current token is near expiry
- * @route POST /auth/token
- * @access Private
- */
-export const refreshToken = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const accessToken = req.headers.authorization?.split(" ")[1];
-
-    if (!accessToken) {
-      return next(
-        new ErrorResponse("Unauthorized", 401, ["Access token required"])
-      );
-    }
-
-    const sendToken = await tokenService.refreshToken(accessToken);
-
-    if (sendToken.error) {
-      return next(
-        new ErrorResponse("Error", sendToken.code, [sendToken.message])
-      );
-    }
-
-    res.status(200).json({
-      error: false,
-      message: { message: sendToken.message },
-      data: { token: sendToken.data.token },
-    });
-  }
-);
-
-/**
  * @name forgotPassword
  * @description Allows user request OTP to reset their password
  * @route POST /auth/forgot-password
@@ -393,10 +264,7 @@ export const forgotPassword = asyncHandler(
       );
     }
 
-    const OTP = await userService.generateOTPCode(
-      user,
-      OtpType.FORGOTPASSWORD
-    );
+    const OTP = await userService.generateOTPCode(user, OtpType.FORGOTPASSWORD);
 
     if (OTP) {
       const sendOTP = await otpService.sendOTPEmail({
@@ -464,7 +332,10 @@ export const resetPassword = asyncHandler(
 
     await userService.encryptUserPassword(user, newPassword);
 
-    const sendEmail = await emailService.sendPasswordResetNotificationEmail(user, email);
+    const sendEmail = await emailService.sendPasswordResetNotificationEmail(
+      user,
+      email
+    );
     if (sendEmail.error) {
       return next(
         new ErrorResponse("Error", sendEmail.code, [sendEmail.message])
@@ -526,7 +397,9 @@ export const changePassword = asyncHandler(
 
     await userService.encryptUserPassword(user, newPassword);
 
-    const sendEmail = await emailService.sendPasswordChangeNotificationEmail(user.email);
+    const sendEmail = await emailService.sendPasswordChangeNotificationEmail(
+      user.email
+    );
     if (sendEmail.error) {
       return next(
         new ErrorResponse("Error", sendEmail.code, [sendEmail.message])
@@ -541,6 +414,38 @@ export const changePassword = asyncHandler(
       data: {},
       message: "Password changed successfully",
       status: 200,
+    });
+  }
+);
+
+/**
+ * @name RefreshToken
+ * @description Automatically generates a new token for a user if the current token is near expiry
+ * @route POST /auth/token
+ * @access Private
+ */
+export const refreshToken = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const accessToken = req.headers.authorization?.split(" ")[1];
+
+    if (!accessToken) {
+      return next(
+        new ErrorResponse("Unauthorized", 401, ["Access token required"])
+      );
+    }
+
+    const sendToken = await tokenService.refreshToken(accessToken);
+
+    if (sendToken.error) {
+      return next(
+        new ErrorResponse("Error", sendToken.code, [sendToken.message])
+      );
+    }
+
+    res.status(200).json({
+      error: false,
+      message: { message: sendToken.message },
+      data: { token: sendToken.data.token },
     });
   }
 );
@@ -631,9 +536,6 @@ export const resendOTP = asyncHandler(
     });
   }
 );
-
-
-
 
 // Sign in with Google
 // Sign in with Apple

@@ -8,7 +8,7 @@
   "main": "server.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "NODE_ENV=production ts-node --transpile-only src/server.ts",
+    "prod": "NODE_ENV=production ts-node --transpile-only src/server.ts",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
   },
   "dependencies": {
