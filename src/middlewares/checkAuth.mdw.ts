@@ -23,7 +23,7 @@ declare global {
  *  - 404 if user role not found
  *  - 403 if user lacks required permissions
  */
-const checkAuthentication = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+const Protect = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   
     const token = req.header("authorization")?.split(" ")[1];
     if (!token) {
@@ -62,4 +62,4 @@ const checkAuthentication = asyncHandler(async (req: Request, res: Response, nex
     }
   })
 
-export default checkAuthentication;
+export default Protect;
