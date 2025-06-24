@@ -124,6 +124,7 @@ export const registerUser = asyncHandler(
   }
 );
 
+
 // activate user using OTP
 /**
  * @name activateUserAccount
