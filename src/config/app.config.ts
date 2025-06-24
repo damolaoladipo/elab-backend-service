@@ -12,6 +12,7 @@ import helmet from "helmet";
 import hpp from "hpp";
 import cors from "cors";
 import v1Routes from "../routes/v1/routes.router";
+import winston from "winston";
 
 config();
 
@@ -63,6 +64,17 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "../views")); 
 
+
+const logger = winston.createLogger({
+  level: "info",
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: "error.log", level: "error" }),
+    new winston.transports.File({ filename: "combined.log" }),
+  ],
+});
+
 app.get("/", (req: Request, res: Response, next: NextFunction) => {
   
     let enviornemnt = ENVType.DEVELOPMENT;
@@ -75,6 +87,8 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
     enviornemnt = ENVType.DEVELOPMENT;
   }
 
+  logger.info("Request received at /");
+
   res.status(200).render("health-check", {
     error: false,
     errors: [],
@@ -85,6 +99,8 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
     message: `eLab website api v1.0.0 is running on ${enviornemnt} mode`,
     status: 200,
   });
+
+  logger.info("Response sent from /");
 });
 
 app.use("/v1", v1Routes);

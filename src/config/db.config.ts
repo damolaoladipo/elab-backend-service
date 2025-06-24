@@ -36,7 +36,7 @@ const connectDB = async () => {
 
     console.log(
       colors.cyan.bold.underline(
-        `eLab website database connected: ${dbConn.connection.host}`
+        `eLab website ${process.env.NODE_ENV?.toUpperCase()} database connected: ${dbConn.connection.host}`
       )
     );
   } catch (error) {

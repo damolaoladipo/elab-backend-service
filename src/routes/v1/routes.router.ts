@@ -6,6 +6,8 @@ import resourceRoutes from "./routers/resource.router";
 
 const router = express.Router();
 
+
+
 router.use("/auth", authRoutes);
 router.use("/event", eventRoutes);
 router.use("/project", projectRoutes);
