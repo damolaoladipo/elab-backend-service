@@ -1,4 +1,4 @@
-import { FilterQuery, Model } from "mongoose";
+import { FilterQuery, Model, ObjectId } from "mongoose";
 import Project from "../models/Project.model";
 import { IResult, IProjectDoc } from "../utils/interface.util";
 
@@ -47,7 +47,7 @@ class ProjectRepository {
    * @param userId
    * @returns {Promise<IResult>}
    */
-  public async getUserProjects(userId: string): Promise<IResult> {
+  public async getUserProjects(userId: string | ObjectId ): Promise<IResult> {
     let result: IResult = { error: false, message: "", code: 200, data: {} };
 
     const projects = await this.model.find({ user: userId }).lean();

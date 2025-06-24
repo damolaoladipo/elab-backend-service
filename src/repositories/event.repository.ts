@@ -1,9 +1,9 @@
 import { FilterQuery, Model } from "mongoose";
-import { IEvent, IResult } from "../utils/interface.util";
+import { IEventDoc, IResult } from "../utils/interface.util";
 import Event from "../models/Event.model";
 
 class EventRepository {
-  private model: Model<IEvent>;
+  private model: Model<IEventDoc>;
 
   constructor() {
     this.model = Event;
@@ -13,13 +13,13 @@ class EventRepository {
    * @name findById
    * @param id
    * @param populate
-   * @returns {Promise<IEvent | null>}
+   * @returns {Promise<IEventDoc | null>}
    */
   public async findById(
     id: string,
     populate: boolean = false
-  ): Promise<IEvent | null> {
-    const query: FilterQuery<IEvent> = { _id: id };
+  ): Promise<IEventDoc | null> {
+    const query: FilterQuery<IEventDoc> = { _id: id };
 
     const pop = populate ? [{ path: "user" }] : [];
 
@@ -71,7 +71,7 @@ public async getUserEvents(userId: string | Object): Promise<IResult> {
    * @param data
    * @returns {Promise<IResult>}
    */
-  public async createEvent(data: Partial<IEvent>): Promise<IResult> {
+  public async createEvent(data: Partial<IEventDoc>): Promise<IResult> {
     let result: IResult = { error: false, message: "", code: 201, data: {} };
 
     const event = await this.model.create(data);
@@ -94,7 +94,7 @@ public async getUserEvents(userId: string | Object): Promise<IResult> {
    */
   public async updateEvent(
     id: string,
-    data: Partial<IEvent>
+    data: Partial<IEventDoc>
   ): Promise<IResult> {
     let result: IResult = { error: false, message: "", code: 200, data: {} };
     const event = await this.model.findByIdAndUpdate(id, data, { new: true });

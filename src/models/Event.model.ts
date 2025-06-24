@@ -1,8 +1,8 @@
 import mongoose, { Schema, Model } from "mongoose";
-import { IEvent } from "../utils/interface.util";
+import { IEventDoc } from "../utils/interface.util";
 import { DbModelsType } from "../utils/enums.util";
 
-const EventSchema = new Schema<IEvent>(
+const EventSchema = new Schema<IEventDoc>(
   {
     name: { type: String, required: true },
     eventType: { type: String, required: true },
@@ -26,7 +26,7 @@ const EventSchema = new Schema<IEvent>(
   }
 );
 
-const Event: Model<IEvent> = mongoose.model<IEvent>(
+const Event: Model<IEventDoc> = mongoose.model<IEventDoc>(
   DbModelsType.EVENT,
   EventSchema
 );
