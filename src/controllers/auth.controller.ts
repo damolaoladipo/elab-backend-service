@@ -91,14 +91,25 @@ export const registerUser = asyncHandler(
     }
 
     // Activate the user account and Update login information
+    await userService.updateUserType(user, userType as UserType);
     await userService.activateAccount(user);
     await userService.updateLastLogin(user);
-    await userService.updateLoginInfo(user, req);
 
     res.status(200).json({
       error: false,
       errors: [],
-      data: user,
+      data: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        userType: user.userType,
+        isAdmin: user.isAdmin,
+        isActive: user.isActive,
+        isDeactivated: user.isDeactivated,
+        loginLimit: user.loginLimit,
+        lastLogin: user.lastLogin,
+        id: user._id
+      },
       message: "user registered successfully",
       status: 200,
     });

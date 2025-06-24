@@ -393,6 +393,8 @@ class UserService {
    * @param user
    */
   public async activateAccount(user: IUserDoc): Promise<void> {
+    user.isActivated = true;
+    user.isActive = true;
     user.isActive = true;
     user.isLocked = false;
     user.loginLimit = 0;
@@ -407,6 +409,30 @@ class UserService {
     user.isActive = false;
     user.isLocked = true;
     user.isDeactivated = true;
+    await user.save();
+  }
+
+
+  
+  /**
+   * @name updateUserType
+   * @param user
+   * @param userType
+   */
+  public async updateUserType(
+    user: IUserDoc,
+    userType: UserType
+  ): Promise<void> {
+    user.isAdmin = false;
+    
+
+    if (userType === UserType.ADMIN) {
+      user.isAdmin = true;
+    } 
+ 
+
+    user.userType = userType;
+
     await user.save();
   }
 
@@ -552,15 +578,12 @@ class UserService {
   ): Promise<boolean> {
     let result: boolean = false;
 
-    console.log("Encrypting password for:", user.email);
-
     const encrypted = await SystemService.encryptData({
       payload: password,
       password: user.email,
       separator: "-",
     });
 
-    console.log("Encrypted Password:", encrypted);
 
     if (encrypted) {
       user.password = encrypted;

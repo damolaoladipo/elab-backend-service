@@ -21,7 +21,7 @@ class ValidationService {
     if (!data.description) return this.error("description is required");
     if (!data.startDate) return this.error("startDate is required");
     if (!data.endDate) return this.error("endDate is required");
-    if (!data.user) return this.error("user is required");
+    if (!data.userId) return this.error("user is required");
     return this.ok();
   }
 

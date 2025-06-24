@@ -25,7 +25,7 @@ export const createEvent = asyncHandler(
       features,
       startDate,
       endDate,
-      user,
+      userId,
     }: CreateEventDTO = req.body;
 
     const validate = await validationService.validateCreateEvent(req.body);
@@ -42,7 +42,7 @@ export const createEvent = asyncHandler(
       features,
       startDate,
       endDate,
-      user,
+      userId,
     };
 
     const event = await eventRepository.createEvent(data);
@@ -74,7 +74,7 @@ export const updateEvent = asyncHandler(
       features,
       startDate,
       endDate,
-      user,
+      userId,
     }: UpdateEventDTO = req.body;
 
     const validate = await validationService.validateUpdateEvent(req.body);
@@ -91,7 +91,7 @@ export const updateEvent = asyncHandler(
       features,
       startDate,
       endDate,
-      user,
+      userId,
     };
 
     const { id } = req.params;

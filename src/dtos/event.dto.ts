@@ -9,7 +9,7 @@ export interface CreateEventDTO {
   features?: Array<string>;
   startDate: Date;
   endDate: Date;
-  user: ObjectId;
+  userId: ObjectId;
 }
 
 export interface UpdateEventDTO {
@@ -21,5 +21,5 @@ export interface UpdateEventDTO {
   features?: Array<string>;
   startDate?: Date;
   endDate?: Date;
-  user: ObjectId;
+  userId: ObjectId;
 }
