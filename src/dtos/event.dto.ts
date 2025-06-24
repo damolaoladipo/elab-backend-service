@@ -21,5 +21,5 @@ export interface UpdateEventDTO {
   features?: Array<string>;
   startDate?: Date;
   endDate?: Date;
-  user?: ObjectId;
+  user: ObjectId;
 }

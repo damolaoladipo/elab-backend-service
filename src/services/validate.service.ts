@@ -154,11 +154,11 @@ class ValidationService {
 
   // ===== Helper methods =====
   private error(message: string): IResult {
-    return { error: true, message, code: 400, data: null };
+    return { error: true, message, code: 400, data: {} };
   }
 
   private ok(): IResult {
-    return { error: false, message: "", code: 200, data: null };
+    return { error: false, message: "", code: 200, data: {} };
   }
 }
 
