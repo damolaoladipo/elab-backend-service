@@ -11,17 +11,4 @@ router.use("/event", eventRoutes);
 router.use("/project", projectRoutes);
 router.use("/resource", resourceRoutes);
 
-router.get("/", (req: Request, res: Response, next: NextFunction) => {
-  res.status(200).json({
-    error: false,
-    errors: [],
-    data: {
-      name: "elab website API",
-      version: "1.0.0",
-    },
-    message: "elab website api v1.0.0 is healthy",
-    status: 200,
-  });
-});
-
 export default router;

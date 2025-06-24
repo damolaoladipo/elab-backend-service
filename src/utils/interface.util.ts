@@ -178,7 +178,7 @@ export interface IEventDoc extends Document {
   name: string;
   eventType: string; 
   lcoation: string;
-  image: string;
+  image: string; //upload file
   description: string;
   features: Array<string>;
   startDate: Date;
@@ -197,7 +197,7 @@ export interface IEventDoc extends Document {
 
 export interface IProjectDoc extends Document {
   name: string;
-  image: string;
+  image: string;  //upload file
   description: string;
   startDate: Date;
   
@@ -216,7 +216,7 @@ export interface IProjectDoc extends Document {
 
 export interface IArchiveDoc extends Document {
   title: string;
-  image: string;
+  image: string;  //upload file
   excerpt?: string;
   description?: string;
   link?: string
@@ -239,9 +239,9 @@ export interface IArchiveDoc extends Document {
 
 export interface IResourceDoc extends Document {
   title: string;
-  image: string;
+  image: string; //upload file
   description: string;
-  resource: string;
+  resource: string; //upload file
   type: string; 
   author: string;
   category: string;

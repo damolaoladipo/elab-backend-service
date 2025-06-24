@@ -83,12 +83,11 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
         error: false,
         errors: [],
         data: {
-            name: "API - DEFAULT",
+            name: "elab website API",
             version: "1.0.0",
-
-        },
-        message: 'ProjectDamola api v1.0.0 is running',
-        status: 200
+            },
+        message: "elab website api v1.0.0 is running",
+        status: 200,
 
     })
 
