@@ -6,7 +6,6 @@ import { CreateCompanyDTO, UpdateCompanyDTO } from "../dtos/company.dto";
 import companyRepository from "../repositories/company.repository";
 import userReposirtory from "../repositories/user.reposirtory";
 
-
 /**
  * @name createCompany
  * @description Creates a new company
@@ -167,7 +166,7 @@ export const getUserCompanies = asyncHandler(
  */
 export const getCompanies = asyncHandler(
   async (_req: Request, res: Response) => {
-    
+
     const result = await companyRepository.getCompanies();
 
     res.status(200).json({
