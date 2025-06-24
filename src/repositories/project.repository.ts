@@ -26,6 +26,9 @@ class ProjectRepository {
     const query: FilterQuery<IProjectDoc> = { _id: id };
 
     const project = await this.model.findById(query).populate(pop);
+    if (!project) {
+      return null;
+    }
     return project;
   }
 
@@ -37,6 +40,14 @@ class ProjectRepository {
     let result: IResult = { error: false, message: "", code: 200, data: {} };
 
     const projects = await this.model.find({}).lean();
+    if (!projects || projects.length === 0) {
+      result.error = true;
+      result.code = 404;
+      result.message = "No projects found";
+      return result;
+    }
+    result.message = "Projects fetched successfully";
+    result.code = 200;
     result.data = projects;
 
     return result;
@@ -65,6 +76,14 @@ class ProjectRepository {
     let result: IResult = { error: false, message: "Project created successfully", code: 201, data: {} };
 
     const newProject = await this.model.create(projectData);
+    if (!newProject) {
+      result.error = true;
+      result.code = 500;
+      result.message = "Failed to create project";
+      return result;
+    }
+    result.message = "Project created successfully";
+    result.code = 201;
     result.data = newProject;
 
     return result;
