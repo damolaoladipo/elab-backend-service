@@ -13,26 +13,40 @@ const options: ConnectOptions = {
 };
 
 const connectDB = async () => {
-  if (
-    process.env.NODE_ENV === ENVType.DEVELOPMENT ||
-    process.env.NODE_ENV === ENVType.PRODUCTION
-  )
-    try {
-      const dbConn = await mongoose.connect(
-        process.env.MONGODB_URI as string,
-        options
-      );
-      console.log(
-        colors.cyan.bold.underline(
-          `eLab website database connected: ${dbConn.connection.host}`
-        )
-      );
-    } catch (error) {
-      console.log(
-        colors.cyan.bold.underline(`Could not connect to eLab website database: ${error}`)
-      );
-      process.exit(1);
-    }
+  
+  let dataBaseURI: string | undefined;
+
+  if (process.env.NODE_ENV === ENVType.PRODUCTION) {
+    dataBaseURI = process.env.MONGODB_URI as string;
+  } else if (process.env.NODE_ENV === ENVType.STAGING) {
+    dataBaseURI = process.env.MONGODB_STAGING_URI as string;
+  } else if (process.env.NODE_ENV === ENVType.DEVELOPMENT) {
+    dataBaseURI = process.env.MONGODB_STAGING_URI as string;
+  }
+
+  if (!dataBaseURI) {
+    throw new Error("Database URI is not defined for the current environment.");
+  }
+
+  try {
+    const dbConn = await mongoose.connect(
+      dataBaseURI as string,
+      options
+    );
+
+    console.log(
+      colors.cyan.bold.underline(
+        `eLab website database connected: ${dbConn.connection.host}`
+      )
+    );
+  } catch (error) {
+    console.log(
+      colors.cyan.bold.underline(
+        `Could not connect to eLab website database: ${error}`
+      )
+    );
+    process.exit(1);
+  }
 };
 
 export default connectDB;
