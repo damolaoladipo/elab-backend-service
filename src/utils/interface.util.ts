@@ -174,7 +174,7 @@ export interface IEmailRequest {
 }
 
 
-export interface IEvent extends Document {
+export interface IEventDoc extends Document {
   name: string;
   eventType: string; 
   lcoation: string;
@@ -195,7 +195,7 @@ export interface IEvent extends Document {
 }
 
 
-export interface IProject extends Document {
+export interface IProjectDoc extends Document {
   name: string;
   image: string;
   description: string;
@@ -214,7 +214,7 @@ export interface IProject extends Document {
 
 
 
-export interface IArchive extends Document {
+export interface IArchiveDoc extends Document {
   title: string;
   image: string;
   excerpt?: string;
@@ -237,7 +237,7 @@ export interface IArchive extends Document {
   id: ObjectId;
 }
 
-export interface IResource extends Document {
+export interface IResourceDoc extends Document {
   title: string;
   image: string;
   description: string;
@@ -259,7 +259,7 @@ export interface IResource extends Document {
 }
 
 
-export interface ICompany extends Document {
+export interface ICompanyDoc extends Document {
   name: string;
   description: string;
   logo: string;
