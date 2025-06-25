@@ -7,6 +7,8 @@ import {
   getResourceById,
   getUserResources
 } from "../../../controllers/resource.controller";
+import Protect from "../../../middlewares/checkAuth.mdw";
+import uploadFile from "../../../middlewares/upload.mdw";
 
 
 /**
@@ -15,11 +17,11 @@ import {
  */
 const resourceRouter = Router({ mergeParams: true });
 
-resourceRouter.post("/", createResource);
-resourceRouter.patch("/:id", updateResource);
-resourceRouter.delete("/:id", deleteResource);
-resourceRouter.get("/", getResources);
-resourceRouter.get("/:id", getResourceById);
-resourceRouter.get("/user/:userId", getUserResources);
+resourceRouter.post("/", Protect, uploadFile, createResource);
+resourceRouter.patch("/:id", Protect, updateResource);
+resourceRouter.delete("/:id",Protect, deleteResource);
+resourceRouter.get("/", Protect, getResources);
+resourceRouter.get("/:id", Protect, getResourceById);
+resourceRouter.get("/user/:userId", Protect, getUserResources);
 
 export default resourceRouter;

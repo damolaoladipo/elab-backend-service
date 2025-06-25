@@ -56,7 +56,7 @@ export const createEvent = asyncHandler(
         image: event.data.image,
         description: event.data.description,
         features: event.data.features,
-        startDat: event.data.startDate,
+        startDate: event.data.startDate,
         endDate: event.data.endDate,
         id: event.data._id,
       },

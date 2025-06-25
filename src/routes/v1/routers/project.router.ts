@@ -7,14 +7,16 @@ import {
   getProjectById,
   getUserProjects,
 } from "../../../controllers/project.controller";
+import uploadFile from "../../../middlewares/upload.mdw";
+import Protect from "../../../middlewares/checkAuth.mdw";
 
 const projectRouter = Router({ mergeParams: true });
 
-projectRouter.post("/", createProject);
-projectRouter.patch("/:id", updateProject);
-projectRouter.delete("/:id", deleteProject);
-projectRouter.get("/", getProjects);
-projectRouter.get("/:id", getProjectById);
-projectRouter.get("/user/:userId", getUserProjects);
+projectRouter.post("/", Protect, uploadFile, createProject);
+projectRouter.patch("/:id", Protect, uploadFile, updateProject);
+projectRouter.delete("/:id", Protect, deleteProject);
+projectRouter.get("/", Protect, getProjects);
+projectRouter.get("/:id", Protect, getProjectById);
+projectRouter.get("/user/:userId", Protect, getUserProjects);
 
 export default projectRouter;

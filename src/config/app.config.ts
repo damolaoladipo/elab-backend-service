@@ -49,15 +49,15 @@ app.use(hpp());
 app.use(cors({ origin: true, credentials: true }));
 
 app.use((req: Request, res: Response, next: NextFunction) => {
-  res.header("Access-Control-Allow-Origin", "*"),
-    res.header(
-      "Access-Control-Allow-Origin",
-      "GET, POST, OPTIONS, PUT, PATCH, DELETE"
-    ),
-    res.header(
-      "Access-Control-Allow-Origin",
-      "x-acess-token, origin, X-Requested-With, Content-Type, Accept"
-    );
+  res.header("Access-Control-Allow-Origin", "*"); 
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
   next();
 });
 

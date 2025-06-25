@@ -7,14 +7,16 @@ import {
   getEventById,
   getUserEvents,
 } from "../../../controllers/event.controller";
+import uploadFile from "../../../middlewares/upload.mdw";
+import Protect from "../../../middlewares/checkAuth.mdw";
 
 const eventRouter = Router({ mergeParams: true });
 
-eventRouter.post("/", createEvent);
-eventRouter.put("/:id", updateEvent);
-eventRouter.delete("/:id", deleteEvent);
-eventRouter.get("/", getEvents);
-eventRouter.get("/:id", getEventById);
-eventRouter.get("/user/:userId", getUserEvents);
+eventRouter.post("/", Protect, uploadFile, createEvent);
+eventRouter.put("/:id", Protect, uploadFile, updateEvent);
+eventRouter.delete("/:id", Protect, deleteEvent);
+eventRouter.get("/", Protect, getEvents);
+eventRouter.get("/:id", Protect, getEventById);
+eventRouter.get("/user/:userId", Protect, getUserEvents);
 
 export default eventRouter;

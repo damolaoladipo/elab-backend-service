@@ -194,6 +194,8 @@ export interface IEventDoc extends Document {
   id: ObjectId;
 }
 
+// array of objects
+// strings 
 
 export interface IProjectDoc extends Document {
   name: string;
@@ -236,6 +238,10 @@ export interface IArchiveDoc extends Document {
   _id: ObjectId;
   id: ObjectId;
 }
+
+
+
+//
 
 export interface IResourceDoc extends Document {
   title: string;
