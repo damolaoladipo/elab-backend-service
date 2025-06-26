@@ -5,9 +5,9 @@ import { DbModelsType } from "../utils/enums.util";
 const EventSchema = new Schema<IEventDoc>(
   {
     title: { type: String, required: true },
-    image: { type: String, required: true },
+    image: { type: String },
     content: {
-      type: { type: String, required: true },
+      type: { type: String },
       content: String,
       level: Number,
       language: String,

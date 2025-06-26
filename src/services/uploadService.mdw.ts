@@ -53,7 +53,7 @@ export const uploadToS3AndSaveImage = async (
   const upload = new Upload({
     client: s3,
     params: {
-      Bucket: process.env.AWS_S3_BUCKET_NAME!,
+      Bucket: process.env.AWS_BUCKET_NAME as string,
       Key: uniqueFileName,
       Body: stream,
       ContentType: mimeType,
@@ -64,7 +64,7 @@ export const uploadToS3AndSaveImage = async (
 
   // 4. Generate public URL
   //const fileUrl = `https://${process.env.AWS_CLOUDFRONT_URL}/${uniqueFileName}`;
-  const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uniqueFileName}`;
+  const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${uniqueFileName}`;
 
   return fileUrl;
 };

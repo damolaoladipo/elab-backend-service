@@ -3,7 +3,6 @@ import { IWysiwygContent } from "../utils/interface.util";
 
 export interface CreateEventDTO {
   title: string;
-  image: string;
   content: IWysiwygContent;
   features?: Array<string>;
   joinUrl?: string;

@@ -52,9 +52,10 @@ export const createEvent = asyncHandler(
       return next(new ErrorResponse("Error", event.code!, [event.message]));
     }
 
-    const imageFile = (req as any).files?.find(
-      (f: any) => f.fieldname === "image"
-    );
+    const imageFile = (req as any).file
+    // ?.find(
+    //   (f: any) => f.fieldname === "file"
+    // );
 
     let imageUrl = "";
 
