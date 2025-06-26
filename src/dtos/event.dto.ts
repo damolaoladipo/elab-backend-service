@@ -12,12 +12,11 @@ export interface CreateEventDTO {
 }
 
 export interface UpdateEventDTO {
-  name?: string;
-  eventType?: string;
-  location?: string;
-  image?: string;
-  description?: string;
+   title?: string;
+  content?: IWysiwygContent;
   features?: Array<string>;
-  startDate?: Date;
-  endDate?: Date;
+  joinUrl?: string;
+  planUrl?: string;
+  sponsorUrl?: string;
+  communityUrl?: string;
 }

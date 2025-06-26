@@ -15,20 +15,26 @@ class EventRepository {
    * @param populate
    * @returns {Promise<IEventDoc | null>}
    */
-  public async findById(
-    id: string,
-    populate: boolean = false
-  ): Promise<IEventDoc | null> {
-    const query: FilterQuery<IEventDoc> = { _id: id };
+ public async findById(id: string, populate: boolean = false): Promise<IResult> {
+  const result: IResult = { error: false, message: "", code: 200, data: {} };
 
-    const pop = populate ? [{ path: "user" }] : [];
+  const pop = populate ? [{ path: "user" }] : [];
+  const event = await this.model.findById(id).populate(pop);
 
-    const event = await this.model.findById(query).populate(pop);
-    if (!event) {
-      return null;
-    }
-    return event;
+  if (!event) {
+    return {
+      error: true,
+      message: "Event not found",
+      code: 404,
+      data: {},
+    };
   }
+
+  result.message = "Event found";
+  result.data = event;
+  return result;
+}
+
 
   /**
  * @name getUserEvents
