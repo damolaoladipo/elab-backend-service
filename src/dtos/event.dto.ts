@@ -1,15 +1,15 @@
 import { ObjectId } from "mongoose";
+import { IWysiwygContent } from "../utils/interface.util";
 
 export interface CreateEventDTO {
-  name: string;
-  eventType: string;
-  location: string;
+  title: string;
   image: string;
-  description: string;
+  content: IWysiwygContent;
   features?: Array<string>;
-  startDate: Date;
-  endDate: Date;
-  userId: ObjectId;
+  joinUrl?: string;
+  planUrl?: string;
+  sponsorUrl?: string;
+  communityUrl?: string;
 }
 
 export interface UpdateEventDTO {
@@ -21,5 +21,4 @@ export interface UpdateEventDTO {
   features?: Array<string>;
   startDate?: Date;
   endDate?: Date;
-  userId: ObjectId;
 }

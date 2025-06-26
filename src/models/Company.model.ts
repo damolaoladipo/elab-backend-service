@@ -1,8 +1,8 @@
 import mongoose, { Schema, Model } from "mongoose";
-import { ICompany } from "../utils/interface.util";
+import { IVentureDoc } from "../utils/interface.util";
 import { DbModelsType } from "../utils/enums.util";
 
-const CompanySchema = new Schema<ICompany>(
+const CompanySchema = new Schema<IVentureDoc>(
   {
     name: { type: String, required: true },
     description: { type: String, required: true },
@@ -25,7 +25,7 @@ const CompanySchema = new Schema<ICompany>(
   }
 );
 
-const Company: Model<ICompany> = mongoose.model<ICompany>(
+const Company: Model<IVentureDoc> = mongoose.model<IVentureDoc>(
   DbModelsType.COMPANY,
   CompanySchema
 );

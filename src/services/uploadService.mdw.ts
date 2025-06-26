@@ -17,31 +17,37 @@ const s3 = new S3Client({
 });
 
 interface UploadImageOptions {
-  stream: PassThrough | Readable;
+  stream: PassThrough;
   mimeType: string;
   originalFileName: string;
-  userId: string;
   eventId: string;
 }
 
-export const uploadToS3AndSaveImage = async ({
-  stream,
-  mimeType,
-  originalFileName,
-  userId,
-  eventId,
-}: UploadImageOptions): Promise<string> => {
-  
-    // 1. Validate supported image types
+/**
+ * Uploads an image to S3 and saves the image URL to the event document.
+ *
+ * @param {UploadImageOptions} data - The data containing the image stream, MIME type, and original file name.
+ * @returns {Promise<string>} - The public URL of the uploaded image.
+ * @throws {Error} - If the image format is unsupported or if the event cannot be updated.
+ */
+
+export const uploadToS3AndSaveImage = async (
+  data: UploadImageOptions
+): Promise<string> => {
+  const { stream, mimeType, originalFileName, eventId } = data;
+
+  // 1. Validate supported image types
   const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
   if (!allowedMimeTypes.includes(mimeType)) {
-    throw new Error("Unsupported image format. Only JPG, PNG, and WebP allowed.");
+    throw new Error(
+      "Unsupported image format. Only JPG, PNG, and WebP allowed."
+    );
   }
 
   // 2. Create unique file key
   const ext = path.extname(originalFileName);
   const fileId = uuidv4();
-  const uniqueFileName = `events/${eventId}/${fileId}${ext}`;
+  const uniqueFileName = `events/${fileId}${ext}`;
 
   // 3. Upload to S3
   const upload = new Upload({
@@ -59,18 +65,6 @@ export const uploadToS3AndSaveImage = async ({
   // 4. Generate public URL
   //const fileUrl = `https://${process.env.AWS_CLOUDFRONT_URL}/${uniqueFileName}`;
   const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${uniqueFileName}`;
-
-
-  // 5. Save image URL to event document
-  const updatedEvent: IEventDoc | null = await Event.findByIdAndUpdate(
-    eventId,
-    { image: fileUrl },
-    { new: true }
-  );
-
-  if (!updatedEvent) {
-    throw new Error("Event not found or could not update image.");
-  }
 
   return fileUrl;
 };

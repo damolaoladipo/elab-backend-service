@@ -6,6 +6,7 @@ import { CreateEventDTO, UpdateEventDTO } from "../dtos/event.dto";
 import eventRepository from "../repositories/event.repository";
 import userReposirtory from "../repositories/user.reposirtory";
 import { IEventDoc } from "../utils/interface.util";
+import { uploadToS3AndSaveImage } from "../services/uploadService.mdw";
 
 /**
  * @name createEvent
@@ -15,16 +16,19 @@ import { IEventDoc } from "../utils/interface.util";
  */
 export const createEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req as any).user?._id;
+    // if (!userId) {
+    //   return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
+    // }
+
     const {
-      name,
-      eventType,
-      location,
-      image,
-      description,
+      title,
+      content,
       features,
-      startDate,
-      endDate,
-      userId,
+      joinUrl,
+      planUrl,
+      sponsorUrl,
+      communityUrl,
     }: CreateEventDTO = req.body;
 
     const validate = await validationService.validateCreateEvent(req.body);
@@ -33,31 +37,54 @@ export const createEvent = asyncHandler(
     }
 
     const data = {
-      name,
-      eventType,
-      location,
-      image,
-      description,
+      title,
+      image: "",
+      content,
       features,
-      startDate,
-      endDate,
-      userId,
+      joinUrl,
+      planUrl,
+      sponsorUrl,
+      communityUrl,
     };
 
     const event = await eventRepository.createEvent(data);
+    if (event.error) {
+      return next(new ErrorResponse("Error", event.code!, [event.message]));
+    }
+
+    const imageFile = (req as any).files?.find(
+      (f: any) => f.fieldname === "image"
+    );
+
+    let imageUrl = "";
+
+    const ImageData = {
+      stream: imageFile.stream,
+      mimeType: imageFile.mimeType,
+      originalFileName: imageFile.fileName,
+      eventId: event.data._id,
+    };
+
+    if (imageFile) {
+      imageUrl = await uploadToS3AndSaveImage(ImageData);
+    }
+    if (imageUrl && imageUrl !== event.data.image) {
+      await eventRepository.updateEvent(event.data._id, { image: imageUrl });
+      event.data.image = imageUrl;
+    }
 
     res.status(200).json({
       error: false,
       errors: [],
       data: {
-        name: event.data.name,
-        eventType: event.data.eventType,
-        location: event.data.location,
+        title: event.data.title,
         image: event.data.image,
-        description: event.data.description,
+        content: event.data.content,
         features: event.data.features,
-        startDate: event.data.startDate,
-        endDate: event.data.endDate,
+        joinUrl: event.data.joinUrl,
+        planUrl: event.data.planUrl,
+        sponsorUrl: event.data.sponsorUrl,
+        communityUrl: event.data.communityUrl,
         id: event.data._id,
       },
       message: "Event created successfully.",
@@ -66,174 +93,175 @@ export const createEvent = asyncHandler(
   }
 );
 
-/**
- * @name updateEvent
- * @description Updates an event
- * @route PATCH /events/:id
- * @access Private
- */
-export const updateEvent = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const {
-      name,
-      eventType,
-      location,
-      image,
-      description,
-      features,
-      startDate,
-      endDate,
-      userId,
-    }: UpdateEventDTO = req.body;
 
-    const validate = await validationService.validateUpdateEvent(req.body);
-    if (validate.error) {
-      return next(new ErrorResponse("Error", 400, [validate.message]));
-    }
+// /**
+//  * @name updateEvent
+//  * @description Updates an event
+//  * @route PATCH /events/:id
+//  * @access Private
+//  */
+// export const updateEvent = asyncHandler(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const {
+//       name,
+//       eventType,
+//       location,
+//       image,
+//       description,
+//       features,
+//       startDate,
+//       endDate,
 
-    const data = {
-      name,
-      eventType,
-      location,
-      image,
-      description,
-      features,
-      startDate,
-      endDate,
-      userId,
-    };
+//     }: UpdateEventDTO = req.body;
 
-    const { id } = req.params;
-    const result = await eventRepository.updateEvent(id, data);
+//     const validate = await validationService.validateUpdateEvent(req.body);
+//     if (validate.error) {
+//       return next(new ErrorResponse("Error", 400, [validate.message]));
+//     }
 
-    if (result.error) {
-      return next(new ErrorResponse("Error", result.code!, [result.message]));
-    }
+//     const data = {
+//       name,
+//       eventType,
+//       location,
+//       image,
+//       description,
+//       features,
+//       startDate,
+//       endDate,
+//       userId,
+//     };
 
-    res.status(200).json({
-      error: false,
-      errors: [],
-      data: {
-        name: result.data.name,
-        eventType: result.data.eventType,
-        location: result.data.location,
-        image: result.data.image,
-        description: result.data.description,
-        features: result.data.features,
-        startDat: result.data.startDate,
-        endDate: result.data.endDate,
-        id: result.data._id,
-      },
-      message: result.message,
-      status: 200,
-    });
-  }
-);
+//     const { id } = req.params;
+//     const result = await eventRepository.updateEvent(id, data);
 
-/**
- * @name getEventById
- * @description Get event by ID
- * @route GET /events/:id
- * @access Public
- */
-export const getEventById = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
+//     if (result.error) {
+//       return next(new ErrorResponse("Error", result.code!, [result.message]));
+//     }
 
-    const event = await eventRepository.findById(id, true);
+//     res.status(200).json({
+//       error: false,
+//       errors: [],
+//       data: {
+//         name: result.data.name,
+//         eventType: result.data.eventType,
+//         location: result.data.location,
+//         image: result.data.image,
+//         description: result.data.description,
+//         features: result.data.features,
+//         startDat: result.data.startDate,
+//         endDate: result.data.endDate,
+//         id: result.data._id,
+//       },
+//       message: result.message,
+//       status: 200,
+//     });
+//   }
+// );
 
-    if (!event) {
-      return next(new ErrorResponse("Error", 404, ["Event not found"]));
-    }
+// /**
+//  * @name getEventById
+//  * @description Get event by ID
+//  * @route GET /events/:id
+//  * @access Public
+//  */
+// export const getEventById = asyncHandler(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const { id } = req.params;
 
-    res.status(200).json({
-      error: false,
-      errors: [],
-      data: {
-        name: event.name,
-        eventType: event.eventType,
-        location: event.location,
-        image: event.image,
-        description: event.description,
-        features: event.features,
-        startDate: event.startDate,
-        endDate: event.endDate,
-        id: event._id,
-      },
-      message: "Event fetched successfully.",
-      status: 200,
-    });
-  }
-);
+//     const event = await eventRepository.findById(id, true);
 
-/**
- * @name getUserEvents
- * @description Get all events for a specific user
- * @route GET /users/:userId/events
- * @access Public
- */
-export const getUserEvents = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { userId } = req.params;
+//     if (!event) {
+//       return next(new ErrorResponse("Error", 404, ["Event not found"]));
+//     }
 
-    const user = await userReposirtory.findById(userId);
-    if (!user) {
-      return next(new ErrorResponse("Error", 404, ["User not found"]));
-    }
+//     res.status(200).json({
+//       error: false,
+//       errors: [],
+//       data: {
+//         name: event.name,
+//         eventType: event.eventType,
+//         location: event.location,
+//         image: event.image,
+//         description: event.description,
+//         features: event.features,
+//         startDate: event.startDate,
+//         endDate: event.endDate,
+//         id: event._id,
+//       },
+//       message: "Event fetched successfully.",
+//       status: 200,
+//     });
+//   }
+// );
 
-    const result = await eventRepository.getUserEvents(user._id);
+// /**
+//  * @name getUserEvents
+//  * @description Get all events for a specific user
+//  * @route GET /users/:userId/events
+//  * @access Public
+//  */
+// export const getUserEvents = asyncHandler(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const { userId } = req.params;
 
-    res.status(200).json({
-      error: false,
-      errors: [],
-      data: {
-        events: result.data.map((event: IEventDoc) => ({
-          name: event.name,
-          eventType: event.eventType,
-          location: event.location,
-          image: event.image,
-          description: event.description,
-          features: event.features,
-          startDate: event.startDate,
-          endDate: event.endDate,
-          id: event._id,
-        })),
-      },
-      message: "User events fetched successfully.",
-      status: 200,
-    });
-  }
-);
+//     const user = await userReposirtory.findById(userId);
+//     if (!user) {
+//       return next(new ErrorResponse("Error", 404, ["User not found"]));
+//     }
 
-/**
- * @name getEvents
- * @description Get all events
- * @route GET /events
- * @access Public
- */
-export const getEvents = asyncHandler(async (_req: Request, res: Response) => {
-  const result = await eventRepository.getEvents();
+//     const result = await eventRepository.getUserEvents(user._id);
 
-  res.status(200).json({
-    error: false,
-    errors: [],
-    data: {
-      events: result.data.map((event: IEventDoc) => ({
-        name: event.name,
-        eventType: event.eventType,
-        location: event.location,
-        image: event.image,
-        description: event.description,
-        features: event.features,
-        startDate: event.startDate,
-        endDate: event.endDate,
-        id: event._id,
-      })),
-    },
-    message: "Events fetched successfully.",
-    status: 200,
-  });
-});
+//     res.status(200).json({
+//       error: false,
+//       errors: [],
+//       data: {
+//         events: result.data.map((event: IEventDoc) => ({
+//           name: event.name,
+//           eventType: event.eventType,
+//           location: event.location,
+//           image: event.image,
+//           description: event.description,
+//           features: event.features,
+//           startDate: event.startDate,
+//           endDate: event.endDate,
+//           id: event._id,
+//         })),
+//       },
+//       message: "User events fetched successfully.",
+//       status: 200,
+//     });
+//   }
+// );
+
+// /**
+//  * @name getEvents
+//  * @description Get all events
+//  * @route GET /events
+//  * @access Public
+//  */
+// export const getEvents = asyncHandler(async (_req: Request, res: Response) => {
+//   const result = await eventRepository.getEvents();
+
+//   res.status(200).json({
+//     error: false,
+//     errors: [],
+//     data: {
+//       events: result.data.map((event: IEventDoc) => ({
+//         name: event.name,
+//         eventType: event.eventType,
+//         location: event.location,
+//         image: event.image,
+//         description: event.description,
+//         features: event.features,
+//         startDate: event.startDate,
+//         endDate: event.endDate,
+//         id: event._id,
+//       })),
+//     },
+//     message: "Events fetched successfully.",
+//     status: 200,
+//   });
+// });
 
 /**
  * @name deleteEvent

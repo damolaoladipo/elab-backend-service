@@ -4,14 +4,23 @@ import { DbModelsType } from "../utils/enums.util";
 
 const EventSchema = new Schema<IEventDoc>(
   {
-    name: { type: String, required: true },
-    eventType: { type: String, required: true },
-    location: { type: String, required: true },
+    title: { type: String, required: true },
     image: { type: String, required: true },
-    description: { type: String, required: true },
+    content: {
+      type: { type: String, required: true },
+      content: String,
+      level: Number,
+      language: String,
+      src: String,
+      alt: String,
+      href: String,
+      items: [String],
+    },
     features: { type: [String], default: [] },
-    startDate: { type: Date, required: true },
-    endDate: { type: Date, required: true },
+    joinUrl: { type: String },
+    planUrl: { type: String },
+    sponsorUrl: { type: String },
+    communityUrl: { type: String },
     user: { type: Schema.Types.ObjectId, ref: DbModelsType.USER, index: true },
   },
   {

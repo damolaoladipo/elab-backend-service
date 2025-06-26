@@ -1,5 +1,5 @@
 import { Document, ObjectId } from "mongoose";
-import { EmailType, OtpType, PasswordType, TransactionsType, UserType } from "./enums.util";
+import { EmailType, OtpType, PasswordType, TransactionsType, UserType, WysiwygBlockType } from "./enums.util";
 
 export type Nullable<T> = T | null;
 export interface IRoleDoc extends Document {
@@ -174,15 +174,18 @@ export interface IEmailRequest {
 }
 
 
+// eLab Interfaces
+
 export interface IEventDoc extends Document {
-  name: string;
-  eventType: string; 
-  location: string;
-  image: string; //upload file
-  description: string;
-  features: Array<string>;
-  startDate: Date;
-  endDate: Date;
+  title: string;
+  image: string;
+  content: IWysiwygContent
+  features?: Array<string>;
+  joinUrl?: string;
+  planUrl?: string;
+  sponsorUrl?: string;
+  communityUrl?: string;
+
   //relationships
   user: IUserDoc | ObjectId;
   
@@ -198,10 +201,13 @@ export interface IEventDoc extends Document {
 // strings 
 
 export interface IProjectDoc extends Document {
-  name: string;
+  title: string;
   image: string;  //upload file
-  description: string;
-  startDate: Date;
+  content: IWysiwygContent
+  websiteUrl?: string;
+  volunteerUrl?: string;
+  partnerUrl?: string;
+  sponsorUrl?: string;
   
   //relationships
   user: IUserDoc | ObjectId;
@@ -218,15 +224,18 @@ export interface IProjectDoc extends Document {
 
 export interface IArchiveDoc extends Document {
   title: string;
-  image: string;  //upload file
-  excerpt?: string;
-  description?: string;
-  link?: string
-  content: string;
-  author: string;
-  category: string;
+  excerpt: string;
+  category: string;  // news, press release, insight or resource
+  image?: string;  //upload file
+  content?: IWysiwygContent
+  link?: string;
+  author?: string;
+  resoruceLink?: string // upload file
+  
   tags: Array<string>;
-  type: string; // news, press release or insight 
+  status: string; // published, draft, archived
+
+  type: string; 
 
   //relationships
   user: IUserDoc | ObjectId;
@@ -239,40 +248,30 @@ export interface IArchiveDoc extends Document {
   id: ObjectId;
 }
 
-
-
-//
-
-export interface IResourceDoc extends Document {
-  title: string;
-  image: string; //upload file
-  description: string;
-  resource: string; //upload file
-  type: string; 
-  author: string;
-  category: string;
-  tags: Array<string>;
-
-    //relationships
-  user: IUserDoc | ObjectId;
-  
-  // time stamps
-  createdAt: Date;
-  updatedAt: Date;
-  _version: number;
-  _id: ObjectId;
-  id: ObjectId;
+export interface IWysiwygContent {
+  type: WysiwygBlockType
+  content?: string; // for text-based blocks
+  level?: number; // for heading levels (e.g. h1 = 1, h2 = 2)
+  language?: string; // for code blocks (e.g. "javascript", "markdown")
+  src?: string; // for images
+  alt?: string;
+  href?: string; // for links
+  items?: string[]; // for list blocks
 }
 
 
-export interface ICompanyDoc extends Document {
+
+
+export interface IVentureDoc extends Document {
   name: string;
   description: string;
+  content: IWysiwygContent;
   logo: string;
   status: string;
-  url: string;
-  email: string;
-  brochure: string;
+  websiteUrl: string;
+  brochureUrl: string;
+  contact: string;
+  
   
   //relationships
   user: IUserDoc | ObjectId;

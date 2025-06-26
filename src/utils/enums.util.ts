@@ -33,6 +33,17 @@ export enum DbModelsType {
 }
 
 
+export enum WysiwygBlockType {
+  Paragraph = "paragraph",
+  Heading = "heading",
+  Blockquote = "blockquote",
+  Code = "code",
+  Image = "image",
+  List = "list",
+  Link = "link",
+}
+
+
 export enum PasswordType {
   USERGENERATED = "user-generated",
   SYSTEMGENERATED = "system-generated",

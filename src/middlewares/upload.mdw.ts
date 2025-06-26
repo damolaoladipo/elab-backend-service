@@ -24,69 +24,86 @@ const uploadFile = asyncHandler(
       return next();
     }
 
-    const bb = busboy({
+    const stream = busboy({
       headers: req.headers as IncomingHttpHeaders,
       limits: {
-        files: 10, 
-        fileSize: 100 * 1024 * 1024,
+        files: 10,
+        fileSize: 100 * 1024 * 1024, // 100MB
       },
     });
 
-    const uploadedFiles: UploadedFile[] = [];
+    
+    let hasFile = false;
+    let mimeType = "";
+    let fileName = "";
+    let fileSize = 0;
+    let fileInfo: FileInfo | null = null;
 
-    bb.on("file", (fieldname, file, info) => {
-      const passthrough = new PassThrough();
-      file.pipe(passthrough);
+    let uploadStream: PassThrough;
 
-      let fileSize = 0;
+
+    stream.on("file", (fieldname, file, info) => {
+      if (fieldname !== "file") {
+        file.resume();
+        return;
+      }
+
+      hasFile = true;
+      fileInfo = info;
+      mimeType = info.mimeType;
+      fileName = info.filename;
+
+      uploadStream = new PassThrough();
 
       file.on("data", (chunk) => {
+        uploadStream.write(chunk);
         fileSize += chunk.length;
+        console.log('file chunks', chunk.length)
       });
 
       file.on("end", () => {
-        passthrough.end();
-      });
+        uploadStream.end();
 
-      file.on("limit", () => {
-        passthrough.destroy();
-        return next(new Error(`File size limit reached for ${info.filename}`));
+        // Attach the final file metadata after stream ends
+        (req as any).file = {
+          stream: uploadStream,
+          fileName,
+          mimeType,
+          info: fileInfo,
+          size: fileSize,
+        };
+
+        console.log(`🟢 Finished streaming file: ${fileName}, size: ${fileSize} bytes`);
       });
 
       file.on("error", (err) => {
-        passthrough.destroy();
+        uploadStream?.destroy(err);
         return next(err);
       });
 
-      uploadedFiles.push({
-        stream: passthrough,
-        info,
-        mimeType: info.mimeType,
-        fileName: info.filename,
-        size: fileSize,
-        fieldname,
+      uploadStream.on("error", (err) => {
+        return next(err);
       });
+
     });
 
-    bb.on("field", (name, val) => {
+    stream.on("field", (name, val) => {
+      if (!req.body) req.body = {};
       req.body[name] = val;
     });
 
-    bb.on("finish", () => {
-      if (!uploadedFiles.length) {
-        return next(new Error("No files uploaded"));
+    stream.on("finish", () => {
+      if (!hasFile) {
+        return next(new Error("No file uploaded"));
       }
-
-      // Attach as req.files (array of files)
-      (req as any).files = uploadedFiles;
       next();
     });
 
-    bb.on("error", (err) => {
-      return next(err);
+    stream.on("error", (err) => {
+      next(err);
     });
 
-    req.pipe(bb);
+    req.pipe(stream);
   }
 );
 
