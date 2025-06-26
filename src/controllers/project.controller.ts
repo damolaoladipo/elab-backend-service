@@ -5,6 +5,7 @@ import validationService from "../services/validate.service";
 import { CreateProjectDTO, UpdateProjectDTO } from "../dtos/project.dto";
 import projectRepository from "../repositories/project.repository";
 import userReposirtory from "../repositories/user.reposirtory";
+import { uploadToS3AndSaveImage } from "../services/upload.service";
 
 
 /**
@@ -13,14 +14,18 @@ import userReposirtory from "../repositories/user.reposirtory";
  * @route POST /projects
  * @access Private
  */
+
 export const createProject = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req as any).user?._id;
+
     const {
-      name,
-      image,
-      description,
-      startDate,
-      user,
+      title,
+      content,
+      websiteUrl,
+      volunteerUrl,
+      partnerUrl,
+      sponsorUrl,
     }: CreateProjectDTO = req.body;
 
     const validate = await validationService.validateCreateProject(req.body);
@@ -29,24 +34,84 @@ export const createProject = asyncHandler(
     }
 
     const data = {
-      name,
-      image,
-      description,
-      startDate,
-      user,
+      title,
+      image: "",
+      content,
+      websiteUrl,
+      volunteerUrl,
+      partnerUrl,
+      sponsorUrl,
+      user: userId,
     };
 
     const project = await projectRepository.createProject(data);
+    if (project.error) {
+      return next(new ErrorResponse("Error", project.code!, [project.message]));
+    }
+
+    const imageFile = (req as any).file;
+    let imageUrl = "";
+
+    if (imageFile) {
+      const ImageData = {
+        stream: imageFile.stream,
+        mimeType: imageFile.mimeType,
+        originalFileName: imageFile.fileName,
+        eventId: project.data._id, // if you rename this entity, update key name
+      };
+
+      imageUrl = await uploadToS3AndSaveImage(ImageData);
+    }
+
+    if (imageUrl && imageUrl !== project.data.image) {
+      await projectRepository.updateProject(project.data._id, { image: imageUrl });
+      project.data.image = imageUrl;
+    }
 
     res.status(200).json({
       error: false,
       errors: [],
-      data: project,
+      data: project.data,
       message: "Project created successfully.",
       status: 200,
     });
   }
 );
+
+// export const createProject = asyncHandler(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const {
+//       name,
+//       image,
+//       description,
+//       startDate,
+//       user,
+//     }: CreateProjectDTO = req.body;
+
+//     const validate = await validationService.validateCreateProject(req.body);
+//     if (validate.error) {
+//       return next(new ErrorResponse("Error", 400, [validate.message]));
+//     }
+
+//     const data = {
+//       name,
+//       image,
+//       description,
+//       startDate,
+//       user,
+//     };
+
+//     const project = await projectRepository.createProject(data);
+
+//     res.status(200).json({
+//       error: false,
+//       errors: [],
+//       data: project,
+//       message: "Project created successfully.",
+//       status: 200,
+//     });
+//   }
+// );
 
 /**
  * @name updateProject
@@ -54,45 +119,72 @@ export const createProject = asyncHandler(
  * @route PATCH /projects/:id
  * @access Private
  */
+
 export const updateProject = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const projectId = req.params.id;
+
     const {
-      name,
-      image,
-      description,
-      startDate,
-      user,
+      title,
+      content,
+      websiteUrl,
+      volunteerUrl,
+      partnerUrl,
+      sponsorUrl,
     }: UpdateProjectDTO = req.body;
 
+    // Validate input
     const validate = await validationService.validateUpdateProject(req.body);
     if (validate.error) {
-      return next(new ErrorResponse("Error", 400, [validate.message]));
+      return next(new ErrorResponse("Validation Error", 400, [validate.message]));
     }
 
-    const data = {
-      name,
-      image,
-      description,
-      startDate,
-      user,
-    };
+    // Get current project
+    const existingProject = await projectRepository.findById(projectId);
+    if (!existingProject) {
+      return next(new ErrorResponse("Project not found", 404, ["Project not found"]));
+    }
 
-    const { id } = req.params;
-    const result = await projectRepository.updateProject(id, data);
+    // Handle image upload if present
+    let imageUrl = existingProject.image;
+    const imageFile = (req as any).files?.find(
+      (f: any) => f.fieldname === "file" || f.fieldname === "image"
+    );
 
-    if (result.error) {
-      return next(new ErrorResponse("Error", result.code!, [result.message]));
+    if (imageFile) {
+      imageUrl = await uploadToS3AndSaveImage({
+        stream: imageFile.stream,
+        mimeType: imageFile.mimeType,
+        originalFileName: imageFile.fileName,
+        eventId: existingProject._id.toString(),
+      });
+    }
+
+    // Update project
+    const updated = await projectRepository.updateProject(projectId, {
+      title,
+      content,
+      websiteUrl,
+      volunteerUrl,
+      partnerUrl,
+      sponsorUrl,
+      image: imageUrl,
+    });
+
+    if (updated.error) {
+      return next(new ErrorResponse("Update failed", 500, [updated.message]));
     }
 
     res.status(200).json({
       error: false,
       errors: [],
-      data: result.data,
-      message: result.message,
+      data: updated.data,
+      message: "Project updated successfully.",
       status: 200,
     });
   }
 );
+
 
 /**
  * @name getProjectById

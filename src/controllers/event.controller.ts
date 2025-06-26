@@ -6,7 +6,7 @@ import { CreateEventDTO, UpdateEventDTO } from "../dtos/event.dto";
 import eventRepository from "../repositories/event.repository";
 import userReposirtory from "../repositories/user.reposirtory";
 import { IEventDoc } from "../utils/interface.util";
-import { uploadToS3AndSaveImage } from "../services/uploadService.mdw";
+import { uploadToS3AndSaveImage } from "../services/upload.service";
 
 /**
  * @name createEvent
@@ -17,9 +17,9 @@ import { uploadToS3AndSaveImage } from "../services/uploadService.mdw";
 export const createEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req as any).user?._id;
-    // if (!userId) {
-    //   return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
-    // }
+    if (!userId) {
+      return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
+    }
 
     const {
       title,
@@ -45,6 +45,7 @@ export const createEvent = asyncHandler(
       planUrl,
       sponsorUrl,
       communityUrl,
+      user: userId,
     };
 
     const event = await eventRepository.createEvent(data);

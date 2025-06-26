@@ -1,13 +1,17 @@
+// models/Project.model.ts
 import mongoose, { Schema, Model } from "mongoose";
-import { IProject } from "../utils/interface.util";
+import { IProjectDoc } from "../utils/interface.util";
 import { DbModelsType } from "../utils/enums.util";
 
-const ProjectSchema = new Schema<IProject>(
+const ProjectSchema = new Schema<IProjectDoc>(
   {
-    name: { type: String, required: true },
-    image: { type: String, required: true },
-    description: { type: String, required: true },
-    startDate: { type: Date, required: true },
+    title: { type: String, required: true },
+    image: { type: String },
+    content: { type: Object, required: true },
+    websiteUrl: { type: String },
+    volunteerUrl: { type: String },
+    partnerUrl: { type: String },
+    sponsorUrl: { type: String },
     user: { type: Schema.Types.ObjectId, ref: DbModelsType.USER, index: true },
   },
   {
@@ -22,7 +26,7 @@ const ProjectSchema = new Schema<IProject>(
   }
 );
 
-const Project: Model<IProject> = mongoose.model<IProject>(
+const Project: Model<IProjectDoc> = mongoose.model<IProjectDoc>(
   DbModelsType.PROJECT,
   ProjectSchema
 );
