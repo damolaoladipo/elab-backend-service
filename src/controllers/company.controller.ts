@@ -4,7 +4,7 @@ import ErrorResponse from "../utils/error.util";
 import validationService from "../services/validate.service";
 import { CreateCompanyDTO, UpdateCompanyDTO } from "../dtos/company.dto";
 import companyRepository from "../repositories/company.repository";
-import userReposirtory from "../repositories/user.reposirtory";
+import userReposirtory from "../repositories/user.repository";
 
 /**
  * @name createCompany

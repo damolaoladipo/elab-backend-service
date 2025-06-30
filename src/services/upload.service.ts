@@ -20,7 +20,7 @@ interface UploadImageOptions {
   stream: PassThrough;
   mimeType: string;
   originalFileName: string;
-  eventId: string;
+  refId: string;
 }
 
 /**
@@ -34,7 +34,7 @@ interface UploadImageOptions {
 export const uploadToS3AndSaveImage = async (
   data: UploadImageOptions
 ): Promise<string> => {
-  const { stream, mimeType, originalFileName, eventId } = data;
+  const { stream, mimeType, originalFileName, refId } = data;
 
   // 1. Validate supported image types
   const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];

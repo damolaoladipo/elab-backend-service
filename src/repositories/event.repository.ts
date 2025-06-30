@@ -1,4 +1,4 @@
-import { FilterQuery, Model } from "mongoose";
+import { FilterQuery, Model, ObjectId } from "mongoose";
 import { IEventDoc, IResult } from "../utils/interface.util";
 import Event from "../models/Event.model";
 
@@ -42,16 +42,33 @@ class EventRepository {
  * @returns {Promise<IResult>}
  * @description Get all events created by a specific user
  */
-public async getUserEvents(userId: string | Object): Promise<IResult> {
-  let result: IResult = { error: false, message: "", code: 200, data: {} };
+public async getUserEvents(userId: string | ObjectId): Promise<IResult> {
+  const result: IResult = {
+    error: false,
+    message: "User events fetched successfully",
+    code: 200,
+    data: [],
+  };
 
-  const events = await this.model.find({ user: userId }).lean();
+  const events = await this.model
+    .find({ user: userId })
+    .populate({
+      path: "user",
+      select: "_id name email",
+    })
+    .sort({ createdAt: -1 });
 
-  result.data = events;
+  if (!events || events.length === 0) {
+    result.error = true;
+    result.message = "No events found";
+    result.code = 404;
+    result.data = [];
+  } else {
+    result.data = events;
+  }
 
   return result;
 }
-
 
   /**
    * @name getEvents

@@ -4,7 +4,7 @@ import ErrorResponse from "../utils/error.util";
 import validationService from "../services/validate.service";
 import { CreateResourceDTO, UpdateResourceDTO } from "../dtos/resource.dto";
 import resourceRepository from "../repositories/resource.repository";
-import userReposirtory from "../repositories/user.reposirtory";
+import userReposirtory from "../repositories/user.repository";
 
 
 /**

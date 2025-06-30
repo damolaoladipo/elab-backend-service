@@ -4,9 +4,12 @@ import ErrorResponse from "../utils/error.util";
 import validationService from "../services/validate.service";
 import { CreateEventDTO, UpdateEventDTO } from "../dtos/event.dto";
 import eventRepository from "../repositories/event.repository";
-import userReposirtory from "../repositories/user.reposirtory";
-import { IEventDoc } from "../utils/interface.util";
+import userRepository from "../repositories/user.repository";
+import { IEventDoc, IWysiwygContent } from "../utils/interface.util";
 import { uploadToS3AndSaveImage } from "../services/upload.service";
+import User from "../models/User.model";
+
+
 
 /**
  * @name createEvent
@@ -16,7 +19,8 @@ import { uploadToS3AndSaveImage } from "../services/upload.service";
  */
 export const createEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const userId = (req as any).user?._id;
+      
+    const userId = (req as any).user?.id;
     if (!userId) {
       return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
     }
@@ -30,6 +34,7 @@ export const createEvent = asyncHandler(
       sponsorUrl,
       communityUrl,
     }: CreateEventDTO = req.body;
+
 
     const validate = await validationService.validateCreateEvent(req.body);
     if (validate.error) {
@@ -64,7 +69,7 @@ export const createEvent = asyncHandler(
       stream: imageFile.stream,
       mimeType: imageFile.mimeType,
       originalFileName: imageFile.fileName,
-      eventId: event.data._id,
+      refId: event.data._id,
     };
 
     if (imageFile) {
@@ -74,6 +79,8 @@ export const createEvent = asyncHandler(
       await eventRepository.updateEvent(event.data._id, { image: imageUrl });
       event.data.image = imageUrl;
     }
+
+    console.log("Event created:", event.data);
 
     res.status(200).json({
       error: false,
@@ -104,6 +111,12 @@ export const createEvent = asyncHandler(
  */
 export const updateEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
+    }
+
     const eventId = req.params.id;
     if (!eventId) {
       return next(new ErrorResponse("Event ID is required", 400, []));
@@ -125,7 +138,20 @@ export const updateEvent = asyncHandler(
       return next(new ErrorResponse(existingEvent.message, 404, []));
     }
 
-    const validate = await validationService.validateCreateEvent({
+    //   const contentParseResult = validationService.parseAndValidateContent(rawContent);
+    // if (contentParseResult.error) {
+    //   return next(new ErrorResponse("Error", 400, [contentParseResult.message]));
+    // }
+    // const parsedContent = contentParseResult.data || [];
+
+    //  const featuresParseResult = validationService.parseAndValidateFeatures(rawFeatures);
+    // if (featuresParseResult.error) {
+    //   return next(new ErrorResponse("Error", 400, [featuresParseResult.message]));
+    // }
+    // const parsedFeatures = featuresParseResult.data || [];
+    
+
+    const validate = await validationService.validateUpdateEvent({
       title,
       content,
       features,
@@ -155,7 +181,7 @@ export const updateEvent = asyncHandler(
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
-        eventId: existingEvent.data._id.toString(),
+        refId: existingEvent.data._id.toString(),
       };
 
       const imageUrl = await uploadToS3AndSaveImage(ImageData);
@@ -228,36 +254,89 @@ export const getEventById = asyncHandler(
  */
 export const getUserEvents = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { userId } = req.params;
+    const userId = req.params.userId;
 
-    const user = await userReposirtory.findById(userId);
-    if (!user) {
-      return next(new ErrorResponse("Error", 404, ["User not found"]));
+    if (!userId) {
+      return next(new ErrorResponse("Unauthorized", 401, ["Unauthorized user"]));
     }
 
-    const result = await eventRepository.getUserEvents(user._id);
+    // Check if user exists
+    // const user = await userRepository.findById(userId);
+    // if (!user) {
+    //   return next(new ErrorResponse("User not found", 404, ["User not found"]));
+    // }
+
+     const user = await User.findById(userId).lean();
+
+    if (!user) {
+      return next(new ErrorResponse("User not found", 404, ["User not found"]));
+    }
+
+
+    // Fetch user events with populated user data
+     const result = await eventRepository.getUserEvents(userId);
+
+    if (result.error) {
+      return next(new ErrorResponse(result.message, result.code, []));
+    }
 
     res.status(200).json({
       error: false,
       errors: [],
-      data: {
-        events: result.data.map((event: IEventDoc) => ({
-          title: event.title,
-          content: event.content,
-          image: event.image,
-          features: event.features,
-          joinUrl: event.joinUrl,
-          planUrl: event.planUrl,
-          sponsorUrl: event.sponsorUrl,
-          communityUrl: event.communityUrl,
-          id: event._id,
-        })),
-      },
-      message: "User events fetched successfully.",
+      data: result.data.map((event: IEventDoc) => ({
+        id: event._id,
+        title: event.title,
+        content: event.content,
+        image: event.image,
+        features: event.features,
+        joinUrl: event.joinUrl,
+        planUrl: event.planUrl,
+        sponsorUrl: event.sponsorUrl,
+        communityUrl: event.communityUrl,
+        user: event.user,
+      })),
+      message: "User events fetched successfully",
       status: 200,
     });
   }
 );
+
+// export const getUserEvents = asyncHandler(
+//   async (req: Request, res: Response, next: NextFunction) => {
+    
+//     const userId = req.params.userId;
+//     if (!userId) {
+//       return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
+//     }
+
+//     const user = await userReposirtory.findById(userId);
+//     if (!user) {
+//       return next(new ErrorResponse("Error", 404, ["User not found"]));
+//     }
+
+//     const result = await eventRepository.getUserEvents(userId);
+
+//     res.status(200).json({
+//       error: false,
+//       errors: [],
+//       data: {
+//         events: result.data.map((event: IEventDoc) => ({
+//           title: event.title,
+//           content: event.content,
+//           image: event.image,
+//           features: event.features,
+//           joinUrl: event.joinUrl,
+//           planUrl: event.planUrl,
+//           sponsorUrl: event.sponsorUrl,
+//           communityUrl: event.communityUrl,
+//           id: event._id,
+//         })),
+//       },
+//       message: "User events fetched successfully.",
+//       status: 200,
+//     });
+//   }
+// );
 
 
 /**

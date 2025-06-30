@@ -4,7 +4,7 @@ import ErrorResponse from "../utils/error.util";
 import validationService from "../services/validate.service";
 import { CreateArchiveDTO, UpdateArchiveDTO } from "../dtos/archive.dto";
 import archiveRepository from "../repositories/archive.repository";
-import userReposirtory from "../repositories/user.reposirtory";
+import userReposirtory from "../repositories/user.repository";
 
 
 /**

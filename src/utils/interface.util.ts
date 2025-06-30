@@ -179,7 +179,7 @@ export interface IEmailRequest {
 export interface IEventDoc extends Document {
   title: string;
   image: string;
-  content: IWysiwygContent
+  content: IWysiwygContent[]
   features?: Array<string>;
   joinUrl?: string;
   planUrl?: string;
