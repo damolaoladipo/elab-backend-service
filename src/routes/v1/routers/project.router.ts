@@ -13,7 +13,7 @@ import Protect from "../../../middlewares/checkAuth.mdw";
 const projectRouter = Router({ mergeParams: true });
 
 projectRouter.post("/", Protect, uploadFile, createProject);
-projectRouter.patch("/:id", Protect, uploadFile, updateProject);
+projectRouter.put("/:id", Protect, uploadFile, updateProject);
 projectRouter.delete("/:id", Protect, deleteProject);
 projectRouter.get("/", Protect, getProjects);
 projectRouter.get("/:id", Protect, getProjectById);
