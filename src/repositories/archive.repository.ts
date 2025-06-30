@@ -9,23 +9,38 @@ class ArchiveRepository {
     this.model = Archive;
   }
 
-  public async findById(
-    id: string,
-    populate: boolean = false
-  ): Promise<IArchiveDoc | null> {
-    const dataPop = [{ path: "user" }];
-    const pop = populate ? dataPop : [];
+ public async findById(id: string | ObjectId): Promise<IResult> {
+    const result: IResult = {
+      error: false,
+      message: "",
+      code: 200,
+      data: {},
+    };
 
-    const query: FilterQuery<IArchiveDoc> = { _id: id };
+    try {
+      const archive = await this.model.findById(id).lean();
 
-    const archive = await this.model.findById(query).populate(pop); 
-    if (!archive) {
-        
-      return null;
+      if (!archive) {
+        result.error = true;
+        result.message = "Archive not found";
+        result.code = 404;
+        return result;
+      }
+
+      result.message = "Archive found";
+      result.data = archive;
+      return result;
+    } catch (error: any) {
+      return {
+        error: true,
+        message: error.message || "Error fetching archive",
+        code: 500,
+        data: {},
+      };
     }
-
-    return archive;
   }
+
+
 
   public async getArchives(): Promise<IResult> {
     let result: IResult = { error: false, message: "", code: 200, data: {} };

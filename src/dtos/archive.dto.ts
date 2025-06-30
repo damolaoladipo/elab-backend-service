@@ -1,29 +1,23 @@
-import { ObjectId } from "mongoose";
+import { IWysiwygContent } from "../utils/interface.util";
 
 export interface CreateArchiveDTO {
   title: string;
-  image: string;
-  excerpt?: string;
-  description?: string;
-  link?: string;
-  content: string;
-  author: string;
+  excerpt: string;
   category: string;
-  tags?: Array<string>;
-  type: string;
-  user: ObjectId;
+  content?: IWysiwygContent;
+  link?: string;
+  author?: string;
+  tags: Array<string>;
+  status: string
 }
 
 export interface UpdateArchiveDTO {
   title?: string;
-  image?: string;
   excerpt?: string;
-  description?: string;
-  link?: string;
-  content?: string;
-  author?: string;
   category?: string;
+  content?: IWysiwygContent;
+  link?: string;
+  author?: string;
   tags?: Array<string>;
-  type?: string;
-  user?: ObjectId;
+  status?: string
 }

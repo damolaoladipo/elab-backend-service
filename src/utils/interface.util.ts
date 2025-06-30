@@ -230,12 +230,10 @@ export interface IArchiveDoc extends Document {
   content?: IWysiwygContent
   link?: string;
   author?: string;
-  resoruceLink?: string // upload file
+  resourceLink?: string // upload file
   
   tags: Array<string>;
-  status: string; // published, draft, archived
-
-  type: string; 
+  status: string; // published, draft, archived 
 
   //relationships
   user: IUserDoc | ObjectId;

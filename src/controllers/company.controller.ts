@@ -5,6 +5,7 @@ import validationService from "../services/validate.service";
 import { CreateCompanyDTO, UpdateCompanyDTO } from "../dtos/company.dto";
 import companyRepository from "../repositories/company.repository";
 import userReposirtory from "../repositories/user.repository";
+import { uploadToS3AndSaveImage } from "../services/upload.service";
 
 /**
  * @name createCompany
@@ -17,41 +18,75 @@ export const createCompany = asyncHandler(
     const {
       name,
       description,
-      logo,
       status,
       url,
       email,
-      brochure,
-      user
     }: CreateCompanyDTO = req.body;
 
     const validate = await validationService.validateCreateCompany(req.body);
     if (validate.error) {
-      return next(new ErrorResponse("Error", 400, [validate.message]));
+      return next(new ErrorResponse("Validation error", 400, [validate.message]));
     }
 
     const data = {
       name,
       description,
-      logo,
       status,
       url,
       email,
-      brochure,
-      user
+      logo: "",
+      brochure: "",
     };
 
-    const result = await companyRepository.createCompany(data);
+    const company = await companyRepository.createCompany(data);
+    if (company.error) {
+      return next(new ErrorResponse("Creation failed", company.code!, [company.message]));
+    }
+
+    // Upload logo and brochure if present
+    const logoFile = (req as any).files?.find((f: any) => f.fieldname === "logo");
+    const brochureFile = (req as any).files?.find((f: any) => f.fieldname === "brochure");
+
+    let logoUrl = "";
+    let brochureUrl = "";
+
+    if (logoFile) {
+      logoUrl = await uploadToS3AndSaveImage({
+        stream: logoFile.stream,
+        mimeType: logoFile.mimeType,
+        originalFileName: logoFile.fileName,
+        refId: company.data._id,
+      });
+    }
+
+    if (brochureFile) {
+      brochureUrl = await uploadToS3AndSaveImage({
+        stream: brochureFile.stream,
+        mimeType: brochureFile.mimeType,
+        originalFileName: brochureFile.fileName,
+        refId: company.data._id,
+      });
+    }
+
+    await companyRepository.updateCompany(company.data._id, {
+      logo: logoUrl,
+      brochure: brochureUrl,
+    });
 
     res.status(200).json({
       error: false,
       errors: [],
-      data: result.data,
-      message: result.message,
-      status: 200
+      data: {
+        ...company.data,
+        logo: logoUrl,
+        brochure: brochureUrl,
+      },
+      message: "Company created successfully.",
+      status: 201,
     });
   }
 );
+
 
 /**
  * @name updateCompany
@@ -61,49 +96,74 @@ export const createCompany = asyncHandler(
  */
 export const updateCompany = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const companyId = req.params.id;
+
     const {
       name,
       description,
-      logo,
       status,
       url,
       email,
-      brochure,
-      user
-    }: UpdateCompanyDTO = req.body;
+    }: Partial<CreateCompanyDTO> = req.body;
 
     const validate = await validationService.validateUpdateCompany(req.body);
     if (validate.error) {
-      return next(new ErrorResponse("Error", 400, [validate.message]));
+      return next(new ErrorResponse("Validation error", 400, [validate.message]));
     }
 
-    const data = {
+    const existing = await companyRepository.findById(companyId);
+    if (!existing || existing.error) {
+      return next(new ErrorResponse("Company not found", 404, [existing?.message || "Not found"]));
+    }
+
+    let logoUrl = existing.data.logo;
+    let brochureUrl = existing.data.brochure;
+
+    const logoFile = (req as any).files?.find((f: any) => f.fieldname === "logo");
+    const brochureFile = (req as any).files?.find((f: any) => f.fieldname === "brochure");
+
+    if (logoFile) {
+      logoUrl = await uploadToS3AndSaveImage({
+        stream: logoFile.stream,
+        mimeType: logoFile.mimeType,
+        originalFileName: logoFile.fileName,
+        refId: existing.data._id,
+      });
+    }
+
+    if (brochureFile) {
+      brochureUrl = await uploadToS3AndSaveImage({
+        stream: brochureFile.stream,
+        mimeType: brochureFile.mimeType,
+        originalFileName: brochureFile.fileName,
+        refId: existing.data._id,
+      });
+    }
+
+    const updated = await companyRepository.updateCompany(companyId, {
       name,
       description,
-      logo,
       status,
       url,
       email,
-      brochure,
-      user
-    };
+      logo: logoUrl,
+      brochure: brochureUrl,
+    });
 
-    const { id } = req.params;
-    const result = await companyRepository.updateCompany(id, data);
-
-    if (result.error) {
-      return next(new ErrorResponse("Error", result.code!, [result.message]));
+    if (updated.error) {
+      return next(new ErrorResponse("Update failed", 500, [updated.message]));
     }
 
     res.status(200).json({
       error: false,
       errors: [],
-      data: result.data,
-      message: result.message,
-      status: 200
+      data: updated.data,
+      message: "Company updated successfully.",
+      status: 200,
     });
   }
 );
+
 
 /**
  * @name getCompanyById
@@ -131,32 +191,7 @@ export const getCompanyById = asyncHandler(
   }
 );
 
-/**
- * @name getUserCompanies
- * @description Get all companies for a specific user
- * @route GET /users/:userId/companies
- * @access Public
- */
-export const getUserCompanies = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { userId } = req.params;
 
-    const user = await userReposirtory.findById(userId);
-    if (!user) {
-      return next(new ErrorResponse("Error", 404, ["User not found"]));
-    }
-
-    const result = await companyRepository.getUserCompanies(user._id);
-
-    res.status(200).json({
-      error: false,
-      errors: [],
-      data: result.data,
-      message: "User companies fetched successfully.",
-      status: 200
-    });
-  }
-);
 
 /**
  * @name getCompanies
