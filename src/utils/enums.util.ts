@@ -102,6 +102,15 @@ export enum EmailStatus {
   CLICKED = 'clicked'
 }
 
+export enum TransactionStatus {
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  REFUNDED = 'refunded',
+  CANCELLED = 'cancelled'
+}
+
+
 
 export enum EmailType {
   TRANSACTIONAL = 'transactional',

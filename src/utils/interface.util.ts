@@ -303,3 +303,60 @@ export interface IStoreDoc extends Document {
   _id: ObjectId;
   id: ObjectId;
 }
+
+export interface ITra extends Document {
+  
+  storeItem: IStoreDoc | ObjectId;
+  reference: string;
+  amount: number;
+  status: TransactionsType
+  paidAt?: Date;
+
+  // relationships
+  user: ObjectId | any;
+    // time stamps
+  createdAt: Date;
+  updatedAt: Date;
+  _version: number;
+  _id: ObjectId;
+  id: ObjectId;
+}
+
+
+export interface ITransactionDoc extends Document {
+  type: TransactionsType;
+  medium: string;
+  resource: string;
+  entity: string;
+  reference: string;
+  currency: string;
+  providerRef: string;
+  providerName: string;
+  description: string;
+  narration: string;
+  amount: number;
+  unitAmount: number; // kobo unit * 100
+  fee: number;
+  unitFee: number; // kobo unit * 100
+  status: string;
+  reason: string;
+  message: string;
+  providerData: Array<Record<string, any>>;
+  metadata: Array<Record<string, any>>;
+  channel: string;
+  slug: string;
+  card: IDebitCard;
+
+  // relationships
+  user: ObjectId | any;
+
+  // timestamps
+  createdAt: string;
+  updatedAt: string;
+  _versions: number;
+  _id: ObjectId;
+  id: ObjectId;
+
+  // functions
+  getAll(): Array<ITransactionDoc>;
+}
