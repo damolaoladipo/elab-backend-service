@@ -4,8 +4,7 @@ import ErrorResponse from "../utils/error.util";
 import validationService from "../services/validate.service";
 import { CreateCompanyDTO, UpdateCompanyDTO } from "../dtos/company.dto";
 import companyRepository from "../repositories/company.repository";
-import userReposirtory from "../repositories/user.repository";
-import { uploadToS3AndSaveImage } from "../services/upload.service";
+import uploadService from "../services/upload.service";
 
 /**
  * @name createCompany
@@ -51,7 +50,7 @@ export const createCompany = asyncHandler(
     let brochureUrl = "";
 
     if (logoFile) {
-      logoUrl = await uploadToS3AndSaveImage({
+      logoUrl = await uploadService.uploadFile({
         stream: logoFile.stream,
         mimeType: logoFile.mimeType,
         originalFileName: logoFile.fileName,
@@ -60,7 +59,7 @@ export const createCompany = asyncHandler(
     }
 
     if (brochureFile) {
-      brochureUrl = await uploadToS3AndSaveImage({
+      brochureUrl = await uploadService.uploadFile({
         stream: brochureFile.stream,
         mimeType: brochureFile.mimeType,
         originalFileName: brochureFile.fileName,
@@ -123,7 +122,7 @@ export const updateCompany = asyncHandler(
     const brochureFile = (req as any).files?.find((f: any) => f.fieldname === "brochure");
 
     if (logoFile) {
-      logoUrl = await uploadToS3AndSaveImage({
+      logoUrl = await uploadService.uploadFile({
         stream: logoFile.stream,
         mimeType: logoFile.mimeType,
         originalFileName: logoFile.fileName,
@@ -132,7 +131,7 @@ export const updateCompany = asyncHandler(
     }
 
     if (brochureFile) {
-      brochureUrl = await uploadToS3AndSaveImage({
+      brochureUrl = await uploadService.uploadFile({
         stream: brochureFile.stream,
         mimeType: brochureFile.mimeType,
         originalFileName: brochureFile.fileName,

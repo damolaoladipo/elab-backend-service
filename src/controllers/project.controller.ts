@@ -5,7 +5,8 @@ import validationService from "../services/validate.service";
 import { CreateProjectDTO, UpdateProjectDTO } from "../dtos/project.dto";
 import projectRepository from "../repositories/project.repository";
 import userReposirtory from "../repositories/user.repository";
-import { uploadToS3AndSaveImage } from "../services/upload.service";
+import uploadService from "../services/upload.service";
+
 
 
 /**
@@ -63,7 +64,7 @@ export const createProject = asyncHandler(
         refId: project.data._id,
       };
 
-      imageUrl = await uploadToS3AndSaveImage(ImageData);
+      imageUrl = await uploadService.uploadFile(ImageData);
     }
 
     if (imageUrl && imageUrl !== project.data.image) {
@@ -130,7 +131,7 @@ export const updateProject = asyncHandler(
     );
 
     if (imageFile) {
-      imageUrl = await uploadToS3AndSaveImage({
+      imageUrl = await uploadService.uploadFile({
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,

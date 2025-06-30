@@ -2,11 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import asyncHandler from "../middlewares/async.mdw";
 import ErrorResponse from "../utils/error.util";
 import validationService from "../services/validate.service";
-import { CreateEventDTO, UpdateEventDTO } from "../dtos/event.dto";
+import { CreateEventDTO } from "../dtos/event.dto";
 import eventRepository from "../repositories/event.repository";
-import userRepository from "../repositories/user.repository";
-import { IEventDoc, IWysiwygContent } from "../utils/interface.util";
-import { uploadToS3AndSaveImage } from "../services/upload.service";
+import uploadService from "../services/upload.service";
+import { IEventDoc } from "../utils/interface.util";
 import User from "../models/User.model";
 
 
@@ -73,7 +72,7 @@ export const createEvent = asyncHandler(
     };
 
     if (imageFile) {
-      imageUrl = await uploadToS3AndSaveImage(ImageData);
+      imageUrl = await uploadService.uploadFile(ImageData);
     }
     if (imageUrl && imageUrl !== event.data.image) {
       await eventRepository.updateEvent(event.data._id, { image: imageUrl });
@@ -184,7 +183,7 @@ export const updateEvent = asyncHandler(
         refId: existingEvent.data._id.toString(),
       };
 
-      const imageUrl = await uploadToS3AndSaveImage(ImageData);
+      const imageUrl = await uploadService.uploadFile(ImageData);
       updateData.image = imageUrl;
     }
 

@@ -4,7 +4,7 @@ import ErrorResponse from "../utils/error.util";
 import validationService from "../services/validate.service";
 import { CreateArchiveDTO, UpdateArchiveDTO } from "../dtos/archive.dto";
 import archiveRepository from "../repositories/archive.repository";
-import { uploadToS3AndSaveImage } from "../services/upload.service";
+import uploadService from "../services/upload.service";
 import userRepository from "../repositories/user.repository";
 
 
@@ -62,7 +62,7 @@ export const createArchive = asyncHandler(
     let resourceUrl = "";
 
     if (imageFile) {
-      imageUrl = await uploadToS3AndSaveImage({
+      imageUrl = await uploadService.uploadFile({
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
@@ -71,7 +71,7 @@ export const createArchive = asyncHandler(
     }
 
     if (resourceFile) {
-      resourceUrl = await uploadToS3AndSaveImage({
+      resourceUrl = await uploadService.uploadFile({
         stream: resourceFile.stream,
         mimeType: resourceFile.mimeType,
         originalFileName: resourceFile.fileName,
@@ -135,7 +135,7 @@ export const updateArchive = asyncHandler(
     const resourceFile = files.find((f: any) => f.fieldname === "resourceLink");
 
     if (imageFile) {
-      imageUrl = await uploadToS3AndSaveImage({
+      imageUrl = await uploadService.uploadFile({
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
@@ -144,7 +144,7 @@ export const updateArchive = asyncHandler(
     }
 
     if (resourceFile) {
-      resourceUrl = await uploadToS3AndSaveImage({
+      resourceUrl = await uploadService.uploadFile({
         stream: resourceFile.stream,
         mimeType: resourceFile.mimeType,
         originalFileName: resourceFile.fileName,

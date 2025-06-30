@@ -197,9 +197,6 @@ export interface IEventDoc extends Document {
   id: ObjectId;
 }
 
-// array of objects
-// strings 
-
 export interface IProjectDoc extends Document {
   title: string;
   image: string;  //upload file
@@ -271,6 +268,31 @@ export interface IVentureDoc extends Document {
   contact: string;
   
   
+  //relationships
+  user: IUserDoc | ObjectId;
+  
+  // time stamps
+  createdAt: Date;
+  updatedAt: Date;
+  _version: number;
+  _id: ObjectId;
+  id: ObjectId;
+}
+
+export interface IStoreDoc extends Document {
+  name: string;
+  price: number;
+  discountedPrice?: number;
+  image: string; //upload file
+  tags: Array<string>;
+  category: string; // e.g. "merch", "ebook", "courses"
+
+  author?: string; // for ebooks or courses
+  excerpt?: string; // short description or summary
+  description: string;
+  url: string;
+  status: string;
+    
   //relationships
   user: IUserDoc | ObjectId;
   
