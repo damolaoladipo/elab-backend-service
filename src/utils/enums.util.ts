@@ -28,6 +28,7 @@ export enum DbModelsType {
   RESOURCE = "resource",
   ROLE = "role",
   SUBSCRIPTION = "subscription",
+  STORE = "store",
   TRANSACTION = "transaction",
   USER = "user",
 }
@@ -100,6 +101,15 @@ export enum EmailStatus {
   OPENED = 'opened',
   CLICKED = 'clicked'
 }
+
+export enum TransactionStatus {
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  REFUNDED = 'refunded',
+  CANCELLED = 'cancelled'
+}
+
 
 
 export enum EmailType {

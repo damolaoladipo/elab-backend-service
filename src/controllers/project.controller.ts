@@ -4,8 +4,9 @@ import ErrorResponse from "../utils/error.util";
 import validationService from "../services/validate.service";
 import { CreateProjectDTO, UpdateProjectDTO } from "../dtos/project.dto";
 import projectRepository from "../repositories/project.repository";
-import userReposirtory from "../repositories/user.reposirtory";
-import { uploadToS3AndSaveImage } from "../services/upload.service";
+import userReposirtory from "../repositories/user.repository";
+import uploadService from "../services/upload.service";
+
 
 
 /**
@@ -17,7 +18,10 @@ import { uploadToS3AndSaveImage } from "../services/upload.service";
 
 export const createProject = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const userId = (req as any).user?._id;
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return next(new ErrorResponse("Unauthorized", 401, ["Unauthorized user"]));
+    }
 
     const {
       title,
@@ -57,10 +61,10 @@ export const createProject = asyncHandler(
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
-        eventId: project.data._id, // if you rename this entity, update key name
+        refId: project.data._id,
       };
 
-      imageUrl = await uploadToS3AndSaveImage(ImageData);
+      imageUrl = await uploadService.uploadFile(ImageData);
     }
 
     if (imageUrl && imageUrl !== project.data.image) {
@@ -71,47 +75,22 @@ export const createProject = asyncHandler(
     res.status(200).json({
       error: false,
       errors: [],
-      data: project.data,
+      data: {
+        id: project.data._id,
+        title: project.data.title,
+        content: project.data.content,
+        image: project.data.image,
+        websiteUrl: project.data.websiteUrl,
+        volunteerUrl: project.data.volunteerUrl,
+        partnerUrl: project.data.partnerUrl,
+        sponsorUrl: project.data.sponsorUrl,
+      },
       message: "Project created successfully.",
       status: 200,
     });
   }
 );
 
-// export const createProject = asyncHandler(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     const {
-//       name,
-//       image,
-//       description,
-//       startDate,
-//       user,
-//     }: CreateProjectDTO = req.body;
-
-//     const validate = await validationService.validateCreateProject(req.body);
-//     if (validate.error) {
-//       return next(new ErrorResponse("Error", 400, [validate.message]));
-//     }
-
-//     const data = {
-//       name,
-//       image,
-//       description,
-//       startDate,
-//       user,
-//     };
-
-//     const project = await projectRepository.createProject(data);
-
-//     res.status(200).json({
-//       error: false,
-//       errors: [],
-//       data: project,
-//       message: "Project created successfully.",
-//       status: 200,
-//     });
-//   }
-// );
 
 /**
  * @name updateProject
@@ -152,11 +131,11 @@ export const updateProject = asyncHandler(
     );
 
     if (imageFile) {
-      imageUrl = await uploadToS3AndSaveImage({
+      imageUrl = await uploadService.uploadFile({
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
-        eventId: existingProject._id.toString(),
+        refId: existingProject._id.toString(),
       });
     }
 
@@ -227,7 +206,7 @@ export const getUserProjects = asyncHandler(
       return next(new ErrorResponse("Error", 404, ["User not found"]));
     }
 
-    const result = await projectRepository.getUserProjects(user._id);
+    const result = await projectRepository.getUserProjects(userId);
 
     res.status(200).json({
       error: false,

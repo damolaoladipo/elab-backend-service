@@ -4,7 +4,9 @@ import ErrorResponse from "../utils/error.util";
 import validationService from "../services/validate.service";
 import { CreateArchiveDTO, UpdateArchiveDTO } from "../dtos/archive.dto";
 import archiveRepository from "../repositories/archive.repository";
-import userReposirtory from "../repositories/user.reposirtory";
+import uploadService from "../services/upload.service";
+import userRepository from "../repositories/user.repository";
+
 
 
 /**
@@ -15,50 +17,84 @@ import userReposirtory from "../repositories/user.reposirtory";
  */
 export const createArchive = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req as any).user?.id;
+
     const {
       title,
-      image,
       excerpt,
-      description,
-      link,
-      content,
-      author,
       category,
+      content,
+      link,
+      author,
       tags,
-      type,
-      user
+      status,
     }: CreateArchiveDTO = req.body;
 
     const validate = await validationService.validateCreateArchive(req.body);
     if (validate.error) {
-      return next(new ErrorResponse("Error", 400, [validate.message]));
+      return next(new ErrorResponse("Validation Error", 400, [validate.message]));
     }
 
     const data = {
       title,
-      image,
       excerpt,
-      description,
-      link,
-      content,
-      author,
       category,
+      image: "",
+      content,
+      link,
+      author,
       tags,
-      type,
-      user
+      status,  
+      resourceLink: "",
+      user: userId,
     };
 
     const archive = await archiveRepository.createArchive(data);
+    if (archive.error) {
+      return next(new ErrorResponse("Error", archive.code!, [archive.message]));
+    }
 
-    res.status(200).json({
+    const files = (req as any).files || [];
+    const imageFile = files.find((f: any) => f.fieldname === "image");
+    const resourceFile = files.find((f: any) => f.fieldname === "resourceLink");
+
+    let imageUrl = "";
+    let resourceUrl = "";
+
+    if (imageFile) {
+      imageUrl = await uploadService.uploadFile({
+        stream: imageFile.stream,
+        mimeType: imageFile.mimeType,
+        originalFileName: imageFile.fileName,
+        refId: archive.data._id,
+      });
+    }
+
+    if (resourceFile) {
+      resourceUrl = await uploadService.uploadFile({
+        stream: resourceFile.stream,
+        mimeType: resourceFile.mimeType,
+        originalFileName: resourceFile.fileName,
+        refId: archive.data._id,
+      });
+    }
+
+    await archiveRepository.updateArchive(archive.data._id, {
+      image: imageUrl,
+      resourceLink: resourceUrl,
+    });
+
+    res.status(201).json({
       error: false,
       errors: [],
-      data: archive,
+      data: { ...archive.data, image: imageUrl, resourceLink: resourceUrl },
       message: "Archive created successfully.",
-      status: 200
+      status: 201,
     });
   }
 );
+
+
 
 /**
  * @name updateArchive
@@ -68,55 +104,81 @@ export const createArchive = asyncHandler(
  */
 export const updateArchive = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const archiveId = req.params.id;
+
     const {
       title,
-      image,
       excerpt,
-      description,
-      link,
-      content,
-      author,
       category,
+      content,
+      link,
+      author,
       tags,
-      type,
-      user
+      status,
     }: UpdateArchiveDTO = req.body;
 
     const validate = await validationService.validateUpdateArchive(req.body);
     if (validate.error) {
-      return next(new ErrorResponse("Error", 400, [validate.message]));
+      return next(new ErrorResponse("Validation Error", 400, [validate.message]));
     }
 
-    const data = {
+    const existing = await archiveRepository.findById(archiveId);
+    if (!existing) {
+      return next(new ErrorResponse("Archive not found", 404, [ "Not found"]));
+    }
+
+    let imageUrl = existing.data.image || "";
+    let resourceUrl = existing.data.resourceLink || "";
+
+    const files = (req as any).files || [];
+    const imageFile = files.find((f: any) => f.fieldname === "image");
+    const resourceFile = files.find((f: any) => f.fieldname === "resourceLink");
+
+    if (imageFile) {
+      imageUrl = await uploadService.uploadFile({
+        stream: imageFile.stream,
+        mimeType: imageFile.mimeType,
+        originalFileName: imageFile.fileName,
+        refId: existing.data._id,
+      });
+    }
+
+    if (resourceFile) {
+      resourceUrl = await uploadService.uploadFile({
+        stream: resourceFile.stream,
+        mimeType: resourceFile.mimeType,
+        originalFileName: resourceFile.fileName,
+        refId: existing.data._id,
+      });
+    }
+
+    const updated = await archiveRepository.updateArchive(archiveId, {
       title,
-      image,
       excerpt,
-      description,
-      link,
-      content,
-      author,
       category,
+      content,
+      link,
+      author,
       tags,
-      type,
-      user
-    };
+      status,
+      image: imageUrl,
+      resourceLink: resourceUrl,
+    });
 
-    const { id } = req.params;
-    const result = await archiveRepository.updateArchive(id, data);
-
-    if (result.error) {
-      return next(new ErrorResponse("Error", result.code!, [result.message]));
+    if (updated.error) {
+      return next(new ErrorResponse("Update failed", 500, [updated.message]));
     }
 
     res.status(200).json({
       error: false,
       errors: [],
-      data: result.data,
-      message: result.message,
-      status: 200
+      data: updated.data,
+      message: "Archive updated successfully.",
+      status: 200,
     });
   }
 );
+
 
 /**
  * @name getArchiveById
@@ -128,21 +190,21 @@ export const getArchiveById = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
-    const archive = await archiveRepository.findById(id, true);
-
-    if (!archive) {
-      return next(new ErrorResponse("Error", 404, ["Archive not found"]));
+    const result = await archiveRepository.findById(id);
+    if (!result || result.error) {
+      return next(new ErrorResponse("Archive not found", 404, [result?.message || "Not found"]));
     }
 
     res.status(200).json({
       error: false,
       errors: [],
-      data: archive,
+      data: result.data,
       message: "Archive fetched successfully.",
-      status: 200
+      status: 200,
     });
   }
 );
+
 
 /**
  * @name getUserArchives
@@ -154,22 +216,23 @@ export const getUserArchives = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.params;
 
-    const user = await userReposirtory.findById(userId);
-    if (!user) {
-      return next(new ErrorResponse("Error", 404, ["User not found"]));
+    const user = await userRepository.findById(userId);
+    if (!user || user.error) {
+      return next(new ErrorResponse("User not found", 404, ["User not found"]));
     }
 
-    const result = await archiveRepository.getUserArchives(user._id);
+    const result = await archiveRepository.getUserArchives(userId);
 
     res.status(200).json({
       error: false,
       errors: [],
       data: result.data,
       message: "User archives fetched successfully.",
-      status: 200
+      status: 200,
     });
   }
 );
+
 
 /**
  * @name getArchives

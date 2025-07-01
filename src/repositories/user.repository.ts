@@ -1,4 +1,4 @@
-import { FilterQuery, Model } from "mongoose";
+import { FilterQuery, Model, ObjectId } from "mongoose";
 import User from "../models/User.model";
 import { IResult, IUserDoc } from "../utils/interface.util";
 import tokenService from "../services/token.service";
@@ -9,7 +9,9 @@ class UserRepository {
 
   constructor() {
     this.model = User;
+    console.log("User model is:", this.model);
   }
+  
 
   /**
    * @name findById
@@ -18,20 +20,46 @@ class UserRepository {
    * @returns user
    * @description Find a user by ID and populate related data
    */
-  public async findById(id: string, populate: boolean = false): Promise<IUserDoc | null> {
-    
-    const dataPop = [
-      { path: 'sermons'}
-    ]
 
-    const pop = populate ? dataPop : [];
+  public async findById(id: string | ObjectId, populate: boolean = false): Promise<IResult> {
+    const result: IResult = { error: false, message: "", code: 200, data: {} };
 
-    // define filter query
-    const query: FilterQuery<IUserDoc> = { _id: id };
+    let query = this.model.findById(id);
 
-    const user = await this.model.findById(query).populate(pop);
-    return user
+  if (populate) {
+    query = query.populate("events"); // You can chain populate calls
   }
+
+  const user = await query.lean();
+
+    if (!user) {
+      return {
+        error: true,
+        message: "User not found",
+        code: 404,
+        data: {},
+      };
+    }
+
+    result.message = "User found";
+    result.data = user;
+    return result;
+  }
+
+  // public async findById(id: string | ObjectId, populate: boolean = false): Promise<IUserDoc | null> {
+    
+  //   const dataPop = [
+  //     { path: 'events' },
+  //   ]
+
+  //   const pop = populate ? dataPop : [];
+
+  //   // define filter query
+  //   const query: FilterQuery<IUserDoc> = { _id: id };
+
+  //   const user = await this.model.findById(query).populate(pop);
+  //   return user
+  // }
 
   /**
    * @name findByEmail
