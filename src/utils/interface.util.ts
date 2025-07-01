@@ -180,7 +180,7 @@ export interface IEventDoc extends Document {
   title: string;
   image: string;
   content: IWysiwygContent[]
-  features?: Array<string>;
+  features?: IWysiwygContent[];
   joinUrl?: string;
   planUrl?: string;
   sponsorUrl?: string;

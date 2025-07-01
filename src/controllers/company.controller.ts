@@ -17,9 +17,10 @@ export const createCompany = asyncHandler(
     const {
       name,
       description,
+      content,
       status,
-      url,
-      email,
+      websiteUrl,
+      contact,
     }: CreateCompanyDTO = req.body;
 
     const validate = await validationService.validateCreateCompany(req.body);
@@ -27,22 +28,25 @@ export const createCompany = asyncHandler(
       return next(new ErrorResponse("Validation error", 400, [validate.message]));
     }
 
-    const data = {
+    // Initial empty file placeholders
+    const data: CreateCompanyDTO & { logo?: string; brochureUrl?: string } = {
       name,
       description,
+      content,
       status,
-      url,
-      email,
+      websiteUrl,
+      contact,
       logo: "",
-      brochure: "",
+      brochureUrl: "",
     };
 
+    // Create initial company record
     const company = await companyRepository.createCompany(data);
     if (company.error) {
       return next(new ErrorResponse("Creation failed", company.code!, [company.message]));
     }
 
-    // Upload logo and brochure if present
+    // Handle file uploads
     const logoFile = (req as any).files?.find((f: any) => f.fieldname === "logo");
     const brochureFile = (req as any).files?.find((f: any) => f.fieldname === "brochure");
 
@@ -67,18 +71,22 @@ export const createCompany = asyncHandler(
       });
     }
 
+    // Update file URLs
     await companyRepository.updateCompany(company.data._id, {
       logo: logoUrl,
-      brochure: brochureUrl,
+      brochureUrl: brochureUrl,
     });
 
-    res.status(200).json({
+    // Clean final response
+    // const sanitized = .toJSON();
+
+    res.status(201).json({
       error: false,
       errors: [],
       data: {
         ...company.data,
         logo: logoUrl,
-        brochure: brochureUrl,
+        brochureUrl: brochureUrl,
       },
       message: "Company created successfully.",
       status: 201,
@@ -87,12 +95,14 @@ export const createCompany = asyncHandler(
 );
 
 
+
 /**
  * @name updateCompany
  * @description Updates a company
  * @route PATCH /companies/:id
  * @access Private
  */
+
 export const updateCompany = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const companyId = req.params.id;
@@ -100,68 +110,91 @@ export const updateCompany = asyncHandler(
     const {
       name,
       description,
+      content,
       status,
-      url,
-      email,
-    }: Partial<CreateCompanyDTO> = req.body;
+      websiteUrl,
+      contact,
+    }: UpdateCompanyDTO = req.body;
 
+    // Validation
     const validate = await validationService.validateUpdateCompany(req.body);
     if (validate.error) {
       return next(new ErrorResponse("Validation error", 400, [validate.message]));
     }
 
+    // const data = {
+    //   name,
+    //   description,
+    //   content,
+    //   status,
+    //   websiteUrl,
+    //   contact,
+    // }
+
+    // Fetch existing company
     const existing = await companyRepository.findById(companyId);
-    if (!existing || existing.error) {
-      return next(new ErrorResponse("Company not found", 404, [existing?.message || "Not found"]));
+    if (!existing) {
+      return next(new ErrorResponse("Company not found", 404, []));
     }
 
-    let logoUrl = existing.data.logo;
-    let brochureUrl = existing.data.brochure;
+    // Extract existing URLs
+    let logoUrl = existing.logo || '';
+    let brochureUrl = existing.brochureUrl || '';
 
-    const logoFile = (req as any).files?.find((f: any) => f.fieldname === "logo");
-    const brochureFile = (req as any).files?.find((f: any) => f.fieldname === "brochure");
+    const files = (req as any).files || [];
+    const logoFile = files.find((f: any) => f.fieldname === "logo");
+    const brochureFile = files.find((f: any) => f.fieldname === "brochure");
 
+    // Handle logo upload
     if (logoFile) {
       logoUrl = await uploadService.uploadFile({
         stream: logoFile.stream,
         mimeType: logoFile.mimeType,
         originalFileName: logoFile.fileName,
-        refId: existing.data._id,
+        refId: existing._id.toString(),
       });
     }
 
+    // Handle brochure upload
     if (brochureFile) {
       brochureUrl = await uploadService.uploadFile({
         stream: brochureFile.stream,
         mimeType: brochureFile.mimeType,
         originalFileName: brochureFile.fileName,
-        refId: existing.data._id,
+        refId: existing._id.toString(),
       });
     }
 
+    // Update company
     const updated = await companyRepository.updateCompany(companyId, {
       name,
       description,
+      content,
       status,
-      url,
-      email,
+      websiteUrl,
+      contact,
       logo: logoUrl,
-      brochure: brochureUrl,
+      brochureUrl: brochureUrl,
     });
 
     if (updated.error) {
       return next(new ErrorResponse("Update failed", 500, [updated.message]));
     }
 
+    // Clean response
+    const sanitized = updated.data.toJSON();
+
     res.status(200).json({
       error: false,
       errors: [],
-      data: updated.data,
+      data: sanitized,
       message: "Company updated successfully.",
       status: 200,
     });
   }
 );
+
+
 
 
 /**

@@ -10,10 +10,6 @@ const transactionRouter = express.Router();
 
 transactionRouter.post("/initiate", Protect, initiateStorePayment);
 transactionRouter.get("/verify", Protect, verifyStorePayment);
-transactionRouter.post(
-  "/webhook",
-  express.raw({ type: "application/json" }),
-  handleStoreWebhook
-);
+transactionRouter.post("/webhook", handleStoreWebhook);
 
 export default transactionRouter;

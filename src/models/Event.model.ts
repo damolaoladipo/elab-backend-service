@@ -10,7 +10,7 @@ const EventSchema = new Schema<IEventDoc>(
       type: Schema.Types.Mixed,
       default: {},
     },
-    features: { type: [String], default: [] },
+    features: { type: Schema.Types.Mixed, default: {} },
     joinUrl: { type: String },
     planUrl: { type: String },
     sponsorUrl: { type: String },
