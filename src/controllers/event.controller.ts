@@ -79,8 +79,6 @@ export const createEvent = asyncHandler(
       event.data.image = imageUrl;
     }
 
-    console.log("Event created:", event.data);
-
     res.status(200).json({
       error: false,
       errors: [],
