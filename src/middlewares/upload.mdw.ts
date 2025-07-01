@@ -16,8 +16,6 @@ type UploadedFile = {
 const uploadFile = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
 
-    console.log("UploadFile (start): req.user is", req.user);
-
     const contentType = req.headers["content-type"];
 
     if (
@@ -74,8 +72,6 @@ const uploadFile = asyncHandler(
           info: fileInfo,
           size: fileSize,
         };
-
-        console.log(`🟢 Finished streaming file: ${fileName}, size: ${fileSize} bytes`);
       });
 
       file.on("error", (err) => {
@@ -98,8 +94,6 @@ const uploadFile = asyncHandler(
       if (!hasFile) {
         return next(new Error("No file uploaded"));
       }
-
-      console.log("UploadFile (end): req.user is", req.user);
       next();
     });
 

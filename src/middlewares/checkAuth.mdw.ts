@@ -49,7 +49,6 @@ const Protect = asyncHandler(async (req: Request, res: Response, next: NextFunct
         res.setHeader('X-New-Token', refreshResult.data.token);
         }
         req.user = decoded;
-        console.log("Protect: req.user is set to", req.user);
         next();
 
     } catch (error) {

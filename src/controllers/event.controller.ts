@@ -56,10 +56,10 @@ export const createEvent = asyncHandler(
       return next(new ErrorResponse("Error", event.code!, [event.message]));
     }
 
-    let imageUrl = "";
     const imageFile = (req as any).file;
+    let imageUrl = "";
 
-    if (imageFile) {
+    if (imageFile && imageFile.stream && imageFile.mimeType && imageFile.fileName) {
       const ImageData = {
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
@@ -94,7 +94,6 @@ export const createEvent = asyncHandler(
     });
   }
 );
-
 
 
 /**
