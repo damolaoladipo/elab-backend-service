@@ -5,12 +5,15 @@ import { DbModelsType } from "../utils/enums.util";
 const CompanySchema = new Schema<IVentureDoc>(
   {
     name: { type: String, required: true },
-    description: { type: String, required: true },
-    logo: { type: String, required: true },
-    status: { type: String, required: true },
-    url: { type: String, required: true },
-    email: { type: String, required: true },
-    brochure: { type: String, required: true },
+    description: { type: String,},
+    content: { type: Schema.Types.Mixed }, // for IWysiwygContent
+    logo: { type: String },
+    status: { type: String },
+    
+    websiteUrl: { type: String },
+    brochureUrl: { type: String },
+    contact: { type: String },
+
     user: { type: Schema.Types.ObjectId, ref: DbModelsType.USER, index: true },
   },
   {

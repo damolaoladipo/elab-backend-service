@@ -1,9 +1,9 @@
 import { FilterQuery, Model, ObjectId } from "mongoose";
 import Company from "../models/Company.model";
-import { ICompanyDoc, IResult } from "../utils/interface.util";
+import { IVentureDoc, IResult } from "../utils/interface.util";
 
 class CompanyRepository {
-  private model: Model<ICompanyDoc>;
+  private model: Model<IVentureDoc>;
 
   constructor() {
     this.model = Company;
@@ -13,14 +13,14 @@ class CompanyRepository {
    * @name findById
    * @param id
    * @param populate
-   * @returns {Promise<ICompanyDoc | null>}
+   * @returns {Promise<IVentureDoc | null>}
    * @description Find a company by ID and optionally populate related data
    */
-  public async findById(id: string, populate: boolean = false): Promise<ICompanyDoc | null> {
+  public async findById(id: string, populate: boolean = false): Promise<IVentureDoc | null> {
     const dataPop = [{ path: "user" }];
     const pop = populate ? dataPop : [];
 
-    const query: FilterQuery<ICompanyDoc> = { _id: id };
+    const query: FilterQuery<IVentureDoc> = { _id: id };
 
     const company = await this.model.findById(query).populate(pop);
     if (!company) {
@@ -78,7 +78,7 @@ class CompanyRepository {
    * @returns {Promise<IResult>}
    * @description Create a new company
    */
-  public async createCompany(companyData: Partial<ICompanyDoc>): Promise<IResult> {
+  public async createCompany(companyData: Partial<IVentureDoc>): Promise<IResult> {
     let result: IResult = { error: false, message: "Company created successfully", code: 201, data: {} };
     const newCompany = await this.model.create(companyData);
     if (!newCompany) {
@@ -88,7 +88,7 @@ class CompanyRepository {
       return result;
     }
     result.message = "Company created successfully";
-    result.data = newCompany;
+    result.data = newCompany.toJSON();
     return result;
   }
 
@@ -99,7 +99,7 @@ class CompanyRepository {
    * @returns {Promise<IResult>}
    * @description Update an existing company
    */
-  public async updateCompany(id: string, updateData: Partial<ICompanyDoc>): Promise<IResult> {
+  public async updateCompany(id: string, updateData: Partial<IVentureDoc>): Promise<IResult> {
     let result: IResult = { error: false, message: "", code: 200, data: {} };
     const updatedCompany = await this.model.findByIdAndUpdate(id, updateData, { new: true });
     if (!updatedCompany) {
@@ -108,7 +108,7 @@ class CompanyRepository {
       result.message = "Company not found";
     } else {
       result.message = "Company updated successfully";
-      result.data = updatedCompany;
+      result.data = updatedCompany.toJSON()
     }
     return result;
   }

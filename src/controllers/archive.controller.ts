@@ -84,7 +84,7 @@ export const createArchive = asyncHandler(
       resourceLink: resourceUrl,
     });
 
-    res.status(201).json({
+    res.status(200).json({
       error: false,
       errors: [],
       data: { ...archive.data, image: imageUrl, resourceLink: resourceUrl },

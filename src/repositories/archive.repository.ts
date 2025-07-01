@@ -93,7 +93,7 @@ class ArchiveRepository {
     }
     result.message = "Archive created successfully";
     result.code = 201;
-    result.data = newArchive;
+    result.data = newArchive.toJSON();
     return result;
   }
 

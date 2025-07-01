@@ -28,15 +28,6 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: false }));
 // cookie parser
 app.use(cookieParser());
 
-// temporaary files directory
-// app.use(
-//   fileUpload({ useTempFiles: true, tempFileDir: path.join(__dirname, "tmp") })
-// );
-
-/**
- * sanitize data
- * secure db against sql injection
- */
 app.use(expressSanitize());
 
 // secure response header

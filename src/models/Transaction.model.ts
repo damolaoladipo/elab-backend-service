@@ -8,14 +8,13 @@ const TransactionSchema = new Schema<ITransactionDoc>(
     type: {
       type: String,
       enum: Object.values(TransactionsType),
-      required: true,
       index: true,
     },
-    medium: { type: String, required: true, index: true },
-    resource: { type: String, required: true, index: true },
-    entity: { type: String, required: true, index: true },
+    medium: { type: String},
+    resource: { type: String },
+    entity: { type: String },
     reference: { type: String, unique: true, required: true },
-    currency: { type: String, required: true, index: true },
+    currency: { type: String },
     providerRef: { type: String },
     providerName: { type: String },
     description: { type: String },
@@ -24,20 +23,20 @@ const TransactionSchema = new Schema<ITransactionDoc>(
     unitAmount: { type: Number, required: true }, // kobo unit * 100
     fee: { type: Number, required: true },
     unitFee: { type: Number, required: true }, // kobo unit * 100
-    status: { type: String, required: true, index: true },
+    status: { type: String },
     reason: { type: String },
     message: { type: String },
     providerData: [{ type: Schema.Types.Mixed }],
     metadata: [{ type: Schema.Types.Mixed }],
     channel: { type: String },
-    slug: { type: String, unique: true, required: true },
+    slug: { type: String, unique: true },
     card: {
-      authCode: { type: String, select: false, required: true },
+      authCode: { type: String, select: false},
       cardBin: { type: String },
       cardLast: { type: String },
       expiryMonth: { type: String },
       expiryYear: { type: String },
-      cardPan: { type: String, select: false, required: true },
+      cardPan: { type: String, select: false },
       token: { type: String },
       provider: { type: String },
     },
@@ -62,16 +61,6 @@ const TransactionSchema = new Schema<ITransactionDoc>(
   }
 );
 
-
-TransactionSchema.pre<ITransactionDoc>("save", function (next) {
-
-  next();
-});
-
-TransactionSchema.methods.decryptCardDetails = function () {
-
-  return this.card;
-};
 
 const Transaction: Model<ITransactionDoc> = mongoose.model<ITransactionDoc>(
   DbModelsType.TRANSACTION,
