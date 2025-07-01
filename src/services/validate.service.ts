@@ -15,10 +15,6 @@ class ValidationService {
     if (!data.title) return this.error("title is required");
     if (!data.content) return this.error("content is required");
     if (!data.features) return this.error("features is required");
-    if (!data.joinUrl) return this.error("joinUrl is required");
-    if (!data.planUrl) return this.error("planUrl is required");
-    if (!data.sponsorUrl) return this.error("sponsorUrl is required");
-    if (!data.communityUrl) return this.error("communityUrl is required");
     return this.ok();
   }
 
@@ -68,10 +64,6 @@ class ValidationService {
     if (!data.title) return this.error("title is required");
     if (!data.image) return this.error("image is required");
     if (!data.content) return this.error("content is required");
-    if (!data.author) return this.error("author is required");
-    if (!data.category) return this.error("category is required");
-    if (!data.type) return this.error("type is required");
-    if (!data.user) return this.error("user is required");
     return this.ok();
   }
 
@@ -127,13 +119,9 @@ class ValidationService {
    */
   public async validateCreateCompany(data: CreateCompanyDTO): Promise<IResult> {
     if (!data.name) return this.error("name is required");
-    if (!data.description) return this.error("description is required");
     if (!data.logo) return this.error("logo is required");
     if (!data.status) return this.error("status is required");
-    if (!data.url) return this.error("url is required");
-    if (!data.email) return this.error("email is required");
-    if (!data.brochure) return this.error("brochure is required");
-    if (!data.user) return this.error("user is required");
+    
     return this.ok();
   }
 
