@@ -1,5 +1,4 @@
-import { ObjectId } from "mongoose";
-import { IUserDoc, IWysiwygContent } from "../utils/interface.util";
+import { IWysiwygContent } from "../utils/interface.util";
 
 export interface CreateProjectDTO {
   title: string;
@@ -8,8 +7,7 @@ export interface CreateProjectDTO {
   volunteerUrl?: string;
   partnerUrl?: string;
   sponsorUrl?: string;
-  image?: string; // S3 URL will be added after upload
-  user: IUserDoc | ObjectId;
+  image?: string; 
 }
 
 export interface UpdateProjectDTO {
@@ -20,5 +18,4 @@ export interface UpdateProjectDTO {
   partnerUrl?: string;
   sponsorUrl?: string;
   image?: string; 
-  user: IUserDoc | ObjectId;
 }

@@ -3,8 +3,8 @@ import { IWysiwygContent } from "../utils/interface.util";
 
 export interface CreateEventDTO {
   title: string;
-  content: IWysiwygContent;
-  features?: Array<string>;
+  content: IWysiwygContent[];
+  features?: IWysiwygContent[];
   joinUrl?: string;
   planUrl?: string;
   sponsorUrl?: string;
@@ -13,8 +13,8 @@ export interface CreateEventDTO {
 
 export interface UpdateEventDTO {
    title?: string;
-  content?: IWysiwygContent;
-  features?: Array<string>;
+  content?: IWysiwygContent[];
+  features?: IWysiwygContent[];
   joinUrl?: string;
   planUrl?: string;
   sponsorUrl?: string;

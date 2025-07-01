@@ -58,14 +58,43 @@ class ProjectRepository {
    * @param userId
    * @returns {Promise<IResult>}
    */
-  public async getUserProjects(userId: string | ObjectId ): Promise<IResult> {
-    let result: IResult = { error: false, message: "", code: 200, data: {} };
-
-    const projects = await this.model.find({ user: userId }).lean();
-    result.data = projects;
-
+  public async getUserProjects(userId: string | ObjectId): Promise<IResult> {
+    const result: IResult = {
+      error: false,
+      message: "",
+      code: 200,
+      data: [],
+    };
+  
+    const events = await this.model
+      .find({ user: userId })
+      .populate({
+        path: "user",
+        select: "_id name email",
+      })
+      .sort({ createdAt: -1 });
+  
+    if (!events || events.length === 0) {
+      result.error = true;
+      result.message = "No events found";
+      result.code = 404;
+      result.data = [];
+    } else {
+      result.message = "Events fetched successfully";
+      result.code = 200;
+      result.data = events;
+    }
+  
     return result;
   }
+  // public async getUserProjects(userId: string | ObjectId ): Promise<IResult> {
+  //   let result: IResult = { error: false, message: "", code: 200, data: {} };
+
+  //   const projects = await this.model.find({ user: userId }).lean();
+  //   result.data = projects;
+
+  //   return result;
+  // }
 
   /**
    * @name createProject

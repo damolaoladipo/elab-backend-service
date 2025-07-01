@@ -179,8 +179,8 @@ export interface IEmailRequest {
 export interface IEventDoc extends Document {
   title: string;
   image: string;
-  content: IWysiwygContent
-  features?: Array<string>;
+  content: IWysiwygContent[]
+  features?: IWysiwygContent[];
   joinUrl?: string;
   planUrl?: string;
   sponsorUrl?: string;
@@ -196,9 +196,6 @@ export interface IEventDoc extends Document {
   _id: ObjectId;
   id: ObjectId;
 }
-
-// array of objects
-// strings 
 
 export interface IProjectDoc extends Document {
   title: string;
@@ -230,12 +227,10 @@ export interface IArchiveDoc extends Document {
   content?: IWysiwygContent
   link?: string;
   author?: string;
-  resoruceLink?: string // upload file
+  resourceLink?: string // upload file
   
   tags: Array<string>;
-  status: string; // published, draft, archived
-
-  type: string; 
+  status: string; // published, draft, archived 
 
   //relationships
   user: IUserDoc | ObjectId;
@@ -282,4 +277,86 @@ export interface IVentureDoc extends Document {
   _version: number;
   _id: ObjectId;
   id: ObjectId;
+}
+
+export interface IStoreDoc extends Document {
+  name: string;
+  price: number;
+  discountedPrice?: number;
+  image: string; //upload file
+  tags: Array<string>;
+  category: string; // e.g. "merch", "ebook", "courses"
+
+  author?: string; // for ebooks or courses
+  excerpt?: string; // short description or summary
+  description: string;
+  url: string;
+  status: string;
+    
+  //relationships
+  user: IUserDoc | ObjectId;
+  
+  // time stamps
+  createdAt: Date;
+  updatedAt: Date;
+  _version: number;
+  _id: ObjectId;
+  id: ObjectId;
+}
+
+export interface ITra extends Document {
+  
+  storeItem: IStoreDoc | ObjectId;
+  reference: string;
+  amount: number;
+  status: TransactionsType
+  paidAt?: Date;
+
+  // relationships
+  user: ObjectId | any;
+    // time stamps
+  createdAt: Date;
+  updatedAt: Date;
+  _version: number;
+  _id: ObjectId;
+  id: ObjectId;
+}
+
+
+export interface ITransactionDoc extends Document {
+  type: TransactionsType;
+  medium: string;
+  resource: string;
+  entity: string;
+  reference: string;
+  currency: string;
+  providerRef: string;
+  providerName: string;
+  description: string;
+  narration: string;
+  amount: number;
+  unitAmount: number; // kobo unit * 100
+  fee: number;
+  unitFee: number; // kobo unit * 100
+  status: string;
+  reason: string;
+  message: string;
+  providerData: Array<Record<string, any>>;
+  metadata: Array<Record<string, any>>;
+  channel: string;
+  slug: string;
+  card: IDebitCard;
+
+  // relationships
+  user: ObjectId | any;
+
+  // timestamps
+  createdAt: string;
+  updatedAt: string;
+  _versions: number;
+  _id: ObjectId;
+  id: ObjectId;
+
+  // functions
+  getAll(): Array<ITransactionDoc>;
 }

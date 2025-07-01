@@ -9,7 +9,7 @@ import {
   strIncludesEs6,
 } from "@btffamily/pacitude";
 import SystemService from "./system.service";
-import userRepository from "../repositories/user.reposirtory";
+import userRepository from "../repositories/user.repository";
 import { OtpType, UserType } from "../utils/enums.util";
 import {
   LoginDTO,

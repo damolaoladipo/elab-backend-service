@@ -1,19 +1,19 @@
 import mongoose, { Schema, Model } from "mongoose";
-import { IArchive } from "../utils/interface.util";
+import { IArchiveDoc } from "../utils/interface.util";
 import { DbModelsType } from "../utils/enums.util";
 
-const ArchiveSchema = new Schema<IArchive>(
+const ArchiveSchema = new Schema<IArchiveDoc>(
   {
     title: { type: String, required: true },
-    image: { type: String, required: true },
+    image: { type: String },
     excerpt: { type: String },
-    description: { type: String },
+    content: { type: Schema.Types.Mixed }, // for IWysiwygContent
     link: { type: String },
-    content: { type: String, required: true },
-    author: { type: String, required: true },
-    category: { type: String, required: true },
+    author: { type: String },
+    resourceLink: { type: String },
+    category: { type: String, required: true }, // news, insight, resource, press-release
     tags: { type: [String], default: [] },
-    type: { type: String, required: true },
+    status: { type: String }, // published, draft, archived
     user: { type: Schema.Types.ObjectId, ref: DbModelsType.USER, index: true },
   },
   {
@@ -28,8 +28,9 @@ const ArchiveSchema = new Schema<IArchive>(
   }
 );
 
-const Archive: Model<IArchive> = mongoose.model<IArchive>(
+const Archive: Model<IArchiveDoc> = mongoose.model<IArchiveDoc>(
   DbModelsType.ARCHIVE,
   ArchiveSchema
 );
+
 export default Archive;
