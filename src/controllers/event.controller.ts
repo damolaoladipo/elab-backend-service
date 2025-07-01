@@ -7,6 +7,7 @@ import eventRepository from "../repositories/event.repository";
 import uploadService from "../services/upload.service";
 import { IEventDoc } from "../utils/interface.util";
 import User from "../models/User.model";
+import Event from "../models/Event.model";
 
 
 
@@ -18,7 +19,6 @@ import User from "../models/User.model";
  */
 export const createEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-      
     const userId = (req as any).user?.id;
     if (!userId) {
       return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
@@ -33,7 +33,6 @@ export const createEvent = asyncHandler(
       sponsorUrl,
       communityUrl,
     }: CreateEventDTO = req.body;
-
 
     const validate = await validationService.validateCreateEvent(req.body);
     if (validate.error) {
@@ -57,26 +56,23 @@ export const createEvent = asyncHandler(
       return next(new ErrorResponse("Error", event.code!, [event.message]));
     }
 
-    const imageFile = (req as any).file
-    // ?.find(
-    //   (f: any) => f.fieldname === "file"
-    // );
-
     let imageUrl = "";
-
-    const ImageData = {
-      stream: imageFile.stream,
-      mimeType: imageFile.mimeType,
-      originalFileName: imageFile.fileName,
-      refId: event.data._id,
-    };
+    const imageFile = (req as any).file;
 
     if (imageFile) {
+      const ImageData = {
+        stream: imageFile.stream,
+        mimeType: imageFile.mimeType,
+        originalFileName: imageFile.fileName,
+        refId: event.data._id,
+      };
+
       imageUrl = await uploadService.uploadFile(ImageData);
-    }
-    if (imageUrl && imageUrl !== event.data.image) {
-      await eventRepository.updateEvent(event.data._id, { image: imageUrl });
-      event.data.image = imageUrl;
+
+      if (imageUrl && imageUrl !== event.data.image) {
+        await eventRepository.updateEvent(event.data._id, { image: imageUrl });
+        event.data.image = imageUrl;
+      }
     }
 
     res.status(200).json({
@@ -98,6 +94,7 @@ export const createEvent = asyncHandler(
     });
   }
 );
+
 
 
 /**
