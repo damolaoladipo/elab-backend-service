@@ -14,10 +14,6 @@ class ValidationService {
     if (!data.title) return this.error("title is required");
     if (!data.content) return this.error("content is required");
     if (!data.features) return this.error("features is required");
-    if (!data.joinUrl) return this.error("joinUrl is required");
-    if (!data.planUrl) return this.error("planUrl is required");
-    if (!data.sponsorUrl) return this.error("sponsorUrl is required");
-    if (!data.communityUrl) return this.error("communityUrl is required");
     return this.ok();
   }
 
@@ -65,9 +61,6 @@ class ValidationService {
   public async validateCreateArchive(data: CreateArchiveDTO): Promise<IResult> {
      if (!data.title) return this.error("title is required");
     if (!data.content) return this.error("content is required");
-    if (!data.category) return this.error("category is required");
-    if (!data.status) return this.error("status is required");
-    
     return this.ok();
   }
 
@@ -93,6 +86,7 @@ class ValidationService {
     if (!data.name) return this.error("name is required");
     if (!data.description) return this.error("description is required");
     if (!data.status) return this.error("status is required");
+    
     
     return this.ok();
   }

@@ -15,9 +15,6 @@ type UploadedFile = {
 
 const uploadFile = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-
-    console.log("UploadFile (start): req.user is", req.user);
-
     const contentType = req.headers["content-type"];
 
     if (
@@ -35,71 +32,53 @@ const uploadFile = asyncHandler(
       },
     });
 
-    
-    let hasFile = false;
-    let mimeType = "";
-    let fileName = "";
-    let fileSize = 0;
-    let fileInfo: FileInfo | null = null;
-
-    let uploadStream: PassThrough;
+    const files: UploadedFile[] = [];
+    req.body = req.body || {};
 
     stream.on("file", (fieldname, file, info) => {
-      if (fieldname !== "file") {
-        file.resume();
-        return;
-      }
+      const passThroughWrite = new PassThrough();
+      const passThroughRead = new PassThrough();
+      let fileSize = 0;
 
-      hasFile = true;
-      fileInfo = info;
-      mimeType = info.mimeType;
-      fileName = info.filename;
-
-      uploadStream = new PassThrough();
+      file.pipe(passThroughWrite);
+      passThroughWrite.pipe(passThroughRead);
 
       file.on("data", (chunk) => {
-        uploadStream.write(chunk);
         fileSize += chunk.length;
-        console.log('file chunks', chunk.length)
       });
 
       file.on("end", () => {
-        uploadStream.end();
-
-        // Attach the final file metadata after stream ends
-        (req as any).file = {
-          stream: uploadStream,
-          fileName,
-          mimeType,
-          info: fileInfo,
+        files.push({
+          fieldname,
+          stream: passThroughRead,
+          fileName: info.filename,
+          mimeType: info.mimeType,
+          info,
           size: fileSize,
-        };
-
-        console.log(`🟢 Finished streaming file: ${fileName}, size: ${fileSize} bytes`);
+        });
       });
 
       file.on("error", (err) => {
-        uploadStream?.destroy(err);
+        passThroughWrite.destroy(err);
+        passThroughRead.destroy(err);
         return next(err);
       });
 
-      uploadStream.on("error", (err) => {
+      passThroughWrite.on("error", (err) => {
         return next(err);
       });
-
     });
 
-    stream.on("field", (name, val) => {
-      if (!req.body) req.body = {};
-      req.body[name] = val;
+    stream.on("field", (name, value) => {
+      req.body[name] = value;
     });
 
     stream.on("finish", () => {
-      if (!hasFile) {
-        return next(new Error("No file uploaded"));
+      if (files.length === 0) {
+        return next(new Error("No files uploaded"));
       }
 
-      console.log("UploadFile (end): req.user is", req.user);
+      (req as any).files = files;
       next();
     });
 
