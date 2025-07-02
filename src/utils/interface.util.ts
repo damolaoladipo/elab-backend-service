@@ -306,7 +306,7 @@ export interface IStoreDoc extends Document {
 
 export interface IEmployeeDoc extends Document {
   name: string;
-  position: string;
+  role: string;
   image: string; //upload file
   status: string; // e.g. "active", "inactive", "on leave"
 

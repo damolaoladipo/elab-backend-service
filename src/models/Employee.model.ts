@@ -5,7 +5,7 @@ import { DbModelsType } from "../utils/enums.util";
 const EmployeeSchema = new Schema<IEmployeeDoc>(
   {
     name: { type: String, required: true },
-    position: { type: String, required: true },
+    role: { type: String, required: true },
     image: { type: String }, // uploaded image URL
     status: {
       type: String,
