@@ -39,7 +39,7 @@ export const createCompany = asyncHandler(
       logo: "",
       brochureUrl: "",
     };
-
+    
     // Create initial company record
     const company = await companyRepository.createCompany(data);
     if (company.error) {

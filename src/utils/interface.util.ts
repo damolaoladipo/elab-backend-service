@@ -304,13 +304,11 @@ export interface IStoreDoc extends Document {
   id: ObjectId;
 }
 
-export interface ITra extends Document {
-  
-  storeItem: IStoreDoc | ObjectId;
-  reference: string;
-  amount: number;
-  status: TransactionsType
-  paidAt?: Date;
+export interface IEmployeeDoc extends Document {
+  name: string;
+  role: string;
+  image: string; //upload file
+  status: string; // e.g. "active", "inactive", "on leave"
 
   // relationships
   user: ObjectId | any;
