@@ -9,8 +9,6 @@ import { IEventDoc } from "../utils/interface.util";
 import User from "../models/User.model";
 import Event from "../models/Event.model";
 
-
-
 /**
  * @name createEvent
  * @description Creates a new event
@@ -59,21 +57,50 @@ export const createEvent = asyncHandler(
     const imageFile = (req as any).file;
     let imageUrl = "";
 
-    if (imageFile && imageFile.stream && imageFile.mimeType && imageFile.fileName) {
-      const ImageData = {
-        stream: imageFile.stream,
-        mimeType: imageFile.mimeType,
-        originalFileName: imageFile.fileName,
-        refId: event.data._id,
-      };
+    try {
+      if (
+        imageFile &&
+        imageFile.stream &&
+        imageFile.mimeType &&
+        imageFile.fileName
+      ) {
+        const ImageData = {
+          stream: imageFile.stream,
+          mimeType: imageFile.mimeType,
+          originalFileName: imageFile.fileName,
+          refId: event.data._id,
+        };
 
-      imageUrl = await uploadService.uploadFile(ImageData);
+        imageUrl = await uploadService.uploadFile(ImageData);
 
-      if (imageUrl && imageUrl !== event.data.image) {
-        await eventRepository.updateEvent(event.data._id, { image: imageUrl });
-        event.data.image = imageUrl;
+        if (imageUrl && imageUrl !== event.data.image) {
+          await eventRepository.updateEvent(event.data._id, {
+            image: imageUrl,
+          });
+          event.data.image = imageUrl;
+        }
       }
+    } catch (err) {
+      console.error("Image upload crash:", err);
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      return next(new ErrorResponse("Image upload failed", 500, [errorMessage]));
     }
+
+    // if (imageFile && imageFile.stream && imageFile.mimeType && imageFile.fileName) {
+    //   const ImageData = {
+    //     stream: imageFile.stream,
+    //     mimeType: imageFile.mimeType,
+    //     originalFileName: imageFile.fileName,
+    //     refId: event.data._id,
+    //   };
+
+    //   imageUrl = await uploadService.uploadFile(ImageData);
+
+    //   if (imageUrl && imageUrl !== event.data.image) {
+    //     await eventRepository.updateEvent(event.data._id, { image: imageUrl });
+    //     event.data.image = imageUrl;
+    //   }
+    // }
 
     res.status(200).json({
       error: false,
@@ -95,7 +122,6 @@ export const createEvent = asyncHandler(
   }
 );
 
-
 /**
  * @name updateEvent
  * @description Updates an event
@@ -104,7 +130,6 @@ export const createEvent = asyncHandler(
  */
 export const updateEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-
     const userId = (req as any).user?.id;
     if (!userId) {
       return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
@@ -142,7 +167,6 @@ export const updateEvent = asyncHandler(
     //   return next(new ErrorResponse("Error", 400, [featuresParseResult.message]));
     // }
     // const parsedFeatures = featuresParseResult.data || [];
-    
 
     const validate = await validationService.validateUpdateEvent({
       title,
@@ -155,7 +179,9 @@ export const updateEvent = asyncHandler(
     });
 
     if (validate.error) {
-      return next(new ErrorResponse("Validation failed", 400, [validate.message]));
+      return next(
+        new ErrorResponse("Validation failed", 400, [validate.message])
+      );
     }
 
     const updateData: any = {
@@ -200,7 +226,6 @@ export const updateEvent = asyncHandler(
   }
 );
 
-
 /**
  * @name getEventById
  * @description Get event by ID
@@ -238,7 +263,6 @@ export const getEventById = asyncHandler(
   }
 );
 
-
 /**
  * @name getUserEvents
  * @description Get all events for a specific user
@@ -250,7 +274,9 @@ export const getUserEvents = asyncHandler(
     const userId = req.params.userId;
 
     if (!userId) {
-      return next(new ErrorResponse("Unauthorized", 401, ["Unauthorized user"]));
+      return next(
+        new ErrorResponse("Unauthorized", 401, ["Unauthorized user"])
+      );
     }
 
     // Check if user exists
@@ -259,15 +285,14 @@ export const getUserEvents = asyncHandler(
     //   return next(new ErrorResponse("User not found", 404, ["User not found"]));
     // }
 
-     const user = await User.findById(userId).lean();
+    const user = await User.findById(userId).lean();
 
     if (!user) {
       return next(new ErrorResponse("User not found", 404, ["User not found"]));
     }
 
-
     // Fetch user events with populated user data
-     const result = await eventRepository.getUserEvents(userId);
+    const result = await eventRepository.getUserEvents(userId);
 
     if (result.error) {
       return next(new ErrorResponse(result.message, result.code, []));
@@ -296,7 +321,7 @@ export const getUserEvents = asyncHandler(
 
 // export const getUserEvents = asyncHandler(
 //   async (req: Request, res: Response, next: NextFunction) => {
-    
+
 //     const userId = req.params.userId;
 //     if (!userId) {
 //       return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
@@ -331,7 +356,6 @@ export const getUserEvents = asyncHandler(
 //   }
 // );
 
-
 /**
  * @name getEvents
  * @description Get all events
@@ -361,7 +385,6 @@ export const getEvents = asyncHandler(async (_req: Request, res: Response) => {
     status: 200,
   });
 });
-
 
 /**
  * @name deleteEvent

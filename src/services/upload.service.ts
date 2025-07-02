@@ -33,9 +33,7 @@ class UploadService {
    * @throws {Error} - If the image format is unsupported or if the event cannot be updated.
    */
 
-  public uploadFile = async (
-    data: UploadFileOptions
-  ): Promise<string> => {
+  public uploadFile = async (data: UploadFileOptions): Promise<string> => {
     const { stream, mimeType, originalFileName, refId } = data;
 
     // 1. Validate supported image types
@@ -62,7 +60,12 @@ class UploadService {
       },
     });
 
-    await upload.done();
+    try {
+      await upload.done();
+    } catch (err) {
+      console.error("S3 upload failed:", err);
+      throw new Error("Upload failed. Please try again.");
+    }
 
     // 4. Generate public URL
     //const fileUrl = `https://${process.env.AWS_CLOUDFRONT_URL}/${uniqueFileName}`;
