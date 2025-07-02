@@ -84,7 +84,7 @@ class ValidationService {
    */
   public async validateCreateCompany(data: CreateCompanyDTO): Promise<IResult> {
     if (!data.name) return this.error("name is required");
-    if (!data.logo) return this.error("logo is required");
+    if (!data.description) return this.error("description is required");
     if (!data.status) return this.error("status is required");
     
     
