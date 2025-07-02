@@ -62,6 +62,7 @@ const uploadFile = asyncHandler(
       });
 
       file.on("end", () => {
+        uploadStream.end();
 
         // Attach the final file metadata after stream ends
         (req as any).file = {
