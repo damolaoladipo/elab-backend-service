@@ -44,7 +44,7 @@ export const createArchive = asyncHandler(
       link,
       author,
       tags,
-      status,  
+      status: "draft",  
       resourceLink: "",
       user: userId,
     };
@@ -90,6 +90,44 @@ export const createArchive = asyncHandler(
       data: { ...archive.data, image: imageUrl, resourceLink: resourceUrl },
       message: "Archive created successfully.",
       status: 201,
+    });
+  }
+);
+
+
+/**
+ * @name publishArchive
+ * @description Publishes an existing archive
+ * @route PATCH /archives/:id/publish
+ * @access Private
+ */
+export const publishArchive = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const archiveId = req.params.id;
+
+    const archive = await archiveRepository.findById(archiveId);
+    if (archive.error || !archive.data) {
+      return next(new ErrorResponse("Archive not found", 404, []));
+    }
+
+    if (archive.data.status === "published") {
+      return next(new ErrorResponse("Archive already published", 400, []));
+    }
+
+    const updated = await archiveRepository.updateArchive(archiveId, {
+      status: "published",
+    });
+
+    if (updated.error) {
+      return next(new ErrorResponse("Failed to publish archive", 500, []));
+    }
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: updated.data,
+      message: "Archive published successfully.",
+      status: 200,
     });
   }
 );
