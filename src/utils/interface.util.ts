@@ -309,6 +309,7 @@ export interface IEmployeeDoc extends Document {
   role: string;
   image: string; //upload file
   status: string; // e.g. "active", "inactive", "on leave"
+  socialLink?: string
 
   // relationships
   user: ObjectId | any;
