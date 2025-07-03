@@ -132,6 +132,43 @@ export const publishArchive = asyncHandler(
   }
 );
 
+/**
+ * @name unpublishArchive
+ * @description Unpublishes an existing archive
+ * @route PATCH /archives/:id/unpublish
+ * @access Private
+ */
+export const unpublishArchive = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const archiveId = req.params.id;
+
+    const archive = await archiveRepository.findById(archiveId);
+    if (archive.error || !archive.data) {
+      return next(new ErrorResponse("Archive not found", 404, []));
+    }
+
+    if (archive.data.status === "draft") {
+      return next(new ErrorResponse("Archive already unpublished", 400, []));
+    }
+
+    const updated = await archiveRepository.updateArchive(archiveId, {
+      status: "draft",
+    });
+
+    if (updated.error) {
+      return next(new ErrorResponse("Failed to unpublish archive", 500, []));
+    }
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: updated.data,
+      message: "Archive unpublished successfully.",
+      status: 200,
+    });
+  }
+);
+
 
 
 /**

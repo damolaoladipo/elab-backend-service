@@ -95,20 +95,28 @@ export const registerUser = asyncHandler(
     await userService.activateAccount(user);
     await userService.updateLastLogin(user);
 
+    const token = await tokenService.attachToken(user);
+    if (token.error) {
+      return next(new ErrorResponse("Error", token.code!, [token.message]));
+    }
+
     res.status(200).json({
       error: false,
       errors: [],
       data: {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        userType: user.userType,
-        isAdmin: user.isAdmin,
-        isActive: user.isActive,
-        isDeactivated: user.isDeactivated,
-        loginLimit: user.loginLimit,
-        lastLogin: user.lastLogin,
-        id: user._id
+        user: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          userType: user.userType,
+          isAdmin: user.isAdmin,
+          isActive: user.isActive,
+          isDeactivated: user.isDeactivated,
+          loginLimit: user.loginLimit,
+          lastLogin: user.lastLogin,
+          id: user._id,
+        },
+        token: token.data.token,
       },
       message: "user registered successfully",
       status: 200,
@@ -164,14 +172,6 @@ export const loginUser = asyncHandler(
     if (!verifyPassword) {
       await userService.increaseLoginLimit(userExist);
       return next(new ErrorResponse("Error", 400, ["invalid credentials"]));
-    }
-
-    if (!userExist.isActive) {
-      return next(
-        new ErrorResponse("Error", 206, [
-          "Inactive account, kindly verify otp to activate account.",
-        ])
-      );
     }
 
     // Update login information
