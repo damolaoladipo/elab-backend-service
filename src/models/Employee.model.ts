@@ -10,6 +10,7 @@ const EmployeeSchema = new Schema<IEmployeeDoc>(
     status: {
       type: String,
     },
+    socialLink: { type: String }, // optional social media link
     user: { type: Schema.Types.ObjectId, ref: DbModelsType.USER, index: true },
   },
   {

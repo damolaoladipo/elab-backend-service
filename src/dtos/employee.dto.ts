@@ -3,6 +3,7 @@ export interface CreateEmployeeDTO {
   role: string;
   image?: string;
   status: string // optional until upload
+  socialLink?: string; // optional social media link
 }
 
 export interface UpdateEmployeeDTO {
@@ -10,4 +11,5 @@ export interface UpdateEmployeeDTO {
   role?: string;
   image?: string;
   status?: string;
+  socialLink?: string; // optional social media link
 }
