@@ -12,7 +12,7 @@ class TokenService {
 
   constructor() {
     const secret = process.env.JWT_SECRET as string;
-    const expire = process.env.JWT_EXPIRY as string;
+    const expire = process.env.JWT_EXPIRY as string || "30d";
 
     if (!secret) {
       throw new ErrorResponse("Error with JWT SECRET", 500, ["JWT secrets are not defined."]);

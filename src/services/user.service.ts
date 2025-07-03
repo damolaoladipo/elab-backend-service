@@ -642,42 +642,42 @@ class UserService {
     return result;
   }
 
-  /**
-   * @name getLoggedInUser
-   * @param data
-   * @returns
-   */
-  public async getLoggedInUser(data: {
-    req: Request;
-    isAdmin: boolean;
-  }): Promise<IResult> {
-    let result: IResult = { error: false, message: "", code: 200, data: {} };
-    const { req, isAdmin } = data;
+  // /**
+  //  * @name getLoggedInUser
+  //  * @param data
+  //  * @returns
+  //  */
+  // public async getLoggedInUser(data: {
+  //   req: Request;
+  //   isAdmin: boolean;
+  // }): Promise<IResult> {
+  //   let result: IResult = { error: false, message: "", code: 200, data: {} };
+  //   const { req, isAdmin } = data;
 
-    const user = await userRepository.findById((req as any).user._id, true);
+  //   const user = await userRepository.findById((req as any).user._id, true);
 
-    if (!user) {
-      result.error = true;
-      result.message = `authorized  - user details not found`;
-      result.code = 401;
-    } else if (
-      user &&
-      isAdmin === false &&
-      (user.userType === UserType.ADMIN ||
-        user.userType === UserType.SUPERADMIN)
-    ) {
-      result.error = true;
-      result.message = `user is not authorized to access this route`;
-      result.code = 401;
-    } else {
-      result.error = false;
-      result.data = {
-        user: user,
-      };
-    }
+  //   if (!user) {
+  //     result.error = true;
+  //     result.message = `authorized  - user details not found`;
+  //     result.code = 401;
+  //   } else if (
+  //     user &&
+  //     isAdmin === false &&
+  //     (user.userType === UserType.ADMIN ||
+  //       user.userType === UserType.SUPERADMIN)
+  //   ) {
+  //     result.error = true;
+  //     result.message = `user is not authorized to access this route`;
+  //     result.code = 401;
+  //   } else {
+  //     result.error = false;
+  //     result.data = {
+  //       user: user,
+  //     };
+  //   }
 
-    return result;
-  }
+  //   return result;
+  // }
 
   /**
    * @name attachRole
