@@ -9,9 +9,16 @@ import { CreateEmployeeDTO, UpdateEmployeeDTO } from "../dtos/employee.dto";
 export const createEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req as any).user?.id;
-    const { name, role, status, socialLink }: CreateEmployeeDTO = req.body;
+    const { name, role, socialLink }: CreateEmployeeDTO = req.body;
 
-    const data = { name, role, user: userId, status, socialLink, image: "" };
+    const data = {
+      name,
+      role,
+      user: userId,
+      status: "active",
+      socialLink,
+      image: "",
+    };
 
     const created = await employeeRepository.createEmployee(data);
     if (created.error)

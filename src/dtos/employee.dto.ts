@@ -2,8 +2,8 @@ export interface CreateEmployeeDTO {
   name: string;
   role: string;
   image?: string;
-  status: string // optional until upload
-  socialLink?: string; // optional social media link
+  status?: string 
+  socialLink?: string; 
 }
 
 export interface UpdateEmployeeDTO {
