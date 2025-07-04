@@ -54,7 +54,10 @@ export const createProject = asyncHandler(
       return next(new ErrorResponse("Error", project.code!, [project.message]));
     }
 
-    const imageFile = (req as any).file;
+    const imageFile = (req as any).files.find(
+      (f: any) => f.fieldname === "file" || f.fieldname === "image"
+    );
+
     let imageUrl = "";
 
     if (imageFile) {

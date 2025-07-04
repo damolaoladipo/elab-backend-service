@@ -14,7 +14,7 @@ const employeeRouter = Router({ mergeParams: true });
 employeeRouter.post("/", Protect, uploadFile, createEmployee);
 employeeRouter.put("/:id", Protect, uploadFile, updateEmployee);
 employeeRouter.delete("/:id", Protect, deleteEmployee);
-employeeRouter.get("/", Protect, getEmployees);
-employeeRouter.get("/:id", Protect, getEmployeeById);
+employeeRouter.get("/", getEmployees);
+employeeRouter.get("/:id", getEmployeeById);
 
 export default employeeRouter;

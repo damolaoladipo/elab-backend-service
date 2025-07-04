@@ -221,7 +221,6 @@ export interface IProjectDoc extends Document {
 
 export interface IArchiveDoc extends Document {
   title: string;
-  excerpt: string;
   category: string;  // news, press release, insight or resource
   image?: string;  //upload file
   content?: IWysiwygContent

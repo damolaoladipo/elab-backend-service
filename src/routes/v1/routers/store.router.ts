@@ -15,7 +15,7 @@ const storeRouter = Router({ mergeParams: true });
 storeRouter.post("/", Protect, uploadFile, createStore);
 storeRouter.put("/:id", Protect, uploadFile, updateStore);
 storeRouter.delete("/:id", Protect, deleteStore);
-storeRouter.get("/", Protect, getStores);
-storeRouter.get("/:id", Protect, getStoreById);
+storeRouter.get("/", getStores);
+storeRouter.get("/:id", getStoreById);
 
 export default storeRouter;

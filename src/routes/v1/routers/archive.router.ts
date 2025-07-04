@@ -19,8 +19,8 @@ archiveRouter.patch("/:id/publish", Protect, publishArchive);
 archiveRouter.patch("/:id/unpublish", Protect, unpublishArchive);
 archiveRouter.put("/:id", Protect, uploadFile,updateArchive);
 archiveRouter.delete("/:id", Protect, deleteArchive);
-archiveRouter.get("/", Protect, getArchives);
-archiveRouter.get("/:id", Protect, getArchiveById);
+archiveRouter.get("/", getArchives);
+archiveRouter.get("/:id", getArchiveById);
 archiveRouter.get("/user/:userId", Protect, getUserArchives);
 
 export default archiveRouter;
