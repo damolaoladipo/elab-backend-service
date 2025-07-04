@@ -17,12 +17,17 @@ const uploadFile = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const contentType = req.headers["content-type"];
 
+    
+
     if (
       req.method !== "POST" ||
       !contentType?.includes("multipart/form-data")
     ) {
       return next();
     }
+
+    console.log("Processing file upload...");
+
 
     const stream = busboy({
       headers: req.headers as IncomingHttpHeaders,
@@ -86,6 +91,7 @@ const uploadFile = asyncHandler(
       next(err);
     });
 
+    console.log("Starting file upload processing...");
     req.pipe(stream);
   }
 );

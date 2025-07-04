@@ -62,7 +62,13 @@ class UploadService {
       },
     });
 
-    await upload.done();
+    try {
+      await upload.done();
+    } catch (error) {
+      console.error("Error uploading file to S3:", error);
+      throw new Error("Failed to upload file to S3");
+    }
+    //await upload.done();
 
     // 4. Generate public URL
     //const fileUrl = `https://${process.env.AWS_CLOUDFRONT_URL}/${uniqueFileName}`;

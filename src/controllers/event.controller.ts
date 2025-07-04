@@ -54,53 +54,56 @@ export const createEvent = asyncHandler(
       return next(new ErrorResponse("Error", event.code!, [event.message]));
     }
 
-    const imageFile = (req as any).file;
+    const imageFile = (req as any).files.find((f: any) => f.fieldname === "image");;
+
+    console.log("Image file:", imageFile);
+    
     let imageUrl = "";
 
-    // try {
-    //   if (
-    //     imageFile &&
-    //     imageFile.stream &&
-    //     imageFile.mimeType &&
-    //     imageFile.fileName
-    //   ) {
-    //     const ImageData = {
-    //       stream: imageFile.stream,
-    //       mimeType: imageFile.mimeType,
-    //       originalFileName: imageFile.fileName,
-    //       refId: event.data._id,
-    //     };
+    try {
+      if (
+        imageFile &&
+        imageFile.stream &&
+        imageFile.mimeType &&
+        imageFile.fileName
+      ) {
+        const ImageData = {
+          stream: imageFile.stream,
+          mimeType: imageFile.mimeType,
+          originalFileName: imageFile.fileName,
+          refId: event.data._id,
+        };
 
-    //     imageUrl = await uploadService.uploadFile(ImageData);
+        imageUrl = await uploadService.uploadFile(ImageData);
 
-    //     if (imageUrl && imageUrl !== event.data.image) {
-    //       await eventRepository.updateEvent(event.data._id, {
-    //         image: imageUrl,
-    //       });
-    //       event.data.image = imageUrl;
-    //     }
-    //   }
-    // } catch (err) {
-    //   console.error("Image upload crash:", err);
-    //   const errorMessage = err instanceof Error ? err.message : "Unknown error";
-    //   return next(new ErrorResponse("Image upload failed", 500, [errorMessage]));
-    // }
-
-    if (imageFile && imageFile.stream && imageFile.mimeType && imageFile.fileName) {
-      const ImageData = {
-        stream: imageFile.stream,
-        mimeType: imageFile.mimeType,
-        originalFileName: imageFile.fileName,
-        refId: event.data._id,
-      };
-
-      imageUrl = await uploadService.uploadFile(ImageData);
-
-      if (imageUrl && imageUrl !== event.data.image) {
-        await eventRepository.updateEvent(event.data._id, { image: imageUrl });
-        event.data.image = imageUrl;
+        if (imageUrl && imageUrl !== event.data.image) {
+          await eventRepository.updateEvent(event.data._id, {
+            image: imageUrl,
+          });
+          event.data.image = imageUrl;
+        }
       }
+    } catch (err) {
+      console.error("Image upload crash:", err);
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      return next(new ErrorResponse("Image upload failed", 500, [errorMessage]));
     }
+
+    // if (imageFile && imageFile.stream && imageFile.mimeType && imageFile.fileName) {
+    //   const ImageData = {
+    //     stream: imageFile.stream,
+    //     mimeType: imageFile.mimeType,
+    //     originalFileName: imageFile.fileName,
+    //     refId: event.data._id,
+    //   };
+
+    //   imageUrl = await uploadService.uploadFile(ImageData);
+
+    //   if (imageUrl && imageUrl !== event.data.image) {
+    //     await eventRepository.updateEvent(event.data._id, { image: imageUrl });
+    //     event.data.image = imageUrl;
+    //   }
+    // }
 
     res.status(200).json({
       error: false,
