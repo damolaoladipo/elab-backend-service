@@ -23,6 +23,7 @@ import emailService from "../services/email.service";
 import tokenService from "../services/token.service";
 import { IUserDoc } from "../utils/interface.util";
 import otpService from "../services/otp.service";
+import userRepository from "../repositories/user.repository";
 
 /**
  * @name registerUser
@@ -550,3 +551,63 @@ export const resendOTP = asyncHandler(
 
 // Sign in with Google
 // Sign in with Apple
+
+
+/**
+ * @name getUser
+ * @description Get the current logged-in user
+ * @route GET /users/me
+ * @access Private
+ */
+export const getUser = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    
+    const userId = (req as any).user?.id;
+
+    if (!userId) {
+      return next(new ErrorResponse("Unauthorized", 401, ["User not authenticated"]));
+    }
+
+    const user = await userRepository.findById(userId);
+    if (user.error || !user.data) {
+      return next(new ErrorResponse("User not found", 404, []));
+    }
+
+    const {
+      firstName,
+      lastName,
+      email,
+      userType,
+      avatar,
+      isSuper,
+      isAdmin,
+      isActive,
+      isActivated,
+      isDeactivated,
+      lastLogin,
+      _id,
+    } = user.data;
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: {
+        id: _id,
+        firstName,
+        lastName,
+        email,
+        userType,
+        avatar,
+        isSuper,
+        isAdmin,
+        isActive,
+        isActivated,
+        isDeactivated,
+        lastLogin,
+      },
+      message: "User profile retrieved",
+      status: 200,
+    });
+  }
+);
+

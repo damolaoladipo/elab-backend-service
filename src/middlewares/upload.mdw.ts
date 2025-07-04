@@ -16,18 +16,12 @@ type UploadedFile = {
 const uploadFile = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const contentType = req.headers["content-type"];
-
-    
-
     if (
       req.method !== "POST" ||
       !contentType?.includes("multipart/form-data")
     ) {
       return next();
     }
-
-    console.log("Processing file upload...");
-
 
     const stream = busboy({
       headers: req.headers as IncomingHttpHeaders,
@@ -38,50 +32,42 @@ const uploadFile = asyncHandler(
     });
 
     const files: UploadedFile[] = [];
-    req.body = req.body || {};
+    req.body = {};
 
-    stream.on("file", (fieldname, file, info) => {
-      const passThroughWrite = new PassThrough();
-      const passThroughRead = new PassThrough();
-      let fileSize = 0;
+   stream.on("file", (fieldname, file, info) => {
+  const passThrough = new PassThrough();
+  let fileSize = 0;
 
-      file.pipe(passThroughWrite);
-      passThroughWrite.pipe(passThroughRead);
+  file.on("data", (chunk) => {
+    fileSize += chunk.length;
+    passThrough.write(chunk); 
+  });
 
-      file.on("data", (chunk) => {
-        fileSize += chunk.length;
-      });
+  file.on("end", () => {
+    passThrough.end();
+    
 
-      file.on("end", () => {
-        files.push({
-          fieldname,
-          stream: passThroughRead,
-          fileName: info.filename,
-          mimeType: info.mimeType,
-          info,
-          size: fileSize,
-        });
-      });
-
-      file.on("error", (err) => {
-        passThroughWrite.destroy(err);
-        passThroughRead.destroy(err);
-        return next(err);
-      });
-
-      passThroughWrite.on("error", (err) => {
-        return next(err);
-      });
+    files.push({
+      fieldname,
+      stream: passThrough,
+      fileName: info.filename,
+      mimeType: info.mimeType,
+      info,
+      size: fileSize,
     });
+  });
+
+  file.on("error", (err) => {
+    passThrough.destroy(err);
+    return next(err);
+  });
+});
 
     stream.on("field", (name, value) => {
       req.body[name] = value;
     });
 
     stream.on("finish", () => {
-      if (files.length === 0) {
-        return next(new Error("No files uploaded"));
-      }
 
       (req as any).files = files;
       next();
@@ -91,7 +77,6 @@ const uploadFile = asyncHandler(
       next(err);
     });
 
-    console.log("Starting file upload processing...");
     req.pipe(stream);
   }
 );

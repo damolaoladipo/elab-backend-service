@@ -16,7 +16,7 @@ const companyRouter = Router({ mergeParams: true });
 companyRouter.post("/", Protect, uploadFile, createCompany);
 companyRouter.put("/:id", Protect, uploadFile, updateCompany);
 companyRouter.delete("/:id", Protect, deleteCompany);
-companyRouter.get("/", Protect, getCompanies);
-companyRouter.get("/:id", Protect, getCompanyById);
+companyRouter.get("/", getCompanies);
+companyRouter.get("/:id", getCompanyById);
 
 export default companyRouter;

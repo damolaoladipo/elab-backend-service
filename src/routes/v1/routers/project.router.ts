@@ -15,8 +15,8 @@ const projectRouter = Router({ mergeParams: true });
 projectRouter.post("/", Protect, uploadFile, createProject);
 projectRouter.put("/:id", Protect, uploadFile, updateProject);
 projectRouter.delete("/:id", Protect, deleteProject);
-projectRouter.get("/", Protect, getProjects);
-projectRouter.get("/:id", Protect, getProjectById);
+projectRouter.get("/", getProjects);
+projectRouter.get("/:id", getProjectById);
 projectRouter.get("/user/:userId", Protect, getUserProjects);
 
 export default projectRouter;

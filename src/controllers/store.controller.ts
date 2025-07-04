@@ -38,14 +38,17 @@ export const createStore = asyncHandler(
       excerpt,
       description,
       url,
-      status,
+      status: "draft",
       image: "",
       user: userId,
     };
 
     const result = await storeRepository.createStore(data);
 
-    const imageFile = (req as any).file;
+    const imageFile = (req as any).files.find(
+      (file: any) => file.fieldname === "image"
+    );
+
     let imageUrl = "";
 
     if (imageFile) {
@@ -71,6 +74,80 @@ export const createStore = asyncHandler(
 );
 
 /**
+ * @name publishStore
+ * @description Publishes a store item
+ * @route PATCH /store/:id/publish
+ * @access Private
+ */
+export const publishStore = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const storeId = req.params.id;
+
+    const store = await storeRepository.findById(storeId);
+    if (store.error || !store.data) {
+      return next(new ErrorResponse("Store item not found", 404, []));
+    }
+
+    if (store.data.status === "active") {
+      return next(new ErrorResponse("Store item already published", 400, []));
+    }
+
+    const updated = await storeRepository.updateStore(storeId, {
+      status: "active",
+    });
+
+    if (updated.error) {
+      return next(new ErrorResponse("Failed to publish store item", 500, []));
+    }
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: updated.data,
+      message: "Store item published successfully.",
+      status: 200,
+    });
+  }
+);
+
+/**
+ * @name unpublishStore
+ * @description Unpublishes a store item
+ * @route PATCH /store/:id/unpublish
+ * @access Private
+ */
+export const unpublishStore = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const storeId = req.params.id;
+
+    const store = await storeRepository.findById(storeId);
+    if (store.error || !store.data) {
+      return next(new ErrorResponse("Store item not found", 404, []));
+    }
+
+    if (store.data.status === "draft") {
+      return next(new ErrorResponse("Store item already unpublished", 400, []));
+    }
+
+    const updated = await storeRepository.updateStore(storeId, {
+      status: "draft",
+    });
+
+    if (updated.error) {
+      return next(new ErrorResponse("Failed to unpublish store item", 500, []));
+    }
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: updated.data,
+      message: "Store item unpublished successfully.",
+      status: 200,
+    });
+  }
+);
+
+/**
  * @name updateStore
  * @description Update an existing store item
  * @route PATCH /store/:id
@@ -86,7 +163,10 @@ export const updateStore = asyncHandler(
       return next(new ErrorResponse("Store item not found", 404, []));
     }
 
-    const imageFile = (req as any).file;
+    const imageFile = (req as any).files.find(
+      (file: any) => file.fieldname === "image"
+      );
+
     if (imageFile) {
       const imageUrl = await uploadService.uploadFile({
         stream: imageFile.stream,

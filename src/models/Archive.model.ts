@@ -6,7 +6,6 @@ const ArchiveSchema = new Schema<IArchiveDoc>(
   {
     title: { type: String, required: true },
     image: { type: String },
-    excerpt: { type: String },
     content: { type: Schema.Types.Mixed }, // for IWysiwygContent
     link: { type: String },
     author: { type: String },
