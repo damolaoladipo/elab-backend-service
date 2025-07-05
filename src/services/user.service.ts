@@ -484,7 +484,7 @@ class UserService {
    */
   async updateLoginInfo(user: IUserDoc, req: Request): Promise<void> {
     const userAgent = req.headers["user-agent"];
-    const parser = new UAParser(userAgent);
+    
     
     await user.save();
   }
