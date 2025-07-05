@@ -2,14 +2,12 @@ import mongoose, { Schema, Model } from "mongoose";
 import { IUserDoc } from "../utils/interface.util";
 import {
   AppChannel,
- DbModelsType,
+  DbModelsType,
   OtpType,
   PasswordType,
   UserType,
 } from "../utils/enums.util";
 import UserService from "../services/user.service";
-
-
 
 const UserSchema = new Schema<IUserDoc>(
   {
@@ -34,7 +32,6 @@ const UserSchema = new Schema<IUserDoc>(
     },
 
     avatar: { type: String },
-   
 
     Otp: { type: String },
     OtpExpiry: {
@@ -43,10 +40,11 @@ const UserSchema = new Schema<IUserDoc>(
     otpType: { type: String, enum: Object.values(OtpType) },
     accessToken: { type: String },
     accessTokenExpiry: { type: Date },
+    tokenVersion: { type: Number, default: 0 },
 
     isSuper: { type: Boolean, default: false },
     isAdmin: { type: Boolean, default: false },
-    
+
     isActive: { type: Boolean, default: false },
     isActivated: { type: Boolean, default: false },
     isDeactivated: { type: Boolean, default: false },
@@ -54,9 +52,8 @@ const UserSchema = new Schema<IUserDoc>(
     lockedUntil: { type: Date },
     lastLogin: { type: String },
 
-
     // Relationships
-    role: { type: Schema.Types.ObjectId, ref:DbModelsType.ROLE, index: true },
+    role: { type: Schema.Types.ObjectId, ref: DbModelsType.ROLE, index: true },
   },
   {
     timestamps: true,
@@ -93,7 +90,7 @@ UserSchema.pre<IUserDoc>("insertMany", async function (next) {
 });
 
 const User: Model<IUserDoc> = mongoose.model<IUserDoc>(
- DbModelsType.USER,
+  DbModelsType.USER,
   UserSchema
 );
 

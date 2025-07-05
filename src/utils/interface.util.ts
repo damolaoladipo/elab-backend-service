@@ -47,6 +47,7 @@ export interface IUserDoc extends Document {
   otpType: OtpType;
   accessToken: string;
   accessTokenExpiry: Date;
+  tokenVersion: number;
 
   isSuper: boolean;
   isAdmin: boolean;

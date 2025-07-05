@@ -39,10 +39,14 @@ class TokenService {
           id: user._id,
           email: user.email,
           role: user.role,
+          tokenVersion: user.tokenVersion,
         },
         this.secret,
         { algorithm: "HS512", expiresIn: this.expire } as jwt.SignOptions
       );
+
+      console.log("JWT expiry in use:", this.expire);
+
 
       await User.findByIdAndUpdate(user.id, { accessToken: token });
 
@@ -82,6 +86,7 @@ class TokenService {
             id: user._id,
             email: user.email,
             role: user.role,
+            tokenVersion: user.tokenVersion,
           },
           this.secret,
           { algorithm: "HS512", expiresIn: this.expire } as jwt.SignOptions
@@ -135,6 +140,38 @@ class TokenService {
       result.error = true;
       result.code = 500;
       result.message = `Failed to detach token: ${error.message}`;
+    }
+
+    return result;
+  }
+
+  /**
+   * @name revokeTokens
+   * @description Increments the user's tokenVersion to revoke all existing JWTs
+   * @param {string} user - The user whose tokens to revoke
+   * @returns {Promise<IResult>} Result object indicating success or failure
+   */
+  public async revokeToken(user: IUserDoc): Promise<IResult> {
+    let result: IResult = { error: false, message: "", code: 200, data: {} };
+
+    try {
+      const updated = await User.findByIdAndUpdate(
+        user.id,
+        { $inc: { tokenVersion: 1 } },
+        { new: true }
+      );
+      if (!updated) {
+        result.error = true;
+        result.code = 404;
+        result.message = "User not found";
+        return result;
+      }
+      result.message = "All tokens revoked successfully";
+      result.data = { tokenVersion: updated.tokenVersion };
+    } catch (error: any) {
+      result.error = true;
+      result.code = 500;
+      result.message = `Failed to revoke tokens: ${error.message}`;
     }
 
     return result;
