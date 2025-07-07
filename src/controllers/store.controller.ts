@@ -4,6 +4,7 @@ import { CreateStoreDTO, UpdateStoreDTO } from "../dtos/store.dto";
 import asyncHandler from "../middlewares/async.mdw";
 import ErrorResponse from "../utils/error.util";
 import uploadService from "../services/upload.service";
+import { IStoreDoc } from "../utils/interface.util";
 
 /**
  * @name createStore
@@ -225,6 +226,51 @@ export const getStoreById = asyncHandler(
     });
   }
 );
+
+/**
+ * @name getStoreItemBySlug
+ * @description Get store item by slug
+ * @route GET /store/slug/:slug
+ * @access Public
+ */
+export const getStoreItemBySlug = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { slug } = req.params;
+
+    const result = await storeRepository.findBySlug(slug);
+    if (result.error || !result.data) {
+      return next(new ErrorResponse("Store item not found", 404, [result.message]));
+    }
+
+    const item = result.data as IStoreDoc;
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: {
+        id: item._id,
+        name: item.name,
+        slug: item.slug,
+        price: item.price,
+        discount: item.discount,
+        discountedPrice: item.discountedPrice,
+        image: item.image,
+        category: item.category,
+        excerpt: item.excerpt,
+        description: item.description,
+        author: item.author,
+        url: item.url,
+        color: item.color,
+        pageCount: item.pageCount,
+        size: item.size,
+        status: item.status,
+      },
+      message: "Store item fetched successfully",
+      status: 200,
+    });
+  }
+);
+
 
 /**
  * @name getStores
