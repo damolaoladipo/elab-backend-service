@@ -36,6 +36,7 @@ export const initiateStorePayment = asyncHandler(
  */
 export const verifyStorePayment = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    
     const { reference } = req.query;
 
     const transaction = await transactionService.verifyPurchase(
@@ -59,6 +60,7 @@ export const verifyStorePayment = asyncHandler(
  */
 export const handleStoreWebhook = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    
     const rawBody = req.body as Buffer;
     const signature = req.headers["x-paystack-signature"] as string;
 

@@ -1,15 +1,17 @@
 export interface CreateStoreDTO {
+  image?: string; // upload file
   name: string;
   price: number;
-  discountedPrice?: number;
-  image?: string; // upload file
-  tags: string[];
+  discount?: number;
+  description?: string;
+  status?: string;
   category: string;
-  author?: string;
   excerpt?: string;
-  description: string;
-  url: string;
-  status: string;
+  url?: string;
+  author?: string;
+  color?: string;
+  pageCount?: number;
+  size?: string;
 }
 
 export interface UpdateStoreDTO extends Partial<CreateStoreDTO> {}

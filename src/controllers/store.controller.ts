@@ -18,27 +18,36 @@ export const createStore = asyncHandler(
     const {
       name,
       price,
-      discountedPrice,
-      tags,
+      discount,
       category,
       author,
       excerpt,
       description,
       url,
-      status,
+      color,
+      pageCount,
+      size,
+      status
     }: CreateStoreDTO = req.body;
+
+      const discountedPrice = discount
+      ? price - (price * discount) / 100
+      : price;
 
     const data = {
       name,
       price,
+      discount,
       discountedPrice,
-      tags,
       category,
       author,
       excerpt,
       description,
       url,
-      status: "draft",
+      color,
+      pageCount,
+      size,
+      status,
       image: "",
       user: userId,
     };

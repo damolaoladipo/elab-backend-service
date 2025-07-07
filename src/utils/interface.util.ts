@@ -281,9 +281,9 @@ export interface IVentureDoc extends Document {
 export interface IStoreDoc extends Document {
   name: string;
   price: number;
+  discount?: number; // percentage discount
   discountedPrice?: number;
   image: string; //upload file
-  tags: Array<string>;
   category: string; // e.g. "merch", "ebook", "courses"
 
   author?: string; // for ebooks or courses
@@ -291,6 +291,9 @@ export interface IStoreDoc extends Document {
   description: string;
   url: string;
   status: string;
+  color?: string;
+  pageCount?: number;
+  size?: string;
     
   //relationships
   user: IUserDoc | ObjectId;

@@ -23,7 +23,9 @@ class TransactionService {
       throw new ErrorResponse("Store item not available for purchase", 404, []);
     }
 
-    const amount = store.price * 100;
+    const discount = store.discount ?? 0;
+    const discountedPrice = store.price - (store.price * discount) / 100;
+    const amount = discountedPrice * 100;
 
     const response = await paystackService.initializePayment({
       amount,
@@ -35,7 +37,6 @@ class TransactionService {
       },
     });
 
-  
     await Transaction.create({
       type: "purchase",
       medium: "store",
@@ -47,7 +48,7 @@ class TransactionService {
       providerName: "paystack",
       description: `${store.category} purchase`,
       narration: `${store.category} - ${store._id}`,
-      amount: store.price,
+      amount: discountedPrice,
       unitAmount: amount,
       status: "pending",
       user: user._id,
