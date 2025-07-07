@@ -130,18 +130,6 @@ export const updateEvent = asyncHandler(
       return next(new ErrorResponse(existingEvent.message, 404, []));
     }
 
-    //   const contentParseResult = validationService.parseAndValidateContent(rawContent);
-    // if (contentParseResult.error) {
-    //   return next(new ErrorResponse("Error", 400, [contentParseResult.message]));
-    // }
-    // const parsedContent = contentParseResult.data || [];
-
-    //  const featuresParseResult = validationService.parseAndValidateFeatures(rawFeatures);
-    // if (featuresParseResult.error) {
-    //   return next(new ErrorResponse("Error", 400, [featuresParseResult.message]));
-    // }
-    // const parsedFeatures = featuresParseResult.data || [];
-
     const validate = await validationService.validateUpdateEvent({
       title,
       content,
