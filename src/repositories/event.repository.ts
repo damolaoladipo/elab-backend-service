@@ -70,6 +70,37 @@ public async getUserEvents(userId: string | ObjectId): Promise<IResult> {
   return result;
 }
 
+
+public async findBySlug(slug: string): Promise<IResult> {
+  const result: IResult = {
+    error: false,
+    message: "",
+    code: 200,
+    data: {},
+  };
+
+  try {
+    const event = await this.model.findOne({ slug });
+
+    if (!event) {
+      result.error = true;
+      result.code = 404;
+      result.message = "Event not found";
+      return result;
+    }
+
+    result.data = event.toJSON();
+    result.message = "Event fetched successfully";
+    return result;
+  } catch (err: any) {
+    result.error = true;
+    result.code = 500;
+    result.message = err.message;
+    return result;
+  }
+}
+
+
   /**
    * @name getEvents
    * @returns {Promise<IResult>}

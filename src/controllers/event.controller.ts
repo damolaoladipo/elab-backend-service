@@ -228,6 +228,45 @@ export const getEventById = asyncHandler(
   }
 );
 
+
+/**
+ * @name getEventBySlug
+ * @description Get event by slug
+ * @route GET /events/slug/:slug
+ * @access Public
+ */
+export const getEventBySlug = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { slug } = req.params;
+
+    const result = await eventRepository.findBySlug(slug);
+    if (result.error || !result.data) {
+      return next(new ErrorResponse("Error", 404, ["Event not found"]));
+    }
+
+    const event = result.data as IEventDoc;
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: {
+        title: event.title,
+        content: event.content,
+        image: event.image,
+        features: event.features,
+        joinUrl: event.joinUrl,
+        planUrl: event.planUrl,
+        sponsorUrl: event.sponsorUrl,
+        communityUrl: event.communityUrl,
+        id: event._id,
+      },
+      message: "Event fetched successfully.",
+      status: 200,
+    });
+  }
+);
+
+
 /**
  * @name getUserEvents
  * @description Get all events for a specific user
