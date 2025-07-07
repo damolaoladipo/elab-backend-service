@@ -40,6 +40,36 @@ class ArchiveRepository {
     }
   }
 
+  public async findBySlug(slug: string): Promise<IResult> {
+  const result: IResult = {
+    error: false,
+    message: "",
+    code: 200,
+    data: {},
+  };
+
+  try {
+    const archive = await this.model.findOne({ slug });
+
+    if (!archive) {
+      result.error = true;
+      result.code = 404;
+      result.message = "Archive not found";
+      return result;
+    }
+
+    result.data = archive.toJSON();
+    result.message = "Archive fetched successfully";
+    return result;
+  } catch (err: any) {
+    result.error = true;
+    result.code = 500;
+    result.message = err.message;
+    return result;
+  }
+}
+
+
 
 
   public async getArchives(): Promise<IResult> {
