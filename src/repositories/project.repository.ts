@@ -118,6 +118,40 @@ class ProjectRepository {
     return result;
   }
 
+/**
+   * @name findBySlug
+   * @param slug
+   * @returns {Promise<IResult>}
+   */
+  public async findBySlug(slug: string): Promise<IResult> {
+  const result: IResult = {
+    error: false,
+    message: "",
+    code: 200,
+    data: {},
+  };
+
+  try {
+    const project = await this.model.findOne({ slug });
+    if (!project) {
+      result.error = true;
+      result.code = 404;
+      result.message = "Project not found";
+      return result;
+    }
+
+    result.data = project.toJSON();
+    result.message = "Project fetched successfully";
+    return result;
+  } catch (err: any) {
+    result.error = true;
+    result.code = 500;
+    result.message = err.message;
+    return result;
+  }
+}
+
+
   /**
    * @name updateProject
    * @param id

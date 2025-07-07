@@ -6,6 +6,7 @@ import { CreateProjectDTO, UpdateProjectDTO } from "../dtos/project.dto";
 import projectRepository from "../repositories/project.repository";
 import userReposirtory from "../repositories/user.repository";
 import uploadService from "../services/upload.service";
+import { IProjectDoc } from "../utils/interface.util";
 
 
 
@@ -194,6 +195,45 @@ export const getProjectById = asyncHandler(
     });
   }
 );
+
+/**
+ * @name getProjectBySlug
+ * @description Get a project by its slug
+ * @route GET /projects/slug/:slug
+ * @access Public
+ */
+export const getProjectBySlug = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { slug } = req.params;
+
+    const result = await projectRepository.findBySlug(slug);
+    if (result.error || !result.data) {
+      return next(new ErrorResponse("Project not found", 404, [result.message]));
+    }
+
+    const project = result.data as IProjectDoc;
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: {
+        id: project._id,
+        title: project.title,
+        content: project.content,
+        image: project.image,
+        websiteUrl: project.websiteUrl,
+        volunteerUrl: project.volunteerUrl,
+        partnerUrl: project.partnerUrl,
+        sponsorUrl: project.sponsorUrl,
+        slug: project.slug,
+      },
+      message: "Project fetched successfully.",
+      status: 200,
+    });
+  }
+);
+
+
 
 /**
  * @name getUserProjects
