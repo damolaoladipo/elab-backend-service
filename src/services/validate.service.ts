@@ -13,7 +13,6 @@ class ValidationService {
   public async validateCreateEvent(data: CreateEventDTO): Promise<IResult> {
     if (!data.title) return this.error("title is required");
     if (!data.content) return this.error("content is required");
-    if (!data.features) return this.error("features is required");
     return this.ok();
   }
 
@@ -60,7 +59,7 @@ class ValidationService {
    */
   public async validateCreateArchive(data: CreateArchiveDTO): Promise<IResult> {
      if (!data.title) return this.error("title is required");
-    if (!data.content) return this.error("content is required");
+    if (!data.category) return this.error("category is required");
     return this.ok();
   }
 

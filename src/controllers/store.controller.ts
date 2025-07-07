@@ -88,12 +88,12 @@ export const publishStore = asyncHandler(
       return next(new ErrorResponse("Store item not found", 404, []));
     }
 
-    if (store.data.status === "active") {
+    if (store.data.status === "published") {
       return next(new ErrorResponse("Store item already published", 400, []));
     }
 
     const updated = await storeRepository.updateStore(storeId, {
-      status: "active",
+      status: "published",
     });
 
     if (updated.error) {
