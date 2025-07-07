@@ -30,6 +30,36 @@ class EmployeeRepository {
     return employee;
   }
 
+  public async findBySlug(slug: string): Promise<IResult> {
+  const result: IResult = {
+    error: false,
+    message: "",
+    code: 200,
+    data: {},
+  };
+
+  try {
+    const employee = await this.model.findOne({ slug });
+
+    if (!employee) {
+      result.error = true;
+      result.code = 404;
+      result.message = "Employee not found";
+      return result;
+    }
+
+    result.data = employee.toJSON();
+    result.message = "Employee fetched successfully";
+    return result;
+  } catch (err: any) {
+    result.error = true;
+    result.code = 500;
+    result.message = err.message;
+    return result;
+  }
+}
+
+
   /**
    * @name getEmployees
    * @returns {Promise<IResult>}
