@@ -244,11 +244,6 @@ export const getUserEvents = asyncHandler(
       );
     }
 
-    // Check if user exists
-    // const user = await userRepository.findById(userId);
-    // if (!user) {
-    //   return next(new ErrorResponse("User not found", 404, ["User not found"]));
-    // }
 
     const user = await User.findById(userId).lean();
 
