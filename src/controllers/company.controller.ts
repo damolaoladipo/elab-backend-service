@@ -17,7 +17,6 @@ export const createCompany = asyncHandler(
     const {
       name,
       description,
-      content,
       status,
       websiteUrl,
       contact,
@@ -32,7 +31,6 @@ export const createCompany = asyncHandler(
     const data: CreateCompanyDTO & { logo?: string; brochureUrl?: string } = {
       name,
       description,
-      content,
       status,
       websiteUrl,
       contact,
@@ -110,7 +108,7 @@ export const updateCompany = asyncHandler(
     const {
       name,
       description,
-      content,
+      
       status,
       websiteUrl,
       contact,
@@ -169,7 +167,6 @@ export const updateCompany = asyncHandler(
     const updated = await companyRepository.updateCompany(companyId, {
       name,
       description,
-      content,
       status,
       websiteUrl,
       contact,

@@ -5,8 +5,7 @@ import { DbModelsType } from "../utils/enums.util";
 const CompanySchema = new Schema<IVentureDoc>(
   {
     name: { type: String, required: true },
-    description: { type: String,},
-    content: { type: Schema.Types.Mixed }, // for IWysiwygContent
+    description: { type: Schema.Types.Mixed }, // for IWysiwygContent
     logo: { type: String },
     status: { type: String },
     

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import transactionService from "../services/transaction.service";
 import asyncHandler from "../middlewares/async.mdw";
+import ErrorResponse from "../utils/error.util";
 
 /**
  * @desc Initiate payment for a store item via Paystack
@@ -9,7 +10,11 @@ import asyncHandler from "../middlewares/async.mdw";
  */
 export const initiateStorePayment = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    
     const user = (req as any).user;
+    if (!user) {
+      return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
+    }
     const { storeId } = req.body;
 
     const result = await transactionService.initiatePurchase(storeId, user);

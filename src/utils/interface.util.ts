@@ -259,8 +259,7 @@ export interface IWysiwygContent {
 
 export interface IVentureDoc extends Document {
   name: string;
-  description: string;
-  content: IWysiwygContent;
+  description: IWysiwygContent;
   logo: string;
   status: string;
   websiteUrl: string;
