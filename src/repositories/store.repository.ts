@@ -74,6 +74,41 @@ class StoreRepository {
   }
 
   /**
+   * @name findBySlug
+   * @description Finds a store item by its slug
+   * @param slug Store item slug
+   * @returns {Promise<IResult>}
+   */
+  public async findBySlug(slug: string): Promise<IResult> {
+  const result: IResult = {
+    error: false,
+    message: "",
+    code: 200,
+    data: {},
+  };
+
+  try {
+    const item = await this.model.findOne({ slug });
+    if (!item) {
+      result.error = true;
+      result.code = 404;
+      result.message = "Store item not found";
+      return result;
+    }
+
+    result.data = item.toJSON();
+    result.message = "Store item fetched successfully";
+    return result;
+  } catch (err: any) {
+    result.error = true;
+    result.code = 500;
+    result.message = err.message;
+    return result;
+  }
+}
+
+
+  /**
    * @name getStores
    * @description Fetches all store items
    * @returns {Promise<IResult>}

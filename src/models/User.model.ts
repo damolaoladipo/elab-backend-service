@@ -8,11 +8,13 @@ import {
   UserType,
 } from "../utils/enums.util";
 import UserService from "../services/user.service";
+import slugify from "slugify";
 
 const UserSchema = new Schema<IUserDoc>(
   {
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
+    slug: { type: String, default: "" },
     email: {
       type: String,
       required: true,
@@ -85,9 +87,33 @@ UserSchema.pre<IUserDoc>("save", async function (next) {
   next();
 });
 
+UserSchema.pre<IUserDoc>("save", async function (next) {
+  if (!this.isModified("firstName") && !this.isModified("lastName")) {
+    return next();
+  }
+
+  const fullName = `${this.firstName} ${this.lastName}`;
+  const rawSlug = slugify(fullName, { lower: true });
+
+  let slug = rawSlug;
+  let count = 1;
+
+  while (await mongoose.models.User.exists({ slug })) {
+    slug = `${rawSlug}-${count}`;
+    count++;
+  }
+
+  this.slug = slug;
+  next();
+});
+
+
 UserSchema.pre<IUserDoc>("insertMany", async function (next) {
   next();
 });
+
+
+
 
 const User: Model<IUserDoc> = mongoose.model<IUserDoc>(
   DbModelsType.USER,

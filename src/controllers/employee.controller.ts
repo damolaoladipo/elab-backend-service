@@ -1,13 +1,15 @@
 import { Request, Response, NextFunction } from "express";
-
 import ErrorResponse from "../utils/error.util";
 import employeeRepository from "../repositories/employee.repository";
 import uploadService from "../services/upload.service";
 import asyncHandler from "../middlewares/async.mdw";
 import { CreateEmployeeDTO, UpdateEmployeeDTO } from "../dtos/employee.dto";
 
+
+
 export const createEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    
     const userId = (req as any).user?.id;
     const { name, role, socialLink }: CreateEmployeeDTO = req.body;
 
@@ -51,6 +53,27 @@ export const createEmployee = asyncHandler(
     });
   }
 );
+
+
+export const getEmployeeBySlug = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { slug } = req.params;
+
+    const employee = await employeeRepository.findBySlug(slug);
+    if (employee.error) {
+      return next(new ErrorResponse("Failed", employee.code!, [employee.message]));
+    }
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: employee.data,
+      message: employee.message,
+      status: employee.code,
+    });
+  }
+);
+
 
 export const updateEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {

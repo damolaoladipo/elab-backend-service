@@ -249,6 +249,36 @@ export const updateArchive = asyncHandler(
   }
 );
 
+
+/**
+ * @name getArchiveBySlug
+ * @description Gets a single archive by slug
+ * @route GET /archives/slug/:slug
+ * @access Public
+ */
+export const getArchiveBySlug = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { slug } = req.params;
+
+    const archive = await archiveRepository.findBySlug(slug);
+
+    if (archive.error) {
+      return next(
+        new ErrorResponse("Error", archive.code!, [archive.message])
+      );
+    }
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: archive.data,
+      message: archive.message,
+      status: archive.code,
+    });
+  }
+);
+
+
 /**
  * @name getArchiveById
  * @description Get archive by ID

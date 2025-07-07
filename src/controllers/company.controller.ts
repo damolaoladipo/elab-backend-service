@@ -17,41 +17,39 @@ export const createCompany = asyncHandler(
     const {
       name,
       description,
-      content,
       status,
       websiteUrl,
       contact,
+      brochureUrl
     }: CreateCompanyDTO = req.body;
 
     const validate = await validationService.validateCreateCompany(req.body);
     if (validate.error) {
-      return next(new ErrorResponse("Validation error", 400, [validate.message]));
+      return next(new ErrorResponse(validate.message, 400, []));
     }
 
     // Initial empty file placeholders
-    const data: CreateCompanyDTO & { logo?: string; brochureUrl?: string } = {
+    const data: CreateCompanyDTO & { logo?: string } = {
       name,
       description,
-      content,
       status,
       websiteUrl,
       contact,
+      brochureUrl,
       logo: "",
-      brochureUrl: "",
     };
     
     // Create initial company record
     const company = await companyRepository.createCompany(data);
     if (company.error) {
-      return next(new ErrorResponse("Creation failed", company.code!, [company.message]));
+      return next(new ErrorResponse(company.message, company.code!, []));
     }
 
     // Handle file uploads
     const logoFile = (req as any).files?.find((f: any) => f.fieldname === "logo");
-    const brochureFile = (req as any).files?.find((f: any) => f.fieldname === "brochure");
+    
 
     let logoUrl = "";
-    let brochureUrl = "";
 
     if (logoFile) {
       logoUrl = await uploadService.uploadFile({
@@ -62,19 +60,11 @@ export const createCompany = asyncHandler(
       });
     }
 
-    if (brochureFile) {
-      brochureUrl = await uploadService.uploadFile({
-        stream: brochureFile.stream,
-        mimeType: brochureFile.mimeType,
-        originalFileName: brochureFile.fileName,
-        refId: company.data._id,
-      });
-    }
+   
 
     // Update file URLs
     await companyRepository.updateCompany(company.data._id, {
       logo: logoUrl,
-      brochureUrl: brochureUrl,
     });
 
     // Clean final response
@@ -86,10 +76,37 @@ export const createCompany = asyncHandler(
       data: {
         ...company.data,
         logo: logoUrl,
-        brochureUrl: brochureUrl,
       },
       message: "Company created successfully.",
       status: 201,
+    });
+  }
+);
+
+
+/**
+ * @name getCompanyBySlug
+ * @description Gets a company by its slug
+ * @route GET /companies/slug/:slug
+ * @access Public
+ */
+export const getCompanyBySlug = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+  
+    const { slug } = req.params;
+
+    const company = await companyRepository.findBySlug(slug);
+
+    if (company.error) {
+      return next(new ErrorResponse(company.message, company.code!, []));
+    }
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: company.data,
+      message: company.message,
+      status: company.code,
     });
   }
 );
@@ -110,7 +127,7 @@ export const updateCompany = asyncHandler(
     const {
       name,
       description,
-      content,
+      
       status,
       websiteUrl,
       contact,
@@ -169,7 +186,6 @@ export const updateCompany = asyncHandler(
     const updated = await companyRepository.updateCompany(companyId, {
       name,
       description,
-      content,
       status,
       websiteUrl,
       contact,

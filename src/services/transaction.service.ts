@@ -23,7 +23,9 @@ class TransactionService {
       throw new ErrorResponse("Store item not available for purchase", 404, []);
     }
 
-    const amount = (store.discountedPrice ?? store.price) * 100;
+    const discount = store.discount ?? 0;
+    const discountedPrice = store.price - (store.price * discount) / 100;
+    const amount = discountedPrice * 100;
 
     const response = await paystackService.initializePayment({
       amount,
@@ -33,6 +35,30 @@ class TransactionService {
         userId: user._id.toString(),
         category: store.category,
       },
+    });
+
+    await Transaction.create({
+      type: "purchase",
+      medium: "store",
+      resource: "store",
+      entity: store._id,
+      reference: response.data.reference,
+      currency: "NGN",
+      providerRef: null,
+      providerName: "paystack",
+      description: `${store.category} purchase`,
+      narration: `${store.category} - ${store._id}`,
+      amount: discountedPrice,
+      unitAmount: amount,
+      status: "pending",
+      user: user._id,
+      metadata: [
+        {
+          storeId: store._id.toString(),
+          userId: user._id.toString(),
+          category: store.category,
+        },
+      ],
     });
 
     return {
@@ -111,7 +137,13 @@ class TransactionService {
       throw new ErrorResponse("Invalid webhook signature", 401, []);
     }
 
-    const body = JSON.parse(rawBody.toString());
+    let body;
+    try {
+      body = JSON.parse(rawBody.toString());
+    } catch (err) {
+      throw new ErrorResponse("Malformed webhook payload", 400, []);
+    }
+
     const event = body.event;
     const data = body.data;
     const meta = data.metadata;
@@ -143,8 +175,10 @@ class TransactionService {
         channel: data.channel,
         slug: data.reference,
         card: data.authorization,
-        user: new Types.ObjectId(meta.userId),
+        user: meta.userId,
       });
+    } else {
+      console.log(`Unhandled Paystack event: ${event}`);
     }
   }
 }

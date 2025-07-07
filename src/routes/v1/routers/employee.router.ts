@@ -4,7 +4,8 @@ import {
   updateEmployee,
   getEmployees,
   getEmployeeById,
-  deleteEmployee
+  deleteEmployee,
+  getEmployeeBySlug
 } from "../../../controllers/employee.controller";
 import Protect from "../../../middlewares/checkAuth.mdw";
 import uploadFile from "../../../middlewares/upload.mdw";
@@ -15,6 +16,7 @@ employeeRouter.post("/", Protect, uploadFile, createEmployee);
 employeeRouter.put("/:id", Protect, uploadFile, updateEmployee);
 employeeRouter.delete("/:id", Protect, deleteEmployee);
 employeeRouter.get("/", getEmployees);
+employeeRouter.get("/:slug", getEmployeeBySlug);
 employeeRouter.get("/:id", getEmployeeById);
 
 export default employeeRouter;
