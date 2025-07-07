@@ -84,6 +84,34 @@ export const createCompany = asyncHandler(
 );
 
 
+/**
+ * @name getCompanyBySlug
+ * @description Gets a company by its slug
+ * @route GET /companies/slug/:slug
+ * @access Public
+ */
+export const getCompanyBySlug = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+  
+    const { slug } = req.params;
+
+    const company = await companyRepository.findBySlug(slug);
+
+    if (company.error) {
+      return next(new ErrorResponse(company.message, company.code!, []));
+    }
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: company.data,
+      message: company.message,
+      status: company.code,
+    });
+  }
+);
+
+
 
 /**
  * @name updateCompany

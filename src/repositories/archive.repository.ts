@@ -49,7 +49,7 @@ class ArchiveRepository {
   };
 
   try {
-    const archive = await this.model.findOne({ slug });
+    const archive = await this.model.findOne({ slug,  status: "published"  });
 
     if (!archive) {
       result.error = true;

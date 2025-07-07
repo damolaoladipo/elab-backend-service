@@ -22,7 +22,7 @@ archiveRouter.patch("/:id/unpublish", Protect, unpublishArchive);
 archiveRouter.put("/:id", Protect, uploadFile,updateArchive);
 archiveRouter.delete("/:id", Protect, deleteArchive);
 archiveRouter.get("/", getArchives);
-authRouter.get("/archives", getArchiveBySlug);
+authRouter.get("/:slug", getArchiveBySlug);
 archiveRouter.get("/:id", getArchiveById);
 archiveRouter.get("/user/:userId", Protect, getUserArchives);
 
