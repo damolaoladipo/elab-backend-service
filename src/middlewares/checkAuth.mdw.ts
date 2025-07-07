@@ -65,7 +65,6 @@ const Protect = asyncHandler(
     req.user = { id: decoded.id, email: decoded.email, role: decoded.role };
     next();
 
-    return next(new ErrorResponse("Something went wrong with Token", 500, []));
   }
 );
 
