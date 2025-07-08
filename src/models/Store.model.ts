@@ -13,7 +13,7 @@ const StoreSchema = new Schema<IStoreDoc>(
     author: { type: String },
     excerpt: { type: String },
     description: { type: String },
-    url: { type: String, required: true },
+    url: { type: String},
     status: { type: String },
 
     user: { type: Schema.Types.ObjectId, ref: DbModelsType.USER, index: true },
