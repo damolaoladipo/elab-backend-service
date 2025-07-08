@@ -36,6 +36,7 @@ export interface IPermissionDoc extends Document {
 export interface IUserDoc extends Document {
   firstName: string;
   lastName: string;
+  slug: string;
   email: string;
   password: string;
   passwordType: PasswordType;
@@ -47,6 +48,7 @@ export interface IUserDoc extends Document {
   otpType: OtpType;
   accessToken: string;
   accessTokenExpiry: Date;
+  tokenVersion: number;
 
   isSuper: boolean;
   isAdmin: boolean;
@@ -178,6 +180,7 @@ export interface IEmailRequest {
 
 export interface IEventDoc extends Document {
   title: string;
+  slug: string;
   image: string;
   content: IWysiwygContent[]
   features?: IWysiwygContent[];
@@ -199,6 +202,7 @@ export interface IEventDoc extends Document {
 
 export interface IProjectDoc extends Document {
   title: string;
+  slug: string;
   image: string;  //upload file
   content: IWysiwygContent
   websiteUrl?: string;
@@ -221,13 +225,13 @@ export interface IProjectDoc extends Document {
 
 export interface IArchiveDoc extends Document {
   title: string;
-  excerpt: string;
+  slug: string;
   category: string;  // news, press release, insight or resource
   image?: string;  //upload file
   content?: IWysiwygContent
   link?: string;
   author?: string;
-  resourceLink?: string // upload file
+  resourceLink?: string // upload file for resoruces
   
   tags: Array<string>;
   status: string; // published, draft, archived 
@@ -259,8 +263,8 @@ export interface IWysiwygContent {
 
 export interface IVentureDoc extends Document {
   name: string;
-  description: string;
-  content: IWysiwygContent;
+  slug: string;
+  description: IWysiwygContent;
   logo: string;
   status: string;
   websiteUrl: string;
@@ -281,10 +285,11 @@ export interface IVentureDoc extends Document {
 
 export interface IStoreDoc extends Document {
   name: string;
+  slug: string;
   price: number;
+  discount?: number; // percentage discount
   discountedPrice?: number;
   image: string; //upload file
-  tags: Array<string>;
   category: string; // e.g. "merch", "ebook", "courses"
 
   author?: string; // for ebooks or courses
@@ -292,6 +297,9 @@ export interface IStoreDoc extends Document {
   description: string;
   url: string;
   status: string;
+  color?: string;
+  pageCount?: number;
+  size?: string;
     
   //relationships
   user: IUserDoc | ObjectId;
@@ -304,13 +312,13 @@ export interface IStoreDoc extends Document {
   id: ObjectId;
 }
 
-export interface ITra extends Document {
-  
-  storeItem: IStoreDoc | ObjectId;
-  reference: string;
-  amount: number;
-  status: TransactionsType
-  paidAt?: Date;
+export interface IEmployeeDoc extends Document {
+  name: string;
+  slug: string;
+  role: string;
+  image: string; //upload file
+  status: string; // e.g. "active", "inactive", "on leave"
+  socialLink?: string
 
   // relationships
   user: ObjectId | any;

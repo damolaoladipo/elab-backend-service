@@ -2,19 +2,19 @@ import mongoose, { Schema, Model } from "mongoose";
 import { IUserDoc } from "../utils/interface.util";
 import {
   AppChannel,
- DbModelsType,
+  DbModelsType,
   OtpType,
   PasswordType,
   UserType,
 } from "../utils/enums.util";
 import UserService from "../services/user.service";
-
-
+import slugify from "slugify";
 
 const UserSchema = new Schema<IUserDoc>(
   {
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
+    slug: { type: String, default: "" },
     email: {
       type: String,
       required: true,
@@ -34,7 +34,6 @@ const UserSchema = new Schema<IUserDoc>(
     },
 
     avatar: { type: String },
-   
 
     Otp: { type: String },
     OtpExpiry: {
@@ -43,10 +42,11 @@ const UserSchema = new Schema<IUserDoc>(
     otpType: { type: String, enum: Object.values(OtpType) },
     accessToken: { type: String },
     accessTokenExpiry: { type: Date },
+    tokenVersion: { type: Number, default: 0 },
 
     isSuper: { type: Boolean, default: false },
     isAdmin: { type: Boolean, default: false },
-    
+
     isActive: { type: Boolean, default: false },
     isActivated: { type: Boolean, default: false },
     isDeactivated: { type: Boolean, default: false },
@@ -54,9 +54,8 @@ const UserSchema = new Schema<IUserDoc>(
     lockedUntil: { type: Date },
     lastLogin: { type: String },
 
-
     // Relationships
-    role: { type: Schema.Types.ObjectId, ref:DbModelsType.ROLE, index: true },
+    role: { type: Schema.Types.ObjectId, ref: DbModelsType.ROLE, index: true },
   },
   {
     timestamps: true,
@@ -88,12 +87,36 @@ UserSchema.pre<IUserDoc>("save", async function (next) {
   next();
 });
 
+UserSchema.pre<IUserDoc>("save", async function (next) {
+  if (!this.isModified("firstName") && !this.isModified("lastName")) {
+    return next();
+  }
+
+  const fullName = `${this.firstName} ${this.lastName}`;
+  const rawSlug = slugify(fullName, { lower: true });
+
+  let slug = rawSlug;
+  let count = 1;
+
+  while (await mongoose.models.User.exists({ slug })) {
+    slug = `${rawSlug}-${count}`;
+    count++;
+  }
+
+  this.slug = slug;
+  next();
+});
+
+
 UserSchema.pre<IUserDoc>("insertMany", async function (next) {
   next();
 });
 
+
+
+
 const User: Model<IUserDoc> = mongoose.model<IUserDoc>(
- DbModelsType.USER,
+  DbModelsType.USER,
   UserSchema
 );
 

@@ -22,6 +22,7 @@ export enum UserType {
 export enum DbModelsType {
   ARCHIVE = "archive",
   COMPANY = "company",
+  EMPLOYEE = "employee",
   EVENT = "event",
   PERMISSION = "permission",
   PROJECT = "project",

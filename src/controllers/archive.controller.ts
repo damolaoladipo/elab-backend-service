@@ -7,8 +7,6 @@ import archiveRepository from "../repositories/archive.repository";
 import uploadService from "../services/upload.service";
 import userRepository from "../repositories/user.repository";
 
-
-
 /**
  * @name createArchive
  * @description Creates a new archive
@@ -17,34 +15,31 @@ import userRepository from "../repositories/user.repository";
  */
 export const createArchive = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    
     const userId = (req as any).user?.id;
+    if (!userId) {
+      return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
+    }
 
-    const {
-      title,
-      excerpt,
-      category,
-      content,
-      link,
-      author,
-      tags,
-      status,
-    }: CreateArchiveDTO = req.body;
+    const { title, content, link, author, category, tags }: CreateArchiveDTO =
+      req.body;
 
     const validate = await validationService.validateCreateArchive(req.body);
     if (validate.error) {
-      return next(new ErrorResponse("Validation Error", 400, [validate.message]));
+      return next(
+        new ErrorResponse("Validation Error", 400, [validate.message])
+      );
     }
 
     const data = {
       title,
-      excerpt,
-      category,
       image: "",
       content,
       link,
       author,
+      category,
       tags,
-      status,  
+      status: "draft",
       resourceLink: "",
       user: userId,
     };
@@ -54,9 +49,12 @@ export const createArchive = asyncHandler(
       return next(new ErrorResponse("Error", archive.code!, [archive.message]));
     }
 
-    const files = (req as any).files || [];
-    const imageFile = files.find((f: any) => f.fieldname === "image");
-    const resourceFile = files.find((f: any) => f.fieldname === "resourceLink");
+    const imageFile = (req as any).files.find(
+      (f: any) => f.fieldname === "image"
+    );
+    const resourceFile = (req as any).files.find(
+      (f: any) => f.fieldname === "resourceLink"
+    );
 
     let imageUrl = "";
     let resourceUrl = "";
@@ -94,7 +92,79 @@ export const createArchive = asyncHandler(
   }
 );
 
+/**
+ * @name publishArchive
+ * @description Publishes an existing archive
+ * @route PATCH /archives/:id/publish
+ * @access Private
+ */
+export const publishArchive = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const archiveId = req.params.id;
 
+    const archive = await archiveRepository.findById(archiveId);
+    if (archive.error || !archive.data) {
+      return next(new ErrorResponse("Archive not found", 404, []));
+    }
+
+    if (archive.data.status === "published") {
+      return next(new ErrorResponse("Archive already published", 400, []));
+    }
+
+    const updated = await archiveRepository.updateArchive(archiveId, {
+      status: "published",
+    });
+
+    if (updated.error) {
+      return next(new ErrorResponse("Failed to publish archive", 500, []));
+    }
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: updated.data,
+      message: "Archive published successfully.",
+      status: 200,
+    });
+  }
+);
+
+/**
+ * @name unpublishArchive
+ * @description Unpublishes an existing archive
+ * @route PATCH /archives/:id/unpublish
+ * @access Private
+ */
+export const unpublishArchive = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const archiveId = req.params.id;
+
+    const archive = await archiveRepository.findById(archiveId);
+    if (archive.error || !archive.data) {
+      return next(new ErrorResponse("Archive not found", 404, []));
+    }
+
+    if (archive.data.status === "draft") {
+      return next(new ErrorResponse("Archive already unpublished", 400, []));
+    }
+
+    const updated = await archiveRepository.updateArchive(archiveId, {
+      status: "draft",
+    });
+
+    if (updated.error) {
+      return next(new ErrorResponse("Failed to unpublish archive", 500, []));
+    }
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: updated.data,
+      message: "Archive unpublished successfully.",
+      status: 200,
+    });
+  }
+);
 
 /**
  * @name updateArchive
@@ -108,7 +178,6 @@ export const updateArchive = asyncHandler(
 
     const {
       title,
-      excerpt,
       category,
       content,
       link,
@@ -119,12 +188,14 @@ export const updateArchive = asyncHandler(
 
     const validate = await validationService.validateUpdateArchive(req.body);
     if (validate.error) {
-      return next(new ErrorResponse("Validation Error", 400, [validate.message]));
+      return next(
+        new ErrorResponse("Validation Error", 400, [validate.message])
+      );
     }
 
     const existing = await archiveRepository.findById(archiveId);
     if (!existing) {
-      return next(new ErrorResponse("Archive not found", 404, [ "Not found"]));
+      return next(new ErrorResponse("Archive not found", 404, ["Not found"]));
     }
 
     let imageUrl = existing.data.image || "";
@@ -154,7 +225,6 @@ export const updateArchive = asyncHandler(
 
     const updated = await archiveRepository.updateArchive(archiveId, {
       title,
-      excerpt,
       category,
       content,
       link,
@@ -181,6 +251,35 @@ export const updateArchive = asyncHandler(
 
 
 /**
+ * @name getArchiveBySlug
+ * @description Gets a single archive by slug
+ * @route GET /archives/slug/:slug
+ * @access Public
+ */
+export const getArchiveBySlug = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { slug } = req.params;
+
+    const archive = await archiveRepository.findBySlug(slug);
+
+    if (archive.error) {
+      return next(
+        new ErrorResponse("Error", archive.code!, [archive.message])
+      );
+    }
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: archive.data,
+      message: archive.message,
+      status: archive.code,
+    });
+  }
+);
+
+
+/**
  * @name getArchiveById
  * @description Get archive by ID
  * @route GET /archives/:id
@@ -192,7 +291,11 @@ export const getArchiveById = asyncHandler(
 
     const result = await archiveRepository.findById(id);
     if (!result || result.error) {
-      return next(new ErrorResponse("Archive not found", 404, [result?.message || "Not found"]));
+      return next(
+        new ErrorResponse("Archive not found", 404, [
+          result?.message || "Not found",
+        ])
+      );
     }
 
     res.status(200).json({
@@ -204,7 +307,6 @@ export const getArchiveById = asyncHandler(
     });
   }
 );
-
 
 /**
  * @name getUserArchives
@@ -233,7 +335,6 @@ export const getUserArchives = asyncHandler(
   }
 );
 
-
 /**
  * @name getArchives
  * @description Get all archives
@@ -249,7 +350,7 @@ export const getArchives = asyncHandler(
       errors: [],
       data: result.data,
       message: "Archives fetched successfully.",
-      status: 200
+      status: 200,
     });
   }
 );
@@ -280,7 +381,7 @@ export const deleteArchive = asyncHandler(
       errors: [],
       data: result.data,
       message: result.message,
-      status: 200
+      status: 200,
     });
   }
 );

@@ -9,7 +9,6 @@ class UserRepository {
 
   constructor() {
     this.model = User;
-    console.log("User model is:", this.model);
   }
   
 

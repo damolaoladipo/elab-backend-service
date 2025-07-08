@@ -1,10 +1,12 @@
 import mongoose, { Schema, Model } from "mongoose";
 import { IEventDoc } from "../utils/interface.util";
 import { DbModelsType } from "../utils/enums.util";
+import slugify from "slugify";
 
 const EventSchema = new Schema<IEventDoc>(
   {
     title: { type: String, required: true },
+    slug: { type: String, default: "" },
     image: { type: String },
     content: {
       type: Schema.Types.Mixed,
@@ -28,6 +30,23 @@ const EventSchema = new Schema<IEventDoc>(
     },
   }
 );
+
+EventSchema.pre<IEventDoc>("save", async function (next) {
+  if (!this.isModified("title")) return next();
+
+  const rawSlug = slugify(this.title, { lower: true, strict: true });
+
+  let slug = rawSlug;
+  let count = 1;
+
+  while (await mongoose.models.Event.exists({ slug })) {
+    slug = `${rawSlug}-${count}`;
+    count++;
+  }
+
+  this.slug = slug;
+  next();
+});
 
 const Event: Model<IEventDoc> = mongoose.model<IEventDoc>(
   DbModelsType.EVENT,

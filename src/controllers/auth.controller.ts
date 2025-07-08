@@ -3,7 +3,6 @@ import asyncHandler from "../middlewares/async.mdw";
 import ErrorResponse from "../utils/error.util";
 import User from "../models/User.model";
 import {
-  ChangePasswordDTO,
   LoginDTO,
   RegisterUserDTO,
   resendOtpDTO,
@@ -23,6 +22,7 @@ import emailService from "../services/email.service";
 import tokenService from "../services/token.service";
 import { IUserDoc } from "../utils/interface.util";
 import otpService from "../services/otp.service";
+import userRepository from "../repositories/user.repository";
 
 /**
  * @name registerUser
@@ -95,20 +95,28 @@ export const registerUser = asyncHandler(
     await userService.activateAccount(user);
     await userService.updateLastLogin(user);
 
+    const token = await tokenService.attachToken(user);
+    if (token.error) {
+      return next(new ErrorResponse("Error", token.code!, [token.message]));
+    }
+
     res.status(200).json({
       error: false,
       errors: [],
       data: {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        userType: user.userType,
-        isAdmin: user.isAdmin,
-        isActive: user.isActive,
-        isDeactivated: user.isDeactivated,
-        loginLimit: user.loginLimit,
-        lastLogin: user.lastLogin,
-        id: user._id
+        user: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          userType: user.userType,
+          isAdmin: user.isAdmin,
+          isActive: user.isActive,
+          isDeactivated: user.isDeactivated,
+          loginLimit: user.loginLimit,
+          lastLogin: user.lastLogin,
+          id: user._id,
+        },
+        token: token.data.token,
       },
       message: "user registered successfully",
       status: 200,
@@ -166,14 +174,6 @@ export const loginUser = asyncHandler(
       return next(new ErrorResponse("Error", 400, ["invalid credentials"]));
     }
 
-    if (!userExist.isActive) {
-      return next(
-        new ErrorResponse("Error", 206, [
-          "Inactive account, kindly verify otp to activate account.",
-        ])
-      );
-    }
-
     // Update login information
     await userService.activateAccount(userExist);
     await userService.updateLastLogin(userExist);
@@ -225,6 +225,7 @@ export const logoutUser = asyncHandler(
       return next(new ErrorResponse("Error", result.code, [result.message]));
     }
 
+    await tokenService.revokeToken(user);
     await userService.updateLastLogin(user);
     await userService.updateLoginInfo(user, req);
 
@@ -363,103 +364,8 @@ export const resetPassword = asyncHandler(
   }
 );
 
-/**
- * @name changePassword
- * @description Allows user to change their password using their old password
- * @route POST /auth/change-password
- * @access  Private
- */
-export const changePassword = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const userId = (req as any).user.id as IUserDoc;
 
-    const { currentPassword, newPassword }: ChangePasswordDTO = req.body;
-    if (!currentPassword || !newPassword) {
-      return next(
-        new ErrorResponse("Error", 400, [
-          "Missing fields, Current and new password are required",
-        ])
-      );
-    }
 
-    const user = await User.findById(userId).select("+password");
-    if (!user) {
-      return next(new ErrorResponse("Error", 404, ["User not found"]));
-    }
-
-    const isMatch = await await userService.matchEncryptedPassword({
-      hash: currentPassword,
-      user: user,
-    });
-    if (!isMatch) {
-      return next(
-        new ErrorResponse("Error", 400, ["Current password is incorrect"])
-      );
-    }
-
-    const passCheck = await userService.checkPassword(newPassword);
-    if (!passCheck) {
-      return next(
-        new ErrorResponse("Error", 400, [
-          "Password must contain at least 8 characters, 1 lowercase letter, 1 uppercase letter, 1 special character and 1 number",
-        ])
-      );
-    }
-
-    await userService.encryptUserPassword(user, newPassword);
-
-    const sendEmail = await emailService.sendPasswordChangeNotificationEmail(
-      user.email
-    );
-    if (sendEmail.error) {
-      return next(
-        new ErrorResponse("Error", sendEmail.code, [sendEmail.message])
-      );
-    }
-
-    await user.save();
-
-    res.status(200).json({
-      error: false,
-      errors: [],
-      data: {},
-      message: "Password changed successfully",
-      status: 200,
-    });
-  }
-);
-
-/**
- * @name RefreshToken
- * @description Automatically generates a new token for a user if the current token is near expiry
- * @route POST /auth/token
- * @access Private
- */
-export const refreshToken = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const accessToken = req.headers.authorization?.split(" ")[1];
-
-    if (!accessToken) {
-      return next(
-        new ErrorResponse("Unauthorized", 401, ["Access token required"])
-      );
-    }
-
-    const sendToken = await tokenService.refreshToken(accessToken);
-
-    if (sendToken.error) {
-      return next(
-        new ErrorResponse("Error", sendToken.code, [sendToken.message])
-      );
-    }
-
-    res.status(200).json({
-      error: false,
-      message: { message: sendToken.message },
-      data: { token: sendToken.data.token },
-    });
-  }
-);
 
 /**
  * @name verifyOTP
@@ -467,7 +373,7 @@ export const refreshToken = asyncHandler(
  * @route POST /auth/verify-otp
  * @access Public
  */
-export const verifyOTP = asyncHandler(
+export const verifyEmail = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, OTP }: verifyOtpDTO = req.body;
 
@@ -501,7 +407,7 @@ export const verifyOTP = asyncHandler(
  * @route POST /auth/resend-otp
  * @access Public
  */
-export const resendOTP = asyncHandler(
+export const resendEmail = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email }: resendOtpDTO = req.body;
 
@@ -548,5 +454,63 @@ export const resendOTP = asyncHandler(
   }
 );
 
-// Sign in with Google
-// Sign in with Apple
+
+
+/**
+ * @name getUser
+ * @description Get the current logged-in user
+ * @route GET /users/me
+ * @access Private
+ */
+export const getUser = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    
+    const userId = (req as any).user?.id;
+
+    if (!userId) {
+      return next(new ErrorResponse("Unauthorized", 401, ["User not authenticated"]));
+    }
+
+    const user = await userRepository.findById(userId);
+    if (user.error || !user.data) {
+      return next(new ErrorResponse("User not found", 404, []));
+    }
+
+    const {
+      firstName,
+      lastName,
+      email,
+      userType,
+      avatar,
+      isSuper,
+      isAdmin,
+      isActive,
+      isActivated,
+      isDeactivated,
+      lastLogin,
+      _id,
+    } = user.data;
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: {
+        id: _id,
+        firstName,
+        lastName,
+        email,
+        userType,
+        avatar,
+        isSuper,
+        isAdmin,
+        isActive,
+        isActivated,
+        isDeactivated,
+        lastLogin,
+      },
+      message: "User profile retrieved",
+      status: 200,
+    });
+  }
+);
+

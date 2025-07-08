@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import transactionService from "../services/transaction.service";
 import asyncHandler from "../middlewares/async.mdw";
+import ErrorResponse from "../utils/error.util";
 
 /**
  * @desc Initiate payment for a store item via Paystack
@@ -9,7 +10,11 @@ import asyncHandler from "../middlewares/async.mdw";
  */
 export const initiateStorePayment = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    
     const user = (req as any).user;
+    if (!user) {
+      return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
+    }
     const { storeId } = req.body;
 
     const result = await transactionService.initiatePurchase(storeId, user);
@@ -31,6 +36,7 @@ export const initiateStorePayment = asyncHandler(
  */
 export const verifyStorePayment = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    
     const { reference } = req.query;
 
     const transaction = await transactionService.verifyPurchase(
@@ -54,6 +60,7 @@ export const verifyStorePayment = asyncHandler(
  */
 export const handleStoreWebhook = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    
     const rawBody = req.body as Buffer;
     const signature = req.headers["x-paystack-signature"] as string;
 

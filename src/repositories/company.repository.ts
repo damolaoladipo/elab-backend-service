@@ -30,6 +30,37 @@ class CompanyRepository {
     return company;
   }
 
+
+  public async findBySlug(slug: string): Promise<IResult> {
+  const result: IResult = {
+    error: false,
+    message: "",
+    code: 200,
+    data: {},
+  };
+
+  try {
+    const company = await this.model.findOne({ slug });
+
+    if (!company) {
+      result.error = true;
+      result.code = 404;
+      result.message = "Company not found";
+      return result;
+    }
+
+    result.data = company.toJSON();
+    result.message = "Company fetched successfully";
+    return result;
+  } catch (err: any) {
+    result.error = true;
+    result.code = 500;
+    result.message = err.message;
+    return result;
+  }
+}
+
+
   /**
    * @name getCompanies
    * @returns {Promise<IResult>}
