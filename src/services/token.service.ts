@@ -45,9 +45,6 @@ class TokenService {
         { algorithm: "HS512", expiresIn: this.expire } as jwt.SignOptions
       );
 
-      console.log("JWT expiry in use:", this.expire);
-
-
       await User.findByIdAndUpdate(user.id, { accessToken: token });
 
       result.data = { token };
