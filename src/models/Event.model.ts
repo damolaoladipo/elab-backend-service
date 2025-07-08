@@ -39,7 +39,8 @@ EventSchema.pre<IEventDoc>("save", async function (next) {
   let slug = rawSlug;
   let count = 1;
 
-  while (await mongoose.models.Event.exists({ slug })) {
+  const Event = this.constructor as mongoose.Model<IEventDoc>;
+  while (await Event.exists({ slug })) {
     slug = `${rawSlug}-${count}`;
     count++;
   }

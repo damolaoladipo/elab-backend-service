@@ -37,7 +37,8 @@ ArchiveSchema.pre<IArchiveDoc>("save", async function (next) {
   let slug = rawSlug;
   let count = 1;
 
-  while (await mongoose.models.Archive.exists({ slug })) {
+  const Archive = this.constructor as mongoose.Model<IArchiveDoc>;
+  while (await Archive.exists({ slug })) {
     slug = `${rawSlug}-${count}`;
     count++;
   }

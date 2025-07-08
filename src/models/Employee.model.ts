@@ -35,7 +35,8 @@ EmployeeSchema.pre<IEmployeeDoc>("save", async function (next) {
   let slug = rawSlug;
   let count = 1;
 
-  while (await mongoose.models.Employee.exists({ slug })) {
+  const Employee = this.constructor as mongoose.Model<IEmployeeDoc>;
+  while (await Employee.exists({ slug })) {
     slug = `${rawSlug}-${count}`;
     count++;
   }

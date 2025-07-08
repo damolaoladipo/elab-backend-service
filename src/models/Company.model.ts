@@ -37,7 +37,8 @@ CompanySchema.pre<IVentureDoc>("save", async function (next) {
   let slug = rawSlug;
   let count = 1;
 
-  while (await mongoose.models.Company.exists({ slug })) {
+  const company = this.constructor as mongoose.Model<IVentureDoc>;
+  while (await company.exists({ slug })) {
     slug = `${rawSlug}-${count}`;
     count++;
   }

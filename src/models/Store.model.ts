@@ -14,7 +14,7 @@ const StoreSchema = new Schema<IStoreDoc>(
     author: { type: String },
     excerpt: { type: String },
     description: { type: String },
-    url: { type: String},
+    url: { type: String },
     status: { type: String },
     color: { type: String },
     pageCount: { type: Number },
@@ -42,7 +42,8 @@ StoreSchema.pre<IStoreDoc>("save", async function (next) {
   let slug = rawSlug;
   let count = 1;
 
-  while (await mongoose.models.Store.exists({ slug })) {
+  const Store = this.constructor as mongoose.Model<IStoreDoc>;
+  while (await Store.exists({ slug })) {
     slug = `${rawSlug}-${count}`;
     count++;
   }

@@ -36,7 +36,8 @@ ProjectSchema.pre<IProjectDoc>("save", async function (next) {
   let slug = rawSlug;
   let count = 1;
 
-  while (await mongoose.models.Project.exists({ slug })) {
+  const Project = this.constructor as mongoose.Model<IProjectDoc>;
+  while (await Project.exists({ slug })) {
     slug = `${rawSlug}-${count}`;
     count++;
   }
