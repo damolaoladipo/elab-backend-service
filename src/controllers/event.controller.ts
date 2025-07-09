@@ -8,8 +8,6 @@ import uploadService from "../services/upload.service";
 import { CreateEventDTO } from "../dtos/event.dto";
 import { IEventDoc } from "../utils/interface.util";
 
-
-
 /**
  * @name createEvent
  * @description Creates a new event
@@ -18,7 +16,6 @@ import { IEventDoc } from "../utils/interface.util";
  */
 export const createEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    
     const userId = (req as any).user?.id;
     if (!userId) {
       return next(new ErrorResponse("Unauthorized", 401, []));
@@ -112,7 +109,6 @@ export const createEvent = asyncHandler(
  */
 export const updateEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    
     const userId = (req as any).user?.id;
     if (!userId) {
       return next(new ErrorResponse("Unathorized", 401, [""]));
@@ -155,7 +151,7 @@ export const updateEvent = asyncHandler(
       );
     }
 
-    const updateData: any = {
+    const event: any = {
       title,
       content,
       features,
@@ -165,39 +161,44 @@ export const updateEvent = asyncHandler(
       communityUrl,
     };
 
-    const imageFile = (req as any).files.find(
-      (f: any) => f.fieldname === "image"
-    );
+    const files = (req as any).files;
 
-    if (imageFile) {
+    const imageFile = Array.isArray(files)
+      ? files.find((f: any) => f.fieldname === "image")
+      : null;
+
+    let imageUrl = "";
+
+    if (
+      imageFile &&
+      imageFile.stream &&
+      imageFile.mimeType &&
+      imageFile.fileName
+    ) {
       const ImageData = {
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
-        refId: existingEvent.data._id.toString(),
+        refId: event.data._id,
       };
 
-      const imageUrl = await uploadService.uploadFile(ImageData);
-      updateData.image = imageUrl;
-    }
+      imageUrl = await uploadService.uploadFile(ImageData);
 
-    const updatedEvent = await eventRepository.updateEvent(eventId, updateData);
-    if (updatedEvent.error || !updatedEvent.data) {
-      return next(
-        new ErrorResponse(updatedEvent.message, updatedEvent.code, [])
-      );
+      if (imageUrl && imageUrl !== event.data.image) {
+        await eventRepository.updateEvent(event.data._id, { image: imageUrl });
+        event.data.image = imageUrl;
+      }
     }
 
     res.status(200).json({
       error: false,
       errors: [],
-      data: updatedEvent.data,
+      data: event.data,
       message: "Event updated successfully.",
       status: 200,
     });
   }
 );
-
 
 /**
  * @name getEvent
@@ -208,7 +209,6 @@ export const updateEvent = asyncHandler(
  */
 export const getEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    
     const { slug } = req.params;
 
     const result = await eventRepository.findEvent(slug);
@@ -248,13 +248,10 @@ export const getEvent = asyncHandler(
  */
 export const getUserEvents = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    
     const userId = req.params.userId;
 
     if (!userId) {
-      return next(
-        new ErrorResponse("Unauthorized", 401, [])
-      );
+      return next(new ErrorResponse("Unauthorized", 401, []));
     }
 
     const user = await userRepository.findUser(userId);
@@ -291,8 +288,6 @@ export const getUserEvents = asyncHandler(
   }
 );
 
-
-
 /**
  * @name getEvents
  * @description Get all events
@@ -300,7 +295,6 @@ export const getUserEvents = asyncHandler(
  * @access Public
  */
 export const getEvents = asyncHandler(async (_req: Request, res: Response) => {
-  
   const result = await eventRepository.getEvents();
 
   res.status(200).json({
