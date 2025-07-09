@@ -6,8 +6,7 @@ import {
   updateCompany,
   deleteCompany,
   getCompanies,
-  getCompanyById,
-  getCompanyBySlug,
+  getCompany,
 } from "../../../controllers/company.controller";
 import Protect from "../../../middlewares/checkAuth.mdw";
 import uploadFile from "../../../middlewares/upload.mdw";
@@ -18,7 +17,6 @@ companyRouter.post("/", Protect, uploadFile, createCompany);
 companyRouter.put("/:id", Protect, uploadFile, updateCompany);
 companyRouter.delete("/:id", Protect, deleteCompany);
 companyRouter.get("/", getCompanies);
-companyRouter.get("/:slug", getCompanyBySlug);
-companyRouter.get("/:id", getCompanyById);
+companyRouter.get("/:slug", getCompany);
 
 export default companyRouter;

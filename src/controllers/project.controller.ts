@@ -124,7 +124,7 @@ export const updateProject = asyncHandler(
     }
 
     // Get current project
-    const existingProject = await projectRepository.findById(projectId);
+    const existingProject = await projectRepository.findProject(projectId);
     if (!existingProject) {
       return next(new ErrorResponse("Project not found", 404, ["Project not found"]));
     }
@@ -172,41 +172,15 @@ export const updateProject = asyncHandler(
 
 /**
  * @name getProjectById
- * @description Get project by ID
+ * @description Get project by slug or ID
  * @route GET /projects/:id
  * @access Public
  */
-export const getProjectById = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-
-    const project = await projectRepository.findById(id, true);
-
-    if (!project) {
-      return next(new ErrorResponse("Error", 404, ["Project not found"]));
-    }
-
-    res.status(200).json({
-      error: false,
-      errors: [],
-      data: project,
-      message: "Project fetched successfully.",
-      status: 200,
-    });
-  }
-);
-
-/**
- * @name getProjectBySlug
- * @description Get a project by its slug
- * @route GET /projects/slug/:slug
- * @access Public
- */
-export const getProjectBySlug = asyncHandler(
+export const getProject = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { slug } = req.params;
 
-    const result = await projectRepository.findBySlug(slug);
+    const result = await projectRepository.findProject(slug);
     if (result.error || !result.data) {
       return next(new ErrorResponse("Project not found", 404, [result.message]));
     }
@@ -219,6 +193,7 @@ export const getProjectBySlug = asyncHandler(
       data: {
         id: project._id,
         title: project.title,
+        slug: project.slug,
         content: project.content,
         image: project.image,
         websiteUrl: project.websiteUrl,
@@ -245,7 +220,7 @@ export const getUserProjects = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.params;
 
-    const user = await userReposirtory.findById(userId);
+    const user = await userReposirtory.findUser(userId);
     if (!user) {
       return next(new ErrorResponse("Error", 404, ["User not found"]));
     }
@@ -293,7 +268,7 @@ export const deleteProject = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
-    const project = await projectRepository.findById(id);
+    const project = await projectRepository.findProject(id);
     if (!project) {
       return next(new ErrorResponse("Error", 404, ["Project not found"]));
     }

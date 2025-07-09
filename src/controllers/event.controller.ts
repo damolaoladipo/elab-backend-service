@@ -7,8 +7,6 @@ import userRepository from "../repositories/user.repository";
 import uploadService from "../services/upload.service";
 import { CreateEventDTO, UpdateEventDTO } from "../dtos/event.dto";
 import { IEventDoc } from "../utils/interface.util";
-import Event from "../models/Event.model";
-import slugify from "slugify";
 
 /**
  * @name createEvent
@@ -112,43 +110,18 @@ export const createEvent = asyncHandler(
 export const updateEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req as any).user?.id;
-    const eventId = req.params.id;
-
-    if (!userId) {
+      if (!userId) {
       return next(new ErrorResponse("Unauthorized", 401, []));
     }
 
-    const {
-      title,
-      content,
-      features,
-      joinUrl,
-      planUrl,
-      sponsorUrl,
-      communityUrl,
-    }: Partial<CreateEventDTO> = req.body;
+    const eventId = req.params.id;
+
+    const update: IEventDoc = req.body;
 
     
-    const validate = await validationService.validateUpdateEvent(req.body);
-    if (validate.error) {
-      return next(new ErrorResponse(validate.message, 400, []));
-    }
-
-    const data: Partial<IEventDoc> = {
-      ...(title && { title }),
-      ...(content && { content }),
-      ...(features && { features }),
-      ...(joinUrl && { joinUrl }),
-      ...(planUrl && { planUrl }),
-      ...(sponsorUrl && { sponsorUrl }),
-      ...(communityUrl && { communityUrl }),
-    };
-
-    const updatedEvent = await eventRepository.updateEvent(eventId, data);
-    if (updatedEvent.error) {
-      return next(
-        new ErrorResponse(updatedEvent.message, updatedEvent.code!, [])
-      );
+     const found = await eventRepository.findEvent(eventId);
+    if (found.error) {
+      return next(new ErrorResponse("Store item not found", 404, []));
     }
 
     const imageFile = (req as any).files?.find(
@@ -165,32 +138,27 @@ export const updateEvent = asyncHandler(
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
-        refId: updatedEvent.data._id,
+        refId: found.data._id,
       };
 
       const imageUrl = await uploadService.uploadFile(ImageData);
 
-      if (imageUrl && imageUrl !== updatedEvent.data.image) {
+      if (imageUrl && imageUrl !== found.data.image) {
         await eventRepository.updateEvent(eventId, { image: imageUrl });
-        updatedEvent.data.image = imageUrl;
+        found.data.image = imageUrl;
       }
     }
+
+      const result = await eventRepository.updateEvent(eventId, update);
+    if (result.error) {
+      return next(new ErrorResponse(result.message, result.code!, []));
+    }
+
 
     res.status(200).json({
       error: false,
       errors: [],
-      data: {
-        title: updatedEvent.data.title,
-        slug: updatedEvent.data.slug,
-        image: updatedEvent.data.image,
-        content: updatedEvent.data.content,
-        features: updatedEvent.data.features,
-        joinUrl: updatedEvent.data.joinUrl,
-        planUrl: updatedEvent.data.planUrl,
-        sponsorUrl: updatedEvent.data.sponsorUrl,
-        communityUrl: updatedEvent.data.communityUrl,
-        id: updatedEvent.data._id,
-      },
+      data: result.data,
       message: "Event updated successfully.",
       status: 200,
     });

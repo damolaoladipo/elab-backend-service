@@ -15,7 +15,6 @@ import userRepository from "../repositories/user.repository";
  */
 export const createArchive = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    
     const userId = (req as any).user?.id;
     if (!userId) {
       return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
@@ -102,7 +101,7 @@ export const publishArchive = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const archiveId = req.params.id;
 
-    const archive = await archiveRepository.findById(archiveId);
+    const archive = await archiveRepository.findArchive(archiveId);
     if (archive.error || !archive.data) {
       return next(new ErrorResponse("Archive not found", 404, []));
     }
@@ -139,7 +138,7 @@ export const unpublishArchive = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const archiveId = req.params.id;
 
-    const archive = await archiveRepository.findById(archiveId);
+    const archive = await archiveRepository.findArchive(archiveId);
     if (archive.error || !archive.data) {
       return next(new ErrorResponse("Archive not found", 404, []));
     }
@@ -193,7 +192,7 @@ export const updateArchive = asyncHandler(
       );
     }
 
-    const existing = await archiveRepository.findById(archiveId);
+    const existing = await archiveRepository.findArchive(archiveId);
     if (!existing) {
       return next(new ErrorResponse("Archive not found", 404, ["Not found"]));
     }
@@ -249,23 +248,20 @@ export const updateArchive = asyncHandler(
   }
 );
 
-
 /**
- * @name getArchiveBySlug
- * @description Gets a single archive by slug
- * @route GET /archives/slug/:slug
+ * @name getArchive
+ * @description Get a specific archive by slug or ID
+ * @route GET /archives/:slug
  * @access Public
  */
-export const getArchiveBySlug = asyncHandler(
+export const getArchive = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { slug } = req.params;
 
-    const archive = await archiveRepository.findBySlug(slug);
+    const archive = await archiveRepository.findArchive(slug);
 
     if (archive.error) {
-      return next(
-        new ErrorResponse("Error", archive.code!, [archive.message])
-      );
+      return next(new ErrorResponse(archive.message, archive.code!, []));
     }
 
     res.status(200).json({
@@ -274,36 +270,6 @@ export const getArchiveBySlug = asyncHandler(
       data: archive.data,
       message: archive.message,
       status: archive.code,
-    });
-  }
-);
-
-
-/**
- * @name getArchiveById
- * @description Get archive by ID
- * @route GET /archives/:id
- * @access Public
- */
-export const getArchiveById = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-
-    const result = await archiveRepository.findById(id);
-    if (!result || result.error) {
-      return next(
-        new ErrorResponse("Archive not found", 404, [
-          result?.message || "Not found",
-        ])
-      );
-    }
-
-    res.status(200).json({
-      error: false,
-      errors: [],
-      data: result.data,
-      message: "Archive fetched successfully.",
-      status: 200,
     });
   }
 );
@@ -318,7 +284,7 @@ export const getUserArchives = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.params;
 
-    const user = await userRepository.findById(userId);
+    const user = await userRepository.findUser(userId);
     if (!user || user.error) {
       return next(new ErrorResponse("User not found", 404, ["User not found"]));
     }
@@ -365,7 +331,7 @@ export const deleteArchive = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
-    const archive = await archiveRepository.findById(id);
+    const archive = await archiveRepository.findArchive(id);
     if (!archive) {
       return next(new ErrorResponse("Error", 404, ["Archive not found"]));
     }

@@ -6,10 +6,14 @@ import asyncHandler from "../middlewares/async.mdw";
 import { CreateEmployeeDTO, UpdateEmployeeDTO } from "../dtos/employee.dto";
 
 
-
+/**
+ * @name createEmployee
+ * @description Creates a new employee
+ * @route POST /employees
+ * @access Private
+ */
 export const createEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    
     const userId = (req as any).user?.id;
     const { name, role, socialLink }: CreateEmployeeDTO = req.body;
 
@@ -54,14 +58,22 @@ export const createEmployee = asyncHandler(
   }
 );
 
-
-export const getEmployeeBySlug = asyncHandler(
+/**
+ * @name getEmpluyee
+ * @description Get employee by slug
+ * @param {string} slug OR Id - The slug or ID of the emplyee
+ * @route GET /emplyee/slug/:slug
+ * @access Public
+ */
+export const getEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { slug } = req.params;
 
-    const employee = await employeeRepository.findBySlug(slug);
+    const employee = await employeeRepository.findEmployee(slug);
     if (employee.error) {
-      return next(new ErrorResponse("Failed", employee.code!, [employee.message]));
+      return next(
+        new ErrorResponse("Failed", employee.code!, [employee.message])
+      );
     }
 
     res.status(200).json({
@@ -75,12 +87,21 @@ export const getEmployeeBySlug = asyncHandler(
 );
 
 
+/**
+ * @name updateEmployee
+ * @description Updates an existing employee
+ * @route PATCH /employees/:id
+ * @access Private
+ * @param {string} id - The ID of the employee to update
+ * @param {UpdateEmployeeDTO} body - The data to update the employee with
+ * */
+
 export const updateEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
     const { name, role, socialLink, status }: UpdateEmployeeDTO = req.body;
 
-    const existing = await employeeRepository.findById(id);
+    const existing = await employeeRepository.findEmployee(id);
     if (!existing) return next(new ErrorResponse("Not found", 404, []));
 
     let imageUrl = existing.image;
@@ -117,6 +138,13 @@ export const updateEmployee = asyncHandler(
   }
 );
 
+
+/**
+ * @name getEmployees
+ * @description Fetches all employees
+ * @route GET /employees
+ * @access Public
+ */
 export const getEmployees = asyncHandler(
   async (_req: Request, res: Response) => {
     const result = await employeeRepository.getEmployees();
@@ -124,13 +152,21 @@ export const getEmployees = asyncHandler(
   }
 );
 
+
+/**
+ * @name getEmployeeById
+ * @description Fetches an employee by ID
+ * @route GET /employees/:id
+ * @access Public
+ * @param {string} id - The ID of the employee to fetch
+ */
 export const getEmployeeById = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
     if (!id) {
       return next(new ErrorResponse("ID is required", 400, ["Invalid ID"]));
     }
-    const employee = await employeeRepository.findById(id);
+    const employee = await employeeRepository.findEmployee(id);
     if (!employee) {
       return next(new ErrorResponse("Employee not found", 404, []));
     }
@@ -145,6 +181,14 @@ export const getEmployeeById = asyncHandler(
   }
 );
 
+
+/**
+ * @name deleteEmployee
+ * @description Deletes an employee
+ * @route DELETE /employees/:id
+ * @access Private
+ * @param {string} id - The ID of the employee to delete
+ */
 export const deleteEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;

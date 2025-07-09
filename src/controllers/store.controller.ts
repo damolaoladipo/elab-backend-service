@@ -28,12 +28,10 @@ export const createStore = asyncHandler(
       color,
       pageCount,
       size,
-      status
+      status,
     }: CreateStoreDTO = req.body;
 
-      const discountedPrice = discount
-      ? price - (price * discount) / 100
-      : price;
+    const discountedPrice = discount ? price - (price * discount) / 100 : price;
 
     const data = {
       name,
@@ -93,7 +91,7 @@ export const publishStore = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const storeId = req.params.id;
 
-    const store = await storeRepository.findById(storeId);
+    const store = await storeRepository.findStore(storeId);
     if (store.error || !store.data) {
       return next(new ErrorResponse("Store item not found", 404, []));
     }
@@ -130,7 +128,7 @@ export const unpublishStore = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const storeId = req.params.id;
 
-    const store = await storeRepository.findById(storeId);
+    const store = await storeRepository.findStore(storeId);
     if (store.error || !store.data) {
       return next(new ErrorResponse("Store item not found", 404, []));
     }
@@ -165,17 +163,23 @@ export const unpublishStore = asyncHandler(
  */
 export const updateStore = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    
+    const userId = (req as any).user?.id;
+
+    if (!userId) {
+      return next(new ErrorResponse("Unauthorized", 401, []));
+    }
     const storeId = req.params.id;
     const update: UpdateStoreDTO = req.body;
 
-    const found = await storeRepository.findById(storeId);
+    const found = await storeRepository.findStore(storeId);
     if (found.error) {
       return next(new ErrorResponse("Store item not found", 404, []));
     }
 
     const imageFile = (req as any).files.find(
       (file: any) => file.fieldname === "image"
-      );
+    );
 
     if (imageFile) {
       const imageUrl = await uploadService.uploadFile({
@@ -203,43 +207,21 @@ export const updateStore = asyncHandler(
 );
 
 /**
- * @name getStoreById
- * @description Get store item by ID
- * @route GET /store/:id
- * @access Public
- */
-export const getStoreById = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    const result = await storeRepository.findById(id);
-
-    if (result.error) {
-      return next(new ErrorResponse(result.message, result.code!, []));
-    }
-
-    res.status(200).json({
-      error: false,
-      errors: [],
-      data: result.data,
-      message: "Store item retrieved successfully",
-      status: 200,
-    });
-  }
-);
-
-/**
  * @name getStoreItemBySlug
- * @description Get store item by slug
+ * @description Get store item by slug or ID
+ * @param {string} slug - The slug of the store item
  * @route GET /store/slug/:slug
  * @access Public
  */
-export const getStoreItemBySlug = asyncHandler(
+export const getStoreItem = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { slug } = req.params;
 
-    const result = await storeRepository.findBySlug(slug);
+    const result = await storeRepository.findStore(slug);
     if (result.error || !result.data) {
-      return next(new ErrorResponse("Store item not found", 404, [result.message]));
+      return next(
+        new ErrorResponse("Store item not found", 404, [result.message])
+      );
     }
 
     const item = result.data as IStoreDoc;
@@ -270,7 +252,6 @@ export const getStoreItemBySlug = asyncHandler(
     });
   }
 );
-
 
 /**
  * @name getStores

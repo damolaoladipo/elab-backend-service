@@ -20,7 +20,7 @@ export const createCompany = asyncHandler(
       status,
       websiteUrl,
       contact,
-      brochureUrl
+      brochureUrl,
     }: CreateCompanyDTO = req.body;
 
     const validate = await validationService.validateCreateCompany(req.body);
@@ -38,7 +38,7 @@ export const createCompany = asyncHandler(
       brochureUrl,
       logo: "",
     };
-    
+
     // Create initial company record
     const company = await companyRepository.createCompany(data);
     if (company.error) {
@@ -46,8 +46,9 @@ export const createCompany = asyncHandler(
     }
 
     // Handle file uploads
-    const logoFile = (req as any).files?.find((f: any) => f.fieldname === "logo");
-    
+    const logoFile = (req as any).files?.find(
+      (f: any) => f.fieldname === "logo"
+    );
 
     let logoUrl = "";
 
@@ -60,15 +61,10 @@ export const createCompany = asyncHandler(
       });
     }
 
-   
-
     // Update file URLs
     await companyRepository.updateCompany(company.data._id, {
       logo: logoUrl,
     });
-
-    // Clean final response
-    // const sanitized = .toJSON();
 
     res.status(201).json({
       error: false,
@@ -83,19 +79,17 @@ export const createCompany = asyncHandler(
   }
 );
 
-
 /**
- * @name getCompanyBySlug
- * @description Gets a company by its slug
- * @route GET /companies/slug/:slug
+ * @name getCompany
+ * @description Get company by slug or ID
+ * @route GET /companies/:slug
  * @access Public
  */
-export const getCompanyBySlug = asyncHandler(
+export const getCompany = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-  
     const { slug } = req.params;
 
-    const company = await companyRepository.findBySlug(slug);
+    const company = await companyRepository.findCompany(slug);
 
     if (company.error) {
       return next(new ErrorResponse(company.message, company.code!, []));
@@ -111,8 +105,6 @@ export const getCompanyBySlug = asyncHandler(
   }
 );
 
-
-
 /**
  * @name updateCompany
  * @description Updates a company
@@ -127,7 +119,7 @@ export const updateCompany = asyncHandler(
     const {
       name,
       description,
-      
+
       status,
       websiteUrl,
       contact,
@@ -136,27 +128,20 @@ export const updateCompany = asyncHandler(
     // Validation
     const validate = await validationService.validateUpdateCompany(req.body);
     if (validate.error) {
-      return next(new ErrorResponse("Validation error", 400, [validate.message]));
+      return next(
+        new ErrorResponse("Validation error", 400, [validate.message])
+      );
     }
 
-    // const data = {
-    //   name,
-    //   description,
-    //   content,
-    //   status,
-    //   websiteUrl,
-    //   contact,
-    // }
-
     // Fetch existing company
-    const existing = await companyRepository.findById(companyId);
+    const existing = await companyRepository.findCompany(companyId);
     if (!existing) {
       return next(new ErrorResponse("Company not found", 404, []));
     }
 
     // Extract existing URLs
-    let logoUrl = existing.logo || '';
-    let brochureUrl = existing.brochureUrl || '';
+    let logoUrl = existing.logo || "";
+    let brochureUrl = existing.brochureUrl || "";
 
     const files = (req as any).files || [];
     const logoFile = files.find((f: any) => f.fieldname === "logo");
@@ -210,37 +195,6 @@ export const updateCompany = asyncHandler(
   }
 );
 
-
-
-
-/**
- * @name getCompanyById
- * @description Get company by ID
- * @route GET /companies/:id
- * @access Public
- */
-export const getCompanyById = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-
-    const company = await companyRepository.findById(id, true);
-
-    if (!company) {
-      return next(new ErrorResponse("Error", 404, ["Company not found"]));
-    }
-
-    res.status(200).json({
-      error: false,
-      errors: [],
-      data: company,
-      message: "Company fetched successfully.",
-      status: 200
-    });
-  }
-);
-
-
-
 /**
  * @name getCompanies
  * @description Get all companies
@@ -249,7 +203,6 @@ export const getCompanyById = asyncHandler(
  */
 export const getCompanies = asyncHandler(
   async (_req: Request, res: Response) => {
-
     const result = await companyRepository.getCompanies();
 
     res.status(200).json({
@@ -257,7 +210,7 @@ export const getCompanies = asyncHandler(
       errors: [],
       data: result.data,
       message: "Companies fetched successfully.",
-      status: 200
+      status: 200,
     });
   }
 );
@@ -272,7 +225,7 @@ export const deleteCompany = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
-    const company = await companyRepository.findById(id);
+    const company = await companyRepository.findCompany(id);
     if (!company) {
       return next(new ErrorResponse("Error", 404, ["Company not found"]));
     }
@@ -288,7 +241,7 @@ export const deleteCompany = asyncHandler(
       errors: [],
       data: result.data,
       message: result.message,
-      status: 200
+      status: 200,
     });
   }
 );

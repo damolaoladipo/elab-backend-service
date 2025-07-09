@@ -4,9 +4,8 @@ import {
   updateProject,
   deleteProject,
   getProjects,
-  getProjectById,
   getUserProjects,
-  getProjectBySlug,
+  getProject,
 } from "../../../controllers/project.controller";
 import uploadFile from "../../../middlewares/upload.mdw";
 import Protect from "../../../middlewares/checkAuth.mdw";
@@ -17,8 +16,7 @@ projectRouter.post("/", Protect, uploadFile, createProject);
 projectRouter.put("/:id", Protect, uploadFile, updateProject);
 projectRouter.delete("/:id", Protect, deleteProject);
 projectRouter.get("/", getProjects);
-projectRouter.get("/:id", getProjectById);
-projectRouter.get("/:slug", getProjectBySlug);
+projectRouter.get("/:slug", getProject);
 projectRouter.get("/user/:userId", Protect, getUserProjects);
 
 export default projectRouter;

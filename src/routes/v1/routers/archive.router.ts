@@ -4,11 +4,10 @@ import {
   updateArchive,
   deleteArchive,
   getArchives,
-  getArchiveById,
   getUserArchives,
   publishArchive,
   unpublishArchive,
-  getArchiveBySlug
+  getArchive,
 } from "../../../controllers/archive.controller";
 import Protect from "../../../middlewares/checkAuth.mdw";
 import uploadFile from "../../../middlewares/upload.mdw";
@@ -22,8 +21,7 @@ archiveRouter.patch("/:id/unpublish", Protect, unpublishArchive);
 archiveRouter.put("/:id", Protect, uploadFile,updateArchive);
 archiveRouter.delete("/:id", Protect, deleteArchive);
 archiveRouter.get("/", getArchives);
-authRouter.get("/:slug", getArchiveBySlug);
-archiveRouter.get("/:id", getArchiveById);
+authRouter.get("/:slug", getArchive);
 archiveRouter.get("/user/:userId", Protect, getUserArchives);
 
 export default archiveRouter;
