@@ -6,6 +6,8 @@ import { CreateArchiveDTO, UpdateArchiveDTO } from "../dtos/archive.dto";
 import archiveRepository from "../repositories/archive.repository";
 import uploadService from "../services/upload.service";
 import userRepository from "../repositories/user.repository";
+import { IArchiveDoc } from "../utils/interface.util";
+import { generateSlug } from "../utils/helper.util";
 
 /**
  * @name createArchive
@@ -173,6 +175,11 @@ export const unpublishArchive = asyncHandler(
  */
 export const updateArchive = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return next(new ErrorResponse("Unauthorized", 401, []));
+    }
+
     const archiveId = req.params.id;
 
     const {
@@ -188,17 +195,49 @@ export const updateArchive = asyncHandler(
     const validate = await validationService.validateUpdateArchive(req.body);
     if (validate.error) {
       return next(
-        new ErrorResponse("Validation Error", 400, [validate.message])
+        new ErrorResponse(validate.message, 400, [])
       );
     }
 
     const existing = await archiveRepository.findArchive(archiveId);
-    if (!existing) {
-      return next(new ErrorResponse("Archive not found", 404, ["Not found"]));
+    if (existing.error) {
+      return next(new ErrorResponse(existing.message, 404, []));
     }
 
-    let imageUrl = existing.data.image || "";
-    let resourceUrl = existing.data.resourceLink || "";
+    const updatePayload: Partial<IArchiveDoc> = {};
+        // Title and slug update
+        if (title && title !== existing.data.title) {
+          updatePayload.title = title;
+    
+          const slug = await generateSlug({
+            input: title,
+            slugExistsFn: archiveRepository.slugExists.bind(archiveRepository),
+          });
+    
+          updatePayload.slug = slug;
+        }
+    
+    if (category && category !== existing.data.category) {
+      updatePayload.category = category;
+    }
+    if (content && content !== existing.data.content) {
+      updatePayload.content = content;
+    }
+    if (link && link !== existing.data.link) {
+      updatePayload.link = link;
+    }
+    if (author && author !== existing.data.author) {
+      updatePayload.author = author;
+    }
+    if (tags && tags.length > 0) {
+      updatePayload.tags = tags;
+    }
+    if (status && status !== existing.data.status) {
+      updatePayload.status = status;
+    }
+
+    let imageUrl = existing.data.image;
+    let resourceUrl = existing.data.resourceLink;
 
     const files = (req as any).files || [];
     const imageFile = files.find((f: any) => f.fieldname === "image");
@@ -211,6 +250,10 @@ export const updateArchive = asyncHandler(
         originalFileName: imageFile.fileName,
         refId: existing.data._id,
       });
+
+      if (imageUrl && imageUrl !== existing.data.image) {
+        updatePayload.image = imageUrl;
+      }
     }
 
     if (resourceFile) {
@@ -220,22 +263,16 @@ export const updateArchive = asyncHandler(
         originalFileName: resourceFile.fileName,
         refId: existing.data._id,
       });
+
+      if (resourceUrl && resourceUrl !== existing.data.resource) {
+        updatePayload.resourceLink = resourceUrl;
+      }
     }
 
-    const updated = await archiveRepository.updateArchive(archiveId, {
-      title,
-      category,
-      content,
-      link,
-      author,
-      tags,
-      status,
-      image: imageUrl,
-      resourceLink: resourceUrl,
-    });
+    const updated = await archiveRepository.updateArchive(archiveId, updatePayload);
 
     if (updated.error) {
-      return next(new ErrorResponse("Update failed", 500, [updated.message]));
+      return next(new ErrorResponse(updated.message, updated.code, []));
     }
 
     res.status(200).json({

@@ -5,6 +5,7 @@ import asyncHandler from "../middlewares/async.mdw";
 import ErrorResponse from "../utils/error.util";
 import uploadService from "../services/upload.service";
 import { IStoreDoc } from "../utils/interface.util";
+import { generateSlug } from "../utils/helper.util";
 
 /**
  * @name createStore
@@ -163,18 +164,81 @@ export const unpublishStore = asyncHandler(
  */
 export const updateStore = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    
     const userId = (req as any).user?.id;
 
     if (!userId) {
       return next(new ErrorResponse("Unauthorized", 401, []));
     }
     const storeId = req.params.id;
-    const update: UpdateStoreDTO = req.body;
+    const {
+      name,
+      price,
+      discount,
+      category,
+      author,
+      excerpt,
+      description,
+      url,
+      color,
+      pageCount,
+      size,
+      status,
+    }: UpdateStoreDTO = req.body;
 
-    const found = await storeRepository.findStore(storeId);
-    if (found.error) {
-      return next(new ErrorResponse("Store item not found", 404, []));
+    // Fetch existing company
+    const existing = await storeRepository.findStore(storeId);
+    if (existing.error) {
+      return next(new ErrorResponse(existing.message, existing.code, []));
+    }
+
+    const updatePayload: Partial<IStoreDoc> = {};
+
+    if (name && name !== existing.data.name) {
+      updatePayload.name = name;
+
+      const slug = await generateSlug({
+        input: name,
+        slugExistsFn: storeRepository.slugExists.bind(storeRepository),
+      });
+
+      updatePayload.slug = slug;
+    }
+
+    if (price && price !== existing.data.price) {
+      updatePayload.price = price;
+    }
+    if (discount && discount !== existing.data.discount) {
+      updatePayload.discount = discount;
+    }
+
+    if (category && category !== existing.data.category) {
+      updatePayload.category = category;
+    }
+    if (author && author !== existing.data.author) {
+      updatePayload.author = author;
+    }
+    if (excerpt && excerpt !== existing.data.excerpt) {
+      updatePayload.excerpt = excerpt;
+    }
+
+    if (description && description !== existing.data.description) {
+      updatePayload.description = description;
+    }
+    if (url && url !== existing.data.url) {
+      updatePayload.url = url;
+    }
+    if (color && color !== existing.data.color) {
+      updatePayload.color = color;
+    }
+
+    if (pageCount && pageCount !== existing.data.pageCount) {
+      updatePayload.pageCount = pageCount;
+    }
+    if (size && size !== existing.data.size) {
+      updatePayload.size = size;
+    }
+    if (status && status !== existing.data.status) {
+      updatePayload.status = status;
     }
 
     const imageFile = (req as any).files.find(
@@ -186,20 +250,22 @@ export const updateStore = asyncHandler(
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
-        refId: storeId,
+        refId: existing.data.id,
       });
-      update.image = imageUrl;
+      if (imageUrl && imageUrl !== existing.data.image) {
+        updatePayload.image = imageUrl;
+      }
     }
 
-    const result = await storeRepository.updateStore(storeId, update);
-    if (result.error) {
-      return next(new ErrorResponse(result.message, result.code!, []));
+    const updated = await storeRepository.updateStore(storeId, updatePayload);
+    if (updated.error) {
+      return next(new ErrorResponse(updated.message, updated.code, []));
     }
 
     res.status(200).json({
       error: false,
       errors: [],
-      data: result.data,
+      data: updated.data,
       message: "Store item updated successfully",
       status: 200,
     });

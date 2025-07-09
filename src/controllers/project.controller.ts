@@ -7,8 +7,7 @@ import projectRepository from "../repositories/project.repository";
 import userReposirtory from "../repositories/user.repository";
 import uploadService from "../services/upload.service";
 import { IProjectDoc } from "../utils/interface.util";
-
-
+import { generateSlug } from "../utils/helper.util";
 
 /**
  * @name createProject
@@ -19,10 +18,11 @@ import { IProjectDoc } from "../utils/interface.util";
 
 export const createProject = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    
     const userId = (req as any).user?.id;
     if (!userId) {
-      return next(new ErrorResponse("Unauthorized", 401, ["Unauthorized user"]));
+      return next(
+        new ErrorResponse("Unauthorized", 401, ["Unauthorized user"])
+      );
     }
 
     const {
@@ -73,7 +73,9 @@ export const createProject = asyncHandler(
     }
 
     if (imageUrl && imageUrl !== project.data.image) {
-      await projectRepository.updateProject(project.data._id, { image: imageUrl });
+      await projectRepository.updateProject(project.data._id, {
+        image: imageUrl,
+      });
       project.data.image = imageUrl;
     }
 
@@ -95,7 +97,6 @@ export const createProject = asyncHandler(
     });
   }
 );
-
 
 /**
  * @name updateProject
@@ -120,17 +121,49 @@ export const updateProject = asyncHandler(
     // Validate input
     const validate = await validationService.validateUpdateProject(req.body);
     if (validate.error) {
-      return next(new ErrorResponse("Validation Error", 400, [validate.message]));
+      return next(
+        new ErrorResponse("Validation Error", 400, [validate.message])
+      );
     }
 
-    // Get current project
-    const existingProject = await projectRepository.findProject(projectId);
-    if (!existingProject) {
-      return next(new ErrorResponse("Project not found", 404, ["Project not found"]));
+    const found = await await projectRepository.findProject(projectId);
+    if (found.error) {
+      return next(new ErrorResponse(found.message, 404, []));
+    }
+
+    const updatePayload: Partial<IProjectDoc> = {};
+
+    // Title and slug update
+    if (title && title !== found.data.title) {
+      updatePayload.title = title;
+
+      const slug = await generateSlug({
+        input: title,
+        slugExistsFn: projectRepository.slugExists.bind(projectRepository),
+      });
+
+      updatePayload.slug = slug;
+    }
+
+    if (content && content !== found.data.content) {
+      updatePayload.content = content;
+    }
+    if (websiteUrl && websiteUrl !== found.data.websiteUrl) {
+      updatePayload.websiteUrl = websiteUrl;
+    }
+    if (volunteerUrl && volunteerUrl !== found.data.volunteerUrl) {
+      updatePayload.volunteerUrl = volunteerUrl;
+    }
+
+    if (sponsorUrl && sponsorUrl !== found.data.sponsorUrl) {
+      updatePayload.sponsorUrl = sponsorUrl;
+    }
+    if (partnerUrl && partnerUrl !== found.data.partnerUrl) {
+      updatePayload.partnerUrl = partnerUrl;
     }
 
     // Handle image upload if present
-    let imageUrl = existingProject.image;
+    let imageUrl = found.data.image;
     const imageFile = (req as any).files?.find(
       (f: any) => f.fieldname === "file" || f.fieldname === "image"
     );
@@ -140,24 +173,20 @@ export const updateProject = asyncHandler(
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
-        refId: existingProject._id.toString(),
+        refId: found.data._id,
       });
+      
+      if (imageUrl && imageUrl !== found.data.image) {
+        updatePayload.image = imageUrl;
+      }
     }
 
     // Update project
-    const updated = await projectRepository.updateProject(projectId, {
-      title,
-      content,
-      websiteUrl,
-      volunteerUrl,
-      partnerUrl,
-      sponsorUrl,
-      image: imageUrl,
-    });
-
-    if (updated.error) {
-      return next(new ErrorResponse("Update failed", 500, [updated.message]));
+    const updated = await projectRepository.updateProject(projectId, updatePayload);
+ if (updated.error) {
+      return next(new ErrorResponse(updated.message, updated.code, []));
     }
+
 
     res.status(200).json({
       error: false,
@@ -168,7 +197,6 @@ export const updateProject = asyncHandler(
     });
   }
 );
-
 
 /**
  * @name getProjectById
@@ -182,7 +210,9 @@ export const getProject = asyncHandler(
 
     const result = await projectRepository.findProject(slug);
     if (result.error || !result.data) {
-      return next(new ErrorResponse("Project not found", 404, [result.message]));
+      return next(
+        new ErrorResponse("Project not found", 404, [result.message])
+      );
     }
 
     const project = result.data as IProjectDoc;
@@ -200,15 +230,12 @@ export const getProject = asyncHandler(
         volunteerUrl: project.volunteerUrl,
         partnerUrl: project.partnerUrl,
         sponsorUrl: project.sponsorUrl,
-        slug: project.slug,
       },
       message: "Project fetched successfully.",
       status: 200,
     });
   }
 );
-
-
 
 /**
  * @name getUserProjects
@@ -245,7 +272,6 @@ export const getUserProjects = asyncHandler(
  */
 export const getProjects = asyncHandler(
   async (_req: Request, res: Response) => {
-    
     const result = await projectRepository.getProjects();
 
     res.status(200).json({

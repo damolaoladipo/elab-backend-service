@@ -8,8 +8,8 @@ import Protect from "../../../middlewares/checkAuth.mdw";
 
 const transactionRouter = express.Router();
 
-transactionRouter.post("/start", Protect, getPaystackPublicKey);
-transactionRouter.get("/verify", Protect, verifyStorePayment);
+transactionRouter.get("/start", Protect, getPaystackPublicKey);
+transactionRouter.post("/verify", Protect, verifyStorePayment);
 transactionRouter.post("/webhook", handleStoreWebhook);
 
 export default transactionRouter;

@@ -4,7 +4,8 @@ import employeeRepository from "../repositories/employee.repository";
 import uploadService from "../services/upload.service";
 import asyncHandler from "../middlewares/async.mdw";
 import { CreateEmployeeDTO, UpdateEmployeeDTO } from "../dtos/employee.dto";
-
+import { IEmployeeDoc } from "../utils/interface.util";
+import { generateSlug } from "../utils/helper.util";
 
 /**
  * @name createEmployee
@@ -86,7 +87,6 @@ export const getEmployee = asyncHandler(
   }
 );
 
-
 /**
  * @name updateEmployee
  * @description Updates an existing employee
@@ -98,11 +98,45 @@ export const getEmployee = asyncHandler(
 
 export const updateEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    const update : UpdateEmployeeDTO = req.body;
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return next(new ErrorResponse("Unauthorized", 401, []));
+    }
+    const { employeeId } = req.params;
+    if (!employeeId) {
+      return next(new ErrorResponse("Employee ID is required", 400, []));
+    }
 
-    const existing = await employeeRepository.findEmployee(id);
-    if (!existing) return next(new ErrorResponse("Not found", 404, []));
+    const { name, role, socialLink, status }: UpdateEmployeeDTO = req.body;
+
+    // Fetch existing company
+    const existing = await employeeRepository.findEmployee(employeeId);
+    if (!existing) {
+      return next(new ErrorResponse("Company not found", 404, []));
+    }
+
+    const updatePayload: Partial<IEmployeeDoc> = {};
+
+    if (name && name !== existing.data.name) {
+      updatePayload.name = name;
+
+      const slug = await generateSlug({
+        input: name,
+        slugExistsFn: employeeRepository.slugExists.bind(employeeRepository),
+      });
+
+      updatePayload.slug = slug;
+    }
+
+    if (role && role !== existing.data.role) {
+      updatePayload.role = role;
+    }
+    if (socialLink && socialLink !== existing.data.socialLink) {
+      updatePayload.socialLink = socialLink;
+    }
+    if (status && status !== existing.data.status) {
+      updatePayload.status = status;
+    }
 
     let imageUrl = existing.data.image;
 
@@ -114,25 +148,31 @@ export const updateEmployee = asyncHandler(
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
-        refId: id,
+        refId: existing.data.id,
       });
+
+      if (imageUrl && imageUrl !== existing.data.image) {
+        updatePayload.image = imageUrl;
+      }
     }
 
-    const updated = await employeeRepository.updateEmployee(id, update);
-
-    if (updated.error)
-      return next(new ErrorResponse("Update failed", 500, [updated.message]));
+    const updated = await employeeRepository.updateEmployee(
+      employeeId,
+      updatePayload
+    );
+    if (updated.error) {
+      return next(new ErrorResponse(updated.message, updated.code, []));
+    }
 
     res.status(200).json({
       error: false,
       errors: [],
       data: updated.data,
-      message: "Employee updated",
+      message: "Employee updated successfully.",
       status: 200,
     });
   }
 );
-
 
 /**
  * @name getEmployees
@@ -146,7 +186,6 @@ export const getEmployees = asyncHandler(
     res.status(200).json(result);
   }
 );
-
 
 /**
  * @name getEmployeeById
@@ -175,7 +214,6 @@ export const getEmployeeById = asyncHandler(
     });
   }
 );
-
 
 /**
  * @name deleteEmployee

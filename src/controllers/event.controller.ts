@@ -102,13 +102,22 @@ export const createEvent = asyncHandler(
   }
 );
 
+/**
+ * @name updateEvent
+ * @description Updates an existing event
+ * @route PUT /events/:id
+ * @access Private
+ */
 export const updateEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req as any).user?.id;
-    const eventId = req.params.id;
-
     if (!userId) {
       return next(new ErrorResponse("Unauthorized", 401, []));
+    }
+
+    const eventId = req.params.id;
+    if (!eventId) {
+      return next(new ErrorResponse("Event ID is required", 400, []));
     }
 
     const {
@@ -128,7 +137,7 @@ export const updateEvent = asyncHandler(
 
     const found = await eventRepository.findEvent(eventId);
     if (found.error) {
-      return next(new ErrorResponse("Event not found", 404, []));
+      return next(new ErrorResponse(found.message, 404, []));
     }
 
     const updatePayload: Partial<IEventDoc> = {};
@@ -145,18 +154,32 @@ export const updateEvent = asyncHandler(
       updatePayload.slug = slug;
     }
 
-    if (content) updatePayload.content = content;
-    if (features) updatePayload.features = features;
-    if (joinUrl) updatePayload.joinUrl = joinUrl;
-    if (planUrl) updatePayload.planUrl = planUrl;
-    if (sponsorUrl) updatePayload.sponsorUrl = sponsorUrl;
-    if (communityUrl) updatePayload.communityUrl = communityUrl;
+    if (content && content !== found.data.content) {
+      updatePayload.content = content;
+    }
+    if (features && features !== found.data.features) {
+      updatePayload.features = features;
+    }
+
+    if (joinUrl && joinUrl !== found.data.joinUrl) {
+      updatePayload.joinUrl = joinUrl;
+    }
+    if (planUrl && planUrl !== found.data.planUrl) {
+      updatePayload.planUrl = planUrl;
+    }
+
+    if (sponsorUrl && sponsorUrl !== found.data.sponsorUrl) {
+      updatePayload.sponsorUrl = sponsorUrl;
+    }
+    if (communityUrl && communityUrl !== found.data.communityUrl) {
+      updatePayload.communityUrl = communityUrl;
+    }
 
     // Handle image upload (if available)
     const imageFile = (req as any).files?.find(
       (f: any) => f.fieldname === "image"
     );
-    
+
     if (imageFile) {
       const imageUrl = await uploadService.uploadFile({
         stream: imageFile.stream,
