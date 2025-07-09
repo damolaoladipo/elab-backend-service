@@ -6,6 +6,7 @@ import storeRoutes from "./routers/store.router";
 import companyRoutes from "./routers/company.router";
 import archiveRoutes from "./routers/archive.router";
 import employeeRoutes from "./routers/employee.router";
+import transactionRoutes from "./routers/transaction.router";
 
 
 const router = express.Router();
@@ -17,5 +18,6 @@ router.use("/event", eventRoutes);
 router.use("/project", projectRoutes);
 router.use("/store", storeRoutes)
 router.use("/venture", companyRoutes)
+router.use("/payment", transactionRoutes)
 
 export default router;

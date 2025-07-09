@@ -4,13 +4,27 @@ import asyncHandler from "../middlewares/async.mdw";
 import ErrorResponse from "../utils/error.util";
 
 /**
+ * @name getPaystackPublicKey
+ * @description returns paystack public key
+ * @route GET /paystack/public-key
+ * @access public
+ */
+export const getPaystackPublicKey = asyncHandler(
+  async (req: Request, res: Response) => {
+    res.status(200).json({
+      error: false,
+      data: process.env.PAYSTACK_PUBLIC_KEY,
+    });
+  }
+);
+
+/**
  * @desc Initiate payment for a store item via Paystack
  * @route POST /api/payments/initiate
  * @access Private
  */
 export const initiateStorePayment = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    
     const user = (req as any).user;
     if (!user) {
       return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
@@ -38,16 +52,26 @@ export const verifyStorePayment = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     
     const { reference } = req.query;
+    if (!reference) {
+      return next(
+        new ErrorResponse("Transaction reference is required", 400, [])
+      );
+    }
 
     const transaction = await transactionService.verifyPurchase(
       reference as string
     );
+    if (transaction.error) {
+      return next(
+        new ErrorResponse(transaction.message, transaction.code || 400, [])
+      );
+    }
 
     res.status(200).json({
       error: false,
       errors: [],
       data: transaction,
-      message: "Payment verified successfully",
+      message: "Payment Successful",
       status: 200,
     });
   }
@@ -60,7 +84,6 @@ export const verifyStorePayment = asyncHandler(
  */
 export const handleStoreWebhook = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    
     const rawBody = req.body as Buffer;
     const signature = req.headers["x-paystack-signature"] as string;
 

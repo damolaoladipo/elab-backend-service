@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 import crypto from "crypto";
 import Store from "../models/Store.model";
-import { IStoreDoc, ITransactionDoc, IUserDoc } from "../utils/interface.util";
+import { IResult, IStoreDoc, ITransactionDoc, IUserDoc } from "../utils/interface.util";
 import ErrorResponse from "../utils/error.util";
 import Transaction from "../models/Transaction.model";
 import paystackService from "./paystack.service";
@@ -76,17 +76,34 @@ class TransactionService {
    * @throws ErrorResponse if payment was unsuccessful or metadata is invalid
    */
 
-  async verifyPurchase(reference: string): Promise<ITransactionDoc> {
+
+
+async  verifyPurchase  (
+  reference: string
+): Promise<IResult> {
+  let result: IResult = { error: false, message: "", code: 200, data: {} };
+
+  try {
     const response = await paystackService.verifyTransaction(reference);
     const trx = response.data;
     const meta = trx.metadata;
 
     if (trx.status !== "success") {
-      throw new ErrorResponse("Payment failed or incomplete", 400, []);
+      result = {
+        error: true,
+        message: "Payment failed or incomplete",
+        code: 400,
+        data: {},
+      };
+      return result;
     }
 
     const existing = await Transaction.findOne({ reference: trx.reference });
-    if (existing) return existing;
+    if (existing) {
+      result.data = existing;
+      result.message = "Transaction already recorded";
+      return result;
+    }
 
     const transaction = await Transaction.create({
       type: "purchase",
@@ -111,11 +128,22 @@ class TransactionService {
       channel: trx.channel,
       slug: trx.reference,
       card: trx.authorization,
-      user: new meta.userId(),
+      user: meta.userId,
     });
 
-    return transaction;
+    result.data = transaction;
+    result.message = "Transaction verified successfully";
+    return result;
+  } catch (err: any) {
+    result = {
+      error: true,
+      message: err?.message,
+      code: err?.statusCode,
+      data: {},
+    };
+    return result;
   }
+};
 
   /**
    *
