@@ -1,4 +1,4 @@
-import { FilterQuery, Model, ObjectId } from "mongoose";
+import mongoose, { FilterQuery, Model, ObjectId } from "mongoose";
 import Archive from "../models/Archive.model";
 import { IResult, IArchiveDoc } from "../utils/interface.util";
 
@@ -9,7 +9,13 @@ class ArchiveRepository {
     this.model = Archive;
   }
 
- public async findById(id: string | ObjectId): Promise<IResult> {
+  /**
+   * @name findArchive
+   * @param {string} input - The ObjectId or slug of the archive.
+   * @returns {Promise<IResult>} Result object containing the archive data or error information.
+   * @description Fetch an archive by its ObjectId or slug.
+   */
+  public async findArchive(input: string): Promise<IResult> {
     const result: IResult = {
       error: false,
       message: "",
@@ -17,64 +23,33 @@ class ArchiveRepository {
       data: {},
     };
 
-    try {
-      const archive = await this.model.findById(id).lean();
+    const isValidObjectId =
+      mongoose.Types.ObjectId.isValid(input) &&
+      new mongoose.Types.ObjectId(input).toString() === input;
 
-      if (!archive) {
-        result.error = true;
-        result.message = "Archive not found";
-        result.code = 404;
-        return result;
-      }
-
-      result.message = "Archive found";
-      result.data = archive;
-      return result;
-    } catch (error: any) {
-      return {
-        error: true,
-        message: error.message || "Error fetching archive",
-        code: 500,
-        data: {},
-      };
-    }
-  }
-
-  public async findBySlug(slug: string): Promise<IResult> {
-  const result: IResult = {
-    error: false,
-    message: "",
-    code: 200,
-    data: {},
-  };
-
-  try {
-    const archive = await this.model.findOne({ slug,  status: "published"  });
+    const archive = isValidObjectId
+      ? await this.model.findById(input)
+      : await this.model.findOne({ slug: input });
 
     if (!archive) {
       result.error = true;
-      result.code = 404;
       result.message = "Archive not found";
+      result.code = 404;
       return result;
     }
-
     result.data = archive.toJSON();
-    result.message = "Archive fetched successfully";
-    return result;
-  } catch (err: any) {
-    result.error = true;
-    result.code = 500;
-    result.message = err.message;
+    result.message = "Archive found";
     return result;
   }
-}
 
-
-
-
+  /**
+   * @name getArchives
+   * @returns {Promise<IResult>} Result object containing all archives or error information.
+   * @description Fetch all archives from the database.
+   */
   public async getArchives(): Promise<IResult> {
     let result: IResult = { error: false, message: "", code: 200, data: {} };
-    
+
     const archives = await this.model.find({}).lean();
     if (!archives || archives.length === 0) {
       result.error = true;
@@ -88,6 +63,12 @@ class ArchiveRepository {
     return result;
   }
 
+  /**
+   * @name getUserArchives
+   * @param userId - The ID of the user whose archives are to be fetched.
+   * @returns {Promise<IResult>} Result object containing the user's archives or error information.
+   * @description Fetch all archives created by a specific user.
+   */
   public async getUserArchives(userId: string | ObjectId): Promise<IResult> {
     let result: IResult = { error: false, message: "", code: 200, data: {} };
 
@@ -104,6 +85,12 @@ class ArchiveRepository {
     return result;
   }
 
+  /**
+   * @name createArchive
+   * @param archiveData - Partial data for the new archive.
+   * @returns {Promise<IResult>} Result object containing the created archive or error information.
+   * @description Create a new archive in the database.
+   */
   public async createArchive(
     archiveData: Partial<IArchiveDoc>
   ): Promise<IResult> {
@@ -113,7 +100,7 @@ class ArchiveRepository {
       code: 201,
       data: {},
     };
-    
+
     const newArchive = await this.model.create(archiveData);
     if (!newArchive) {
       result.error = true;
@@ -126,6 +113,14 @@ class ArchiveRepository {
     result.data = newArchive.toJSON();
     return result;
   }
+
+  /**
+   * @name updateArchive
+   * @param id - The ID of the archive to be updated.
+   * @param updateData - Partial data to update the archive.
+   * @returns {Promise<IResult>} Result object containing the updated archive or error information.
+   * @description Update an existing archive in the database.
+   */
 
   public async updateArchive(
     id: string,
@@ -146,6 +141,12 @@ class ArchiveRepository {
     return result;
   }
 
+  /**
+   * @name deleteArchive
+   * @param id - The ID of the archive to be deleted.
+   * @returns {Promise<IResult>} Result object containing the deleted archive or error information.
+   * @description Delete an archive from the database by its ID.
+   */
   public async deleteArchive(id: string): Promise<IResult> {
     let result: IResult = { error: false, message: "", code: 200, data: {} };
     const deletedArchive = await this.model.findByIdAndDelete(id);

@@ -72,6 +72,9 @@ const uploadFile = asyncHandler(
     stream.on("finish", () => {
 
       (req as any).files = files;
+
+           console.log("✅ Parsed fields:", req.body);
+      console.log("✅ Parsed files:", files.map(f => f.fieldname));
       next();
     });
 

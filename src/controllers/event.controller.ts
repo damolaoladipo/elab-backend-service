@@ -33,8 +33,6 @@ export const createEvent = asyncHandler(
       communityUrl,
     }: CreateEventDTO = req.body;
 
-
-
     const validate = await validationService.validateCreateEvent(req.body);
     if (validate.error) {
       return next(new ErrorResponse(validate.message, 400, []));
@@ -105,16 +103,9 @@ export const createEvent = asyncHandler(
   }
 );
 
-
 /**
  * @name updateEvent
  * @description Update an event
- * @route PATCH /events/:id
- * @access Private
- */
-/**
- * @name updateEvent
- * @description Updates an existing event
  * @route PATCH /events/:id
  * @access Private
  */
@@ -122,8 +113,6 @@ export const updateEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req as any).user?.id;
     const eventId = req.params.id;
-
-  
 
     if (!userId) {
       return next(new ErrorResponse("Unauthorized", 401, []));
@@ -139,9 +128,8 @@ export const updateEvent = asyncHandler(
       communityUrl,
     }: Partial<CreateEventDTO> = req.body;
 
-    const body = req.body || {};
-const validate = await validationService.validateUpdateEvent(body);
-
+    
+    const validate = await validationService.validateUpdateEvent(req.body);
     if (validate.error) {
       return next(new ErrorResponse(validate.message, 400, []));
     }
@@ -158,7 +146,9 @@ const validate = await validationService.validateUpdateEvent(body);
 
     const updatedEvent = await eventRepository.updateEvent(eventId, data);
     if (updatedEvent.error) {
-      return next(new ErrorResponse(updatedEvent.message, updatedEvent.code!, []));
+      return next(
+        new ErrorResponse(updatedEvent.message, updatedEvent.code!, [])
+      );
     }
 
     const imageFile = (req as any).files?.find(
@@ -206,7 +196,6 @@ const validate = await validationService.validateUpdateEvent(body);
     });
   }
 );
-
 
 /**
  * @name getEvent

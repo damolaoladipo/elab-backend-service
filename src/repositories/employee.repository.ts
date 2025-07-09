@@ -1,6 +1,7 @@
 import { FilterQuery, Model, ObjectId } from "mongoose";
 import Employee from "../models/Employee.model";
 import { IEmployeeDoc, IResult } from "../utils/interface.util";
+import mongoose from "mongoose";
 
 class EmployeeRepository {
   private model: Model<IEmployeeDoc>;
@@ -10,27 +11,12 @@ class EmployeeRepository {
   }
 
   /**
-   * @name findById
-   * @param id
-   * @param populate
-   * @returns {Promise<IEmployeeDoc | null>}
-   * @description Find an employee by ID and optionally populate related data
+   * @name findEmployee
+   * @param {string} input - The ObjectId or slug of the employee.
+   * @returns {Promise<IResult>} Result object containing the employee data or error information.
+   * @description Fetch an employee by its ObjectId or slug.
    */
-  public async findById(id: string, populate: boolean = false): Promise<IEmployeeDoc | null> {
-    const dataPop = [{ path: "user" }];
-    const pop = populate ? dataPop : [];
-
-    const query: FilterQuery<IEmployeeDoc> = { _id: id };
-
-    const employee = await this.model.findById(query).populate(pop);
-    if (!employee) {
-      return null;
-    }
-
-    return employee;
-  }
-
-  public async findBySlug(slug: string): Promise<IResult> {
+  public async findEmployee(input: string): Promise<IResult> {
   const result: IResult = {
     error: false,
     message: "",
@@ -38,9 +24,13 @@ class EmployeeRepository {
     data: {},
   };
 
-  try {
-    const employee = await this.model.findOne({ slug });
+     const isValidObjectId =
+      mongoose.Types.ObjectId.isValid(input) &&
+      new mongoose.Types.ObjectId(input).toString() === input;
 
+    const employee = isValidObjectId
+      ? await this.model.findById(input)
+      : await this.model.findOne({ slug: input });
     if (!employee) {
       result.error = true;
       result.code = 404;
@@ -51,12 +41,6 @@ class EmployeeRepository {
     result.data = employee.toJSON();
     result.message = "Employee fetched successfully";
     return result;
-  } catch (err: any) {
-    result.error = true;
-    result.code = 500;
-    result.message = err.message;
-    return result;
-  }
 }
 
 

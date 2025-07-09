@@ -1,4 +1,4 @@
-import { Model, ObjectId } from "mongoose";
+import mongoose, { Model, ObjectId } from "mongoose";
 import Store from "../models/Store.model";
 import { IStoreDoc, IResult } from "../utils/interface.util";
 
@@ -17,7 +17,7 @@ class StoreRepository {
    */
   public async createStore(data: Partial<IStoreDoc>): Promise<IResult> {
     const result: IResult = { error: false, message: "", code: 201, data: {} };
-    
+
     const item = await this.model.create(data);
     if (!item) {
       result.error = true;
@@ -37,12 +37,22 @@ class StoreRepository {
    * @param data Update data
    * @returns {Promise<IResult>}
    */
-  public async updateStore(id: string, data: Partial<IStoreDoc>): Promise<IResult> {
+  public async updateStore(
+    id: string,
+    data: Partial<IStoreDoc>
+  ): Promise<IResult> {
     const result: IResult = { error: false, message: "", code: 200, data: {} };
-    
-    const updated = await this.model.findByIdAndUpdate(id, data, { new: true }).lean();
+
+    const updated = await this.model
+      .findByIdAndUpdate(id, data, { new: true })
+      .lean();
     if (!updated) {
-      return { error: true, code: 404, message: "Store item not found", data: {} };
+      return {
+        error: true,
+        code: 404,
+        message: "Store item not found",
+        data: {},
+      };
     }
     result.data = updated;
     if (!result.data) {
@@ -56,39 +66,27 @@ class StoreRepository {
   }
 
   /**
-   * @name findById
-   * @description Finds a store item by its ID
-   * @param id Store item ID
-   * @returns {Promise<IResult>}
-   */
-  public async findById(id: string | ObjectId): Promise<IResult> {
-    const result: IResult = { error: false, message: "", code: 200, data: {} };
-    const item = await this.model.findById(id).lean();
-    if (!item) {
-      return { error: true, code: 404, message: "Store item not found", data: {} };
-    }
-    result.data = item;
-    result.message = "Store item found";
-    result.code = 200;
-    return result;
-  }
-
-  /**
    * @name findBySlug
    * @description Finds a store item by its slug
    * @param slug Store item slug
    * @returns {Promise<IResult>}
    */
-  public async findBySlug(slug: string): Promise<IResult> {
-  const result: IResult = {
-    error: false,
-    message: "",
-    code: 200,
-    data: {},
-  };
+  public async findStore(input: string): Promise<IResult> {
+    const result: IResult = {
+      error: false,
+      message: "",
+      code: 200,
+      data: {},
+    };
 
-  try {
-    const item = await this.model.findOne({ slug });
+    const isValidObjectId =
+      mongoose.Types.ObjectId.isValid(input) &&
+      new mongoose.Types.ObjectId(input).toString() === input;
+
+    const item = isValidObjectId
+      ? await this.model.findById(input)
+      : await this.model.findOne({ slug: input });
+
     if (!item) {
       result.error = true;
       result.code = 404;
@@ -99,14 +97,7 @@ class StoreRepository {
     result.data = item.toJSON();
     result.message = "Store item fetched successfully";
     return result;
-  } catch (err: any) {
-    result.error = true;
-    result.code = 500;
-    result.message = err.message;
-    return result;
   }
-}
-
 
   /**
    * @name getStores
@@ -117,7 +108,12 @@ class StoreRepository {
     const result: IResult = { error: false, message: "", code: 200, data: {} };
     const items = await this.model.find({}).sort({ createdAt: -1 }).lean();
     if (!items || items.length === 0) {
-      return { error: true, code: 404, message: "No store items found", data: {} };
+      return {
+        error: true,
+        code: 404,
+        message: "No store items found",
+        data: {},
+      };
     }
     result.data = items;
     return result;
@@ -133,7 +129,12 @@ class StoreRepository {
     const result: IResult = { error: false, message: "", code: 200, data: {} };
     const deleted = await this.model.findByIdAndDelete(id);
     if (!deleted) {
-      return { error: true, code: 404, message: "Store item not found", data: {} };
+      return {
+        error: true,
+        code: 404,
+        message: "Store item not found",
+        data: {},
+      };
     }
     result.message = "Store item deleted";
     return result;

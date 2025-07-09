@@ -1,4 +1,4 @@
-import { FilterQuery, Model, ObjectId } from "mongoose";
+import mongoose, { FilterQuery, Model, ObjectId } from "mongoose";
 import Project from "../models/Project.model";
 import { IResult, IProjectDoc } from "../utils/interface.util";
 
@@ -9,28 +9,41 @@ class ProjectRepository {
     this.model = Project;
   }
 
+ 
   /**
-   * @name findById
-   * @param id
-   * @param populate
-   * @returns project
-   * @description Find a project by ID and populate related data
+   * @name findProject
+   * @param {string} input - The ObjectId or slug of the project.
+   * @returns {Promise<IResult>} Result object containing the project data or error information.
+   * @description Fetch a project by its ObjectId or slug.
    */
-  public async findById(id: string, populate: boolean = false): Promise<IProjectDoc | null> {
-    const dataPop = [
-      { path: "user" }
-    ];
+  public async findProject(input: string): Promise<IResult> {
+  const result: IResult = {
+    error: false,
+    message: "",
+    code: 200,
+    data: {},
+  };
 
-    const pop = populate ? dataPop : [];
+     const isValidObjectId =
+      mongoose.Types.ObjectId.isValid(input) &&
+      new mongoose.Types.ObjectId(input).toString() === input;
 
-    const query: FilterQuery<IProjectDoc> = { _id: id };
+    const project = isValidObjectId
+      ? await this.model.findById(input)
+      : await this.model.findOne({ slug: input });
 
-    const project = await this.model.findById(query).populate(pop);
     if (!project) {
-      return null;
+      result.error = true;
+      result.code = 404;
+      result.message = "Project not found";
+      return result;
     }
-    return project;
-  }
+
+    result.data = project.toJSON();
+    result.message = "Project fetched successfully";
+    return result;
+}
+
 
   /**
    * @name getProjects
@@ -87,14 +100,7 @@ class ProjectRepository {
   
     return result;
   }
-  // public async getUserProjects(userId: string | ObjectId ): Promise<IResult> {
-  //   let result: IResult = { error: false, message: "", code: 200, data: {} };
 
-  //   const projects = await this.model.find({ user: userId }).lean();
-  //   result.data = projects;
-
-  //   return result;
-  // }
 
   /**
    * @name createProject
@@ -118,38 +124,6 @@ class ProjectRepository {
     return result;
   }
 
-/**
-   * @name findBySlug
-   * @param slug
-   * @returns {Promise<IResult>}
-   */
-  public async findBySlug(slug: string): Promise<IResult> {
-  const result: IResult = {
-    error: false,
-    message: "",
-    code: 200,
-    data: {},
-  };
-
-  try {
-    const project = await this.model.findOne({ slug });
-    if (!project) {
-      result.error = true;
-      result.code = 404;
-      result.message = "Project not found";
-      return result;
-    }
-
-    result.data = project.toJSON();
-    result.message = "Project fetched successfully";
-    return result;
-  } catch (err: any) {
-    result.error = true;
-    result.code = 500;
-    result.message = err.message;
-    return result;
-  }
-}
 
 
   /**
