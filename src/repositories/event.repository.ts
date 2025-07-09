@@ -1,4 +1,4 @@
-import { FilterQuery, Model, ObjectId } from "mongoose";
+import mongoose, { FilterQuery, Model, ObjectId } from "mongoose";
 import { IEventDoc, IResult } from "../utils/interface.util";
 import Event from "../models/Event.model";
 
@@ -10,77 +10,28 @@ class EventRepository {
   }
 
   /**
-   * @name findById
-   * @param id
-   * @param populate
-   * @returns {Promise<IEventDoc | null>}
+   * @name findEvent
+   *  @param {string} input - The ObjectId or slug of the event.
+   * @returns {Promise<IResult>} Result object containing the event data or error information.
+   * @example
+   * const result = await eventRepository.findByIdOrSlug("665cd1234ab12cd56ef7890a");
+   * const result = await eventRepository.findByIdOrSlug("tech-conference-2025");
    */
- public async findById(id: string, populate: boolean = false): Promise<IResult> {
-  const result: IResult = { error: false, message: "", code: 200, data: {} };
-
-  const pop = populate ? [{ path: "user" }] : [];
-  const event = await this.model.findById(id).populate(pop);
-
-  if (!event) {
-    return {
-      error: true,
-      message: "Event not found",
-      code: 404,
+  public async findEvent(input: string): Promise<IResult> {
+    const result: IResult = {
+      error: false,
+      message: "",
+      code: 200,
       data: {},
     };
-  }
 
-  result.message = "Event found";
-  result.data = event;
-  return result;
-}
+    const isValidObjectId =
+      mongoose.Types.ObjectId.isValid(input) &&
+      new mongoose.Types.ObjectId(input).toString() === input;
 
-
-  /**
- * @name getUserEvents
- * @param userId
- * @returns {Promise<IResult>}
- * @description Get all events created by a specific user
- */
-public async getUserEvents(userId: string | ObjectId): Promise<IResult> {
-  const result: IResult = {
-    error: false,
-    message: "User events fetched successfully",
-    code: 200,
-    data: [],
-  };
-
-  const events = await this.model
-    .find({ user: userId })
-    .populate({
-      path: "user",
-      select: "_id name email",
-    })
-    .sort({ createdAt: -1 });
-
-  if (!events || events.length === 0) {
-    result.error = true;
-    result.message = "No events found";
-    result.code = 404;
-    result.data = [];
-  } else {
-    result.data = events;
-  }
-
-  return result;
-}
-
-
-public async findBySlug(slug: string): Promise<IResult> {
-  const result: IResult = {
-    error: false,
-    message: "",
-    code: 200,
-    data: {},
-  };
-
-  try {
-    const event = await this.model.findOne({ slug });
+    const event = isValidObjectId
+      ? await this.model.findById(input)
+      : await this.model.findOne({ slug: input });
 
     if (!event) {
       result.error = true;
@@ -92,14 +43,41 @@ public async findBySlug(slug: string): Promise<IResult> {
     result.data = event.toJSON();
     result.message = "Event fetched successfully";
     return result;
-  } catch (err: any) {
-    result.error = true;
-    result.code = 500;
-    result.message = err.message;
+  }
+
+  /**
+   * @name getUserEvents
+   * @param userId
+   * @returns {Promise<IResult>}
+   * @description Get all events created by a specific user
+   */
+  public async getUserEvents(userId: string | ObjectId): Promise<IResult> {
+    const result: IResult = {
+      error: false,
+      message: "User events fetched successfully",
+      code: 200,
+      data: [],
+    };
+
+    const events = await this.model
+      .find({ user: userId })
+      .populate({
+        path: "user",
+        select: "_id name email",
+      })
+      .sort({ createdAt: -1 });
+
+    if (!events || events.length === 0) {
+      result.error = true;
+      result.message = "No events found";
+      result.code = 404;
+      result.data = [];
+    } else {
+      result.data = events;
+    }
+
     return result;
   }
-}
-
 
   /**
    * @name getEvents
@@ -107,7 +85,6 @@ public async findBySlug(slug: string): Promise<IResult> {
    */
   public async getEvents(): Promise<IResult> {
     let result: IResult = { error: false, message: "", code: 200, data: {} };
-
 
     const events = await this.model.find({}).lean();
     if (!events || events.length === 0) {
@@ -151,7 +128,9 @@ public async findBySlug(slug: string): Promise<IResult> {
     data: Partial<IEventDoc>
   ): Promise<IResult> {
     let result: IResult = { error: false, message: "", code: 200, data: {} };
+    
     const event = await this.model.findByIdAndUpdate(id, data, { new: true });
+    
     if (!event) {
       result.error = true;
       result.code = 404;
@@ -170,7 +149,9 @@ public async findBySlug(slug: string): Promise<IResult> {
    */
   public async deleteEvent(id: string): Promise<IResult> {
     let result: IResult = { error: false, message: "", code: 200, data: {} };
+    
     const deletedEvent = await this.model.findByIdAndDelete(id);
+    
     if (!deletedEvent) {
       result.error = true;
       result.code = 404;

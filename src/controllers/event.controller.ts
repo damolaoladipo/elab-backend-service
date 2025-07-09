@@ -2,12 +2,13 @@ import { Request, Response, NextFunction } from "express";
 import asyncHandler from "../middlewares/async.mdw";
 import ErrorResponse from "../utils/error.util";
 import validationService from "../services/validate.service";
-import { CreateEventDTO } from "../dtos/event.dto";
 import eventRepository from "../repositories/event.repository";
+import userRepository from "../repositories/user.repository";
 import uploadService from "../services/upload.service";
+import { CreateEventDTO } from "../dtos/event.dto";
 import { IEventDoc } from "../utils/interface.util";
-import User from "../models/User.model";
-import Event from "../models/Event.model";
+
+
 
 /**
  * @name createEvent
@@ -17,9 +18,10 @@ import Event from "../models/Event.model";
  */
 export const createEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    
     const userId = (req as any).user?.id;
     if (!userId) {
-      return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
+      return next(new ErrorResponse("Unauthorized", 401, []));
     }
 
     const {
@@ -34,7 +36,7 @@ export const createEvent = asyncHandler(
 
     const validate = await validationService.validateCreateEvent(req.body);
     if (validate.error) {
-      return next(new ErrorResponse("Error", 400, [validate.message]));
+      return next(new ErrorResponse(validate.message, 400, []));
     }
 
     const data = {
@@ -51,7 +53,7 @@ export const createEvent = asyncHandler(
 
     const event = await eventRepository.createEvent(data);
     if (event.error) {
-      return next(new ErrorResponse("Error", event.code!, [event.message]));
+      return next(new ErrorResponse(event.message, event.code!, []));
     }
 
     const imageFile = (req as any).files.find(
@@ -60,7 +62,12 @@ export const createEvent = asyncHandler(
 
     let imageUrl = "";
 
-    if (imageFile && imageFile.stream && imageFile.mimeType && imageFile.fileName) {
+    if (
+      imageFile &&
+      imageFile.stream &&
+      imageFile.mimeType &&
+      imageFile.fileName
+    ) {
       const ImageData = {
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
@@ -81,6 +88,7 @@ export const createEvent = asyncHandler(
       errors: [],
       data: {
         title: event.data.title,
+        slug: event.data.slug,
         image: event.data.image,
         content: event.data.content,
         features: event.data.features,
@@ -104,9 +112,10 @@ export const createEvent = asyncHandler(
  */
 export const updateEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    
     const userId = (req as any).user?.id;
     if (!userId) {
-      return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
+      return next(new ErrorResponse("Unathorized", 401, [""]));
     }
 
     const eventId = req.params.id;
@@ -125,7 +134,7 @@ export const updateEvent = asyncHandler(
     } = req.body;
 
     // Fetch existing event via repository
-    const existingEvent = await eventRepository.findById(eventId);
+    const existingEvent = await eventRepository.findEvent(eventId);
     if (existingEvent.error || !existingEvent.data) {
       return next(new ErrorResponse(existingEvent.message, 404, []));
     }
@@ -159,7 +168,7 @@ export const updateEvent = asyncHandler(
     const imageFile = (req as any).files.find(
       (f: any) => f.fieldname === "image"
     );
-    
+
     if (imageFile) {
       const ImageData = {
         stream: imageFile.stream,
@@ -175,9 +184,7 @@ export const updateEvent = asyncHandler(
     const updatedEvent = await eventRepository.updateEvent(eventId, updateData);
     if (updatedEvent.error || !updatedEvent.data) {
       return next(
-        new ErrorResponse("Failed to update event", updatedEvent.code || 500, [
-          updatedEvent.message,
-        ])
+        new ErrorResponse(updatedEvent.message, updatedEvent.code, [])
       );
     }
 
@@ -191,57 +198,23 @@ export const updateEvent = asyncHandler(
   }
 );
 
-/**
- * @name getEventById
- * @description Get event by ID
- * @route GET /events/:id
- * @access Public
- */
-export const getEventById = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-
-    const result = await eventRepository.findById(id, true);
-    if (result.error || !result.data) {
-      return next(new ErrorResponse("Error", 404, ["Event not found"]));
-    }
-
-    const event = result.data as IEventDoc;
-
-    res.status(200).json({
-      error: false,
-      errors: [],
-      data: {
-        title: event.title,
-        content: event.content,
-        image: event.image,
-        features: event.features,
-        joinUrl: event.joinUrl,
-        planUrl: event.planUrl,
-        sponsorUrl: event.sponsorUrl,
-        communityUrl: event.communityUrl,
-        id: event._id,
-      },
-      message: "Event fetched successfully.",
-      status: 200,
-    });
-  }
-);
-
 
 /**
- * @name getEventBySlug
+ * @name getEvent
  * @description Get event by slug
+ * @param {string} slug OR Id - The slug or ID of the event
  * @route GET /events/slug/:slug
  * @access Public
  */
-export const getEventBySlug = asyncHandler(
+export const getEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    
     const { slug } = req.params;
 
-    const result = await eventRepository.findBySlug(slug);
+    const result = await eventRepository.findEvent(slug);
+
     if (result.error || !result.data) {
-      return next(new ErrorResponse("Error", 404, ["Event not found"]));
+      return next(new ErrorResponse("Event not found", result.code, []));
     }
 
     const event = result.data as IEventDoc;
@@ -251,6 +224,7 @@ export const getEventBySlug = asyncHandler(
       errors: [],
       data: {
         title: event.title,
+        slug: event.slug,
         content: event.content,
         image: event.image,
         features: event.features,
@@ -265,7 +239,6 @@ export const getEventBySlug = asyncHandler(
     });
   }
 );
-
 
 /**
  * @name getUserEvents
@@ -275,19 +248,18 @@ export const getEventBySlug = asyncHandler(
  */
 export const getUserEvents = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    
     const userId = req.params.userId;
 
     if (!userId) {
       return next(
-        new ErrorResponse("Unauthorized", 401, ["Unauthorized user"])
+        new ErrorResponse("Unauthorized", 401, [])
       );
     }
 
-
-    const user = await User.findById(userId).lean();
-
-    if (!user) {
-      return next(new ErrorResponse("User not found", 404, ["User not found"]));
+    const user = await userRepository.findUser(userId);
+    if (user.error) {
+      return next(new ErrorResponse(user.message, user.code, []));
     }
 
     // Fetch user events with populated user data
@@ -303,6 +275,7 @@ export const getUserEvents = asyncHandler(
       data: result.data.map((event: IEventDoc) => ({
         id: event._id,
         title: event.title,
+        slug: event.slug,
         content: event.content,
         image: event.image,
         features: event.features,
@@ -318,42 +291,7 @@ export const getUserEvents = asyncHandler(
   }
 );
 
-// export const getUserEvents = asyncHandler(
-//   async (req: Request, res: Response, next: NextFunction) => {
 
-//     const userId = req.params.userId;
-//     if (!userId) {
-//       return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
-//     }
-
-//     const user = await userReposirtory.findById(userId);
-//     if (!user) {
-//       return next(new ErrorResponse("Error", 404, ["User not found"]));
-//     }
-
-//     const result = await eventRepository.getUserEvents(userId);
-
-//     res.status(200).json({
-//       error: false,
-//       errors: [],
-//       data: {
-//         events: result.data.map((event: IEventDoc) => ({
-//           title: event.title,
-//           content: event.content,
-//           image: event.image,
-//           features: event.features,
-//           joinUrl: event.joinUrl,
-//           planUrl: event.planUrl,
-//           sponsorUrl: event.sponsorUrl,
-//           communityUrl: event.communityUrl,
-//           id: event._id,
-//         })),
-//       },
-//       message: "User events fetched successfully.",
-//       status: 200,
-//     });
-//   }
-// );
 
 /**
  * @name getEvents
@@ -362,6 +300,7 @@ export const getUserEvents = asyncHandler(
  * @access Public
  */
 export const getEvents = asyncHandler(async (_req: Request, res: Response) => {
+  
   const result = await eventRepository.getEvents();
 
   res.status(200).json({
@@ -370,6 +309,7 @@ export const getEvents = asyncHandler(async (_req: Request, res: Response) => {
     data: {
       events: result.data.map((event: IEventDoc) => ({
         title: event.title,
+        slug: event.slug,
         content: event.content,
         image: event.image,
         features: event.features,
@@ -395,15 +335,15 @@ export const deleteEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
-    const event = await eventRepository.findById(id);
-    if (!event) {
-      return next(new ErrorResponse("Error", 404, ["Event not found"]));
+    const event = await eventRepository.findEvent(id);
+    if (event.error) {
+      return next(new ErrorResponse(event.message, event.code, []));
     }
 
     const result = await eventRepository.deleteEvent(id);
 
     if (result.error) {
-      return next(new ErrorResponse("Error", result.code!, [result.message]));
+      return next(new ErrorResponse(result.message, result.code!, []));
     }
 
     res.status(200).json({
