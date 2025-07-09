@@ -473,7 +473,7 @@ export const getUser = asyncHandler(
       return next(new ErrorResponse("Unauthorized", 401, ["User not authenticated"]));
     }
 
-    const user = await userRepository.findById(userId);
+    const user = await userRepository.findUser(userId);
     if (user.error || !user.data) {
       return next(new ErrorResponse("User not found", 404, []));
     }
