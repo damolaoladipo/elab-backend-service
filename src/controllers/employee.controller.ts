@@ -99,12 +99,13 @@ export const getEmployee = asyncHandler(
 export const updateEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
-    const { name, role, socialLink, status }: UpdateEmployeeDTO = req.body;
+    const update : UpdateEmployeeDTO = req.body;
 
     const existing = await employeeRepository.findEmployee(id);
     if (!existing) return next(new ErrorResponse("Not found", 404, []));
 
-    let imageUrl = existing.image;
+    let imageUrl = existing.data.image;
+
     const imageFile = (req as any).files?.find(
       (f: any) => f.fieldname === "image"
     );
@@ -117,13 +118,7 @@ export const updateEmployee = asyncHandler(
       });
     }
 
-    const updated = await employeeRepository.updateEmployee(id, {
-      name,
-      role,
-      socialLink,
-      status,
-      image: imageUrl,
-    });
+    const updated = await employeeRepository.updateEmployee(id, update);
 
     if (updated.error)
       return next(new ErrorResponse("Update failed", 500, [updated.message]));

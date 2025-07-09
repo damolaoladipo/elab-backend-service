@@ -16,8 +16,11 @@ type UploadedFile = {
 const uploadFile = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const contentType = req.headers["content-type"];
+    
+    const method = req.method.toUpperCase();
+
     if (
-      req.method !== "POST" ||
+      !["POST", "PUT", "PATCH"].includes(method) ||
       !contentType?.includes("multipart/form-data")
     ) {
       return next();
@@ -34,34 +37,33 @@ const uploadFile = asyncHandler(
     const files: UploadedFile[] = [];
     req.body = {};
 
-   stream.on("file", (fieldname, file, info) => {
-  const passThrough = new PassThrough();
-  let fileSize = 0;
+    stream.on("file", (fieldname, file, info) => {
+      const passThrough = new PassThrough();
+      let fileSize = 0;
 
-  file.on("data", (chunk) => {
-    fileSize += chunk.length;
-    passThrough.write(chunk); 
-  });
+      file.on("data", (chunk) => {
+        fileSize += chunk.length;
+        passThrough.write(chunk);
+      });
 
-  file.on("end", () => {
-    passThrough.end();
-    
+      file.on("end", () => {
+        passThrough.end();
 
-    files.push({
-      fieldname,
-      stream: passThrough,
-      fileName: info.filename,
-      mimeType: info.mimeType,
-      info,
-      size: fileSize,
+        files.push({
+          fieldname,
+          stream: passThrough,
+          fileName: info.filename,
+          mimeType: info.mimeType,
+          info,
+          size: fileSize,
+        });
+      });
+
+      file.on("error", (err) => {
+        passThrough.destroy(err);
+        return next(err);
+      });
     });
-  });
-
-  file.on("error", (err) => {
-    passThrough.destroy(err);
-    return next(err);
-  });
-});
 
     stream.on("field", (name, value) => {
       req.body[name] = value;
@@ -70,11 +72,13 @@ const uploadFile = asyncHandler(
     console.log("REQ.BODY:", req.body);
 
     stream.on("finish", () => {
-
       (req as any).files = files;
 
-           console.log("✅ Parsed fields:", req.body);
-      console.log("✅ Parsed files:", files.map(f => f.fieldname));
+      console.log("✅ Parsed fields:", req.body);
+      console.log(
+        "✅ Parsed files:",
+        files.map((f) => f.fieldname)
+      );
       next();
     });
 

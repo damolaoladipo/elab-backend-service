@@ -7,6 +7,7 @@ import userRepository from "../repositories/user.repository";
 import uploadService from "../services/upload.service";
 import { CreateEventDTO, UpdateEventDTO } from "../dtos/event.dto";
 import { IEventDoc } from "../utils/interface.util";
+import { generateSlug } from "../utils/helper.util";
 
 /**
  * @name createEvent
@@ -101,66 +102,83 @@ export const createEvent = asyncHandler(
   }
 );
 
-/**
- * @name updateEvent
- * @description Update an event
- * @route PATCH /events/:id
- * @access Private
- */
 export const updateEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req as any).user?.id;
-      if (!userId) {
+    const eventId = req.params.id;
+
+    if (!userId) {
       return next(new ErrorResponse("Unauthorized", 401, []));
     }
 
-    const eventId = req.params.id;
+    const {
+      title,
+      content,
+      features,
+      joinUrl,
+      planUrl,
+      sponsorUrl,
+      communityUrl,
+    }: UpdateEventDTO = req.body;
 
-    const update: IEventDoc = req.body;
-
-    
-     const found = await eventRepository.findEvent(eventId);
-    if (found.error) {
-      return next(new ErrorResponse("Store item not found", 404, []));
+    const validate = await validationService.validateUpdateEvent(req.body);
+    if (validate.error) {
+      return next(new ErrorResponse(validate.message, 400, []));
     }
 
+    const found = await eventRepository.findEvent(eventId);
+    if (found.error) {
+      return next(new ErrorResponse("Event not found", 404, []));
+    }
+
+    const updatePayload: Partial<IEventDoc> = {};
+
+    // Title and slug update
+    if (title && title !== found.data.title) {
+      updatePayload.title = title;
+
+      const slug = await generateSlug({
+        input: title,
+        slugExistsFn: eventRepository.slugExists.bind(eventRepository),
+      });
+
+      updatePayload.slug = slug;
+    }
+
+    if (content) updatePayload.content = content;
+    if (features) updatePayload.features = features;
+    if (joinUrl) updatePayload.joinUrl = joinUrl;
+    if (planUrl) updatePayload.planUrl = planUrl;
+    if (sponsorUrl) updatePayload.sponsorUrl = sponsorUrl;
+    if (communityUrl) updatePayload.communityUrl = communityUrl;
+
+    // Handle image upload (if available)
     const imageFile = (req as any).files?.find(
       (f: any) => f.fieldname === "image"
     );
-
-    if (
-      imageFile &&
-      imageFile.stream &&
-      imageFile.mimeType &&
-      imageFile.fileName
-    ) {
-      const ImageData = {
+    
+    if (imageFile) {
+      const imageUrl = await uploadService.uploadFile({
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
         refId: found.data._id,
-      };
-
-      const imageUrl = await uploadService.uploadFile(ImageData);
+      });
 
       if (imageUrl && imageUrl !== found.data.image) {
-        await eventRepository.updateEvent(eventId, { image: imageUrl });
-        found.data.image = imageUrl;
+        updatePayload.image = imageUrl;
       }
     }
 
-      const result = await eventRepository.updateEvent(eventId, update);
+    const result = await eventRepository.updateEvent(eventId, updatePayload);
     if (result.error) {
       return next(new ErrorResponse(result.message, result.code!, []));
     }
 
-
     res.status(200).json({
       error: false,
-      errors: [],
-      data: result.data,
       message: "Event updated successfully.",
-      status: 200,
+      data: result.data,
     });
   }
 );

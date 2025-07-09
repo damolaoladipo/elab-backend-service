@@ -368,3 +368,8 @@ export interface ITransactionDoc extends Document {
   // functions
   getAll(): Array<ITransactionDoc>;
 }
+
+export interface ISlugOptions {
+  input: string;
+  slugExistsFn: (slug: string) => Promise<boolean>;
+}

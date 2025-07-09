@@ -1,4 +1,6 @@
+import slugify from "slugify";
 import { AppChannel } from "./enums.util";
+import { ISlugOptions } from "./interface.util";
 
 /**
  * Generates random characters
@@ -136,6 +138,30 @@ export const detectPlatform = (
   }
 };
 
+
+
+export const generateSlug = async (data: ISlugOptions): Promise<string> => {
+  
+  const { input, slugExistsFn } = data;
+  if (!input || typeof input !== "string") {
+    throw new Error("input must be a non-empty string");
+  }
+
+  const baseSlug = slugify(input, { lower: true, strict: true });
+  let slug = baseSlug;
+  let count = 1;
+
+  while (await slugExistsFn(slug)) {
+    slug = `${baseSlug}-${count}`;
+    count++;
+  }
+
+  return slug;
+};
+
+
+
+
 export default {
   generateRandomChars,
   generateRandomNumbers,
@@ -143,4 +169,5 @@ export default {
   generatePassword,
   generateApiKey,
   detectPlatform,
+  generateSlug
 };

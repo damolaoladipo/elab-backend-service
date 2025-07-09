@@ -159,6 +159,17 @@ class CompanyRepository {
     }
     return result;
   }
+
+  /**
+ * @name slugExists
+ * @description Checks if a slug already exists in the database.
+ * @param {string} slug - The slug to check for existence.
+ * @returns {Promise<boolean>} - Returns true if the slug exists, false otherwise.
+ */
+  public async slugExists(slug: string): Promise<boolean> {
+  const exists = await this.model.exists({ slug });
+  return !!exists;
+}
 }
 
 export default new CompanyRepository();

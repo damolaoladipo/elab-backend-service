@@ -49,6 +49,8 @@ EventSchema.pre<IEventDoc>("save", async function (next) {
   next();
 });
 
+
+
 const Event: Model<IEventDoc> = mongoose.model<IEventDoc>(
   DbModelsType.EVENT,
   EventSchema
