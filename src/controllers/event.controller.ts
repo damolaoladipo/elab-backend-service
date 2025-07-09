@@ -5,8 +5,10 @@ import validationService from "../services/validate.service";
 import eventRepository from "../repositories/event.repository";
 import userRepository from "../repositories/user.repository";
 import uploadService from "../services/upload.service";
-import { CreateEventDTO } from "../dtos/event.dto";
+import { CreateEventDTO, UpdateEventDTO } from "../dtos/event.dto";
 import { IEventDoc } from "../utils/interface.util";
+import Event from "../models/Event.model";
+import slugify from "slugify";
 
 /**
  * @name createEvent
@@ -30,6 +32,8 @@ export const createEvent = asyncHandler(
       sponsorUrl,
       communityUrl,
     }: CreateEventDTO = req.body;
+
+
 
     const validate = await validationService.validateCreateEvent(req.body);
     if (validate.error) {
@@ -101,22 +105,28 @@ export const createEvent = asyncHandler(
   }
 );
 
+
 /**
  * @name updateEvent
- * @description Updates an event
+ * @description Update an event
+ * @route PATCH /events/:id
+ * @access Private
+ */
+/**
+ * @name updateEvent
+ * @description Updates an existing event
  * @route PATCH /events/:id
  * @access Private
  */
 export const updateEvent = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req as any).user?.id;
-    if (!userId) {
-      return next(new ErrorResponse("Unathorized", 401, [""]));
-    }
-
     const eventId = req.params.id;
-    if (!eventId) {
-      return next(new ErrorResponse("Event ID is required", 400, []));
+
+  
+
+    if (!userId) {
+      return next(new ErrorResponse("Unauthorized", 401, []));
     }
 
     const {
@@ -127,47 +137,33 @@ export const updateEvent = asyncHandler(
       planUrl,
       sponsorUrl,
       communityUrl,
-    } = req.body;
+    }: Partial<CreateEventDTO> = req.body;
 
-    // Fetch existing event via repository
-    const existingEvent = await eventRepository.findEvent(eventId);
-    if (existingEvent.error || !existingEvent.data) {
-      return next(new ErrorResponse(existingEvent.message, 404, []));
-    }
-
-    const validate = await validationService.validateUpdateEvent({
-      title,
-      content,
-      features,
-      joinUrl,
-      planUrl,
-      sponsorUrl,
-      communityUrl,
-    });
+    const body = req.body || {};
+const validate = await validationService.validateUpdateEvent(body);
 
     if (validate.error) {
-      return next(
-        new ErrorResponse("Validation failed", 400, [validate.message])
-      );
+      return next(new ErrorResponse(validate.message, 400, []));
     }
 
-    const event: any = {
-      title,
-      content,
-      features,
-      joinUrl,
-      planUrl,
-      sponsorUrl,
-      communityUrl,
+    const data: Partial<IEventDoc> = {
+      ...(title && { title }),
+      ...(content && { content }),
+      ...(features && { features }),
+      ...(joinUrl && { joinUrl }),
+      ...(planUrl && { planUrl }),
+      ...(sponsorUrl && { sponsorUrl }),
+      ...(communityUrl && { communityUrl }),
     };
 
-    const files = (req as any).files;
+    const updatedEvent = await eventRepository.updateEvent(eventId, data);
+    if (updatedEvent.error) {
+      return next(new ErrorResponse(updatedEvent.message, updatedEvent.code!, []));
+    }
 
-    const imageFile = Array.isArray(files)
-      ? files.find((f: any) => f.fieldname === "image")
-      : null;
-
-    let imageUrl = "";
+    const imageFile = (req as any).files?.find(
+      (f: any) => f.fieldname === "image"
+    );
 
     if (
       imageFile &&
@@ -179,26 +175,38 @@ export const updateEvent = asyncHandler(
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
-        refId: event.data._id,
+        refId: updatedEvent.data._id,
       };
 
-      imageUrl = await uploadService.uploadFile(ImageData);
+      const imageUrl = await uploadService.uploadFile(ImageData);
 
-      if (imageUrl && imageUrl !== event.data.image) {
-        await eventRepository.updateEvent(event.data._id, { image: imageUrl });
-        event.data.image = imageUrl;
+      if (imageUrl && imageUrl !== updatedEvent.data.image) {
+        await eventRepository.updateEvent(eventId, { image: imageUrl });
+        updatedEvent.data.image = imageUrl;
       }
     }
 
     res.status(200).json({
       error: false,
       errors: [],
-      data: event.data,
+      data: {
+        title: updatedEvent.data.title,
+        slug: updatedEvent.data.slug,
+        image: updatedEvent.data.image,
+        content: updatedEvent.data.content,
+        features: updatedEvent.data.features,
+        joinUrl: updatedEvent.data.joinUrl,
+        planUrl: updatedEvent.data.planUrl,
+        sponsorUrl: updatedEvent.data.sponsorUrl,
+        communityUrl: updatedEvent.data.communityUrl,
+        id: updatedEvent.data._id,
+      },
       message: "Event updated successfully.",
       status: 200,
     });
   }
 );
+
 
 /**
  * @name getEvent

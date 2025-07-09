@@ -67,6 +67,8 @@ const uploadFile = asyncHandler(
       req.body[name] = value;
     });
 
+    console.log("REQ.BODY:", req.body);
+
     stream.on("finish", () => {
 
       (req as any).files = files;
