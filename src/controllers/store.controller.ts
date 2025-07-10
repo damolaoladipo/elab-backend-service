@@ -170,6 +170,10 @@ export const updateStore = asyncHandler(
       return next(new ErrorResponse("Unauthorized", 401, []));
     }
     const storeId = req.params.id;
+    if (!storeId) {
+      return next(new ErrorResponse("Store ID is required", 400, []));
+    }
+
     const {
       name,
       price,
@@ -184,6 +188,29 @@ export const updateStore = asyncHandler(
       size,
       status,
     }: UpdateStoreDTO = req.body;
+
+    const imageFile = (req as any).files?.find(
+      (file: any) => file.fieldname === "image"
+    );
+
+    const hasBodyUpdate =
+      name ||
+      price ||
+      discount ||
+      category ||
+      author ||
+      excerpt ||
+      description ||
+      url ||
+      color ||
+      pageCount ||
+      size ||
+      status;
+    const hasFileUpdate = !!imageFile;
+
+    if (!hasBodyUpdate && !hasFileUpdate) {
+      return next(new ErrorResponse("Update data is empty", 400, []));
+    }
 
     // Fetch existing company
     const existing = await storeRepository.findStore(storeId);
@@ -241,17 +268,14 @@ export const updateStore = asyncHandler(
       updatePayload.status = status;
     }
 
-    const imageFile = (req as any).files.find(
-      (file: any) => file.fieldname === "image"
-    );
-
     if (imageFile) {
       const imageUrl = await uploadService.uploadFile({
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
-        refId: existing.data.id,
+        refId: existing.data._id,
       });
+
       if (imageUrl && imageUrl !== existing.data.image) {
         updatePayload.image = imageUrl;
       }

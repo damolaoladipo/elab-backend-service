@@ -101,7 +101,6 @@ export const createEvent = asyncHandler(
     });
   }
 );
-
 /**
  * @name updateEvent
  * @description Updates an existing event
@@ -130,9 +129,25 @@ export const updateEvent = asyncHandler(
       communityUrl,
     }: UpdateEventDTO = req.body;
 
-    const validate = await validationService.validateUpdateEvent(req.body);
-    if (validate.error) {
-      return next(new ErrorResponse(validate.message, 400, []));
+    const imageFile = (req as any).files?.find(
+      (f: any) => f.fieldname === "image"
+    );
+
+    const hasBodyUpdate =
+      title || content || features || joinUrl || planUrl || sponsorUrl || communityUrl;
+
+    const hasFileUpdate = !!imageFile;
+
+    if (!hasBodyUpdate && !hasFileUpdate) {
+      return next(new ErrorResponse("update data is empty", 400, []));
+    }
+
+    // Optional validation
+    if (hasBodyUpdate) {
+      const validate = await validationService.validateUpdateEvent(req.body);
+      if (validate.error) {
+        return next(new ErrorResponse(validate.message, 400, []));
+      }
     }
 
     const found = await eventRepository.findEvent(eventId);
@@ -142,7 +157,7 @@ export const updateEvent = asyncHandler(
 
     const updatePayload: Partial<IEventDoc> = {};
 
-    // Title and slug update
+    // Title + slug
     if (title && title !== found.data.title) {
       updatePayload.title = title;
 
@@ -157,6 +172,7 @@ export const updateEvent = asyncHandler(
     if (content && content !== found.data.content) {
       updatePayload.content = content;
     }
+
     if (features && features !== found.data.features) {
       updatePayload.features = features;
     }
@@ -164,6 +180,7 @@ export const updateEvent = asyncHandler(
     if (joinUrl && joinUrl !== found.data.joinUrl) {
       updatePayload.joinUrl = joinUrl;
     }
+
     if (planUrl && planUrl !== found.data.planUrl) {
       updatePayload.planUrl = planUrl;
     }
@@ -171,15 +188,12 @@ export const updateEvent = asyncHandler(
     if (sponsorUrl && sponsorUrl !== found.data.sponsorUrl) {
       updatePayload.sponsorUrl = sponsorUrl;
     }
+
     if (communityUrl && communityUrl !== found.data.communityUrl) {
       updatePayload.communityUrl = communityUrl;
     }
 
-    // Handle image upload (if available)
-    const imageFile = (req as any).files?.find(
-      (f: any) => f.fieldname === "image"
-    );
-
+    // Image upload
     if (imageFile) {
       const imageUrl = await uploadService.uploadFile({
         stream: imageFile.stream,
@@ -194,6 +208,7 @@ export const updateEvent = asyncHandler(
     }
 
     const result = await eventRepository.updateEvent(eventId, updatePayload);
+
     if (result.error) {
       return next(new ErrorResponse(result.message, result.code!, []));
     }
@@ -205,6 +220,7 @@ export const updateEvent = asyncHandler(
     });
   }
 );
+
 
 /**
  * @name getEvent

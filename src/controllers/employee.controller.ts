@@ -92,27 +92,35 @@ export const getEmployee = asyncHandler(
  * @description Updates an existing employee
  * @route PATCH /employees/:id
  * @access Private
- * @param {string} id - The ID of the employee to update
- * @param {UpdateEmployeeDTO} body - The data to update the employee with
- * */
-
+ */
 export const updateEmployee = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req as any).user?.id;
     if (!userId) {
       return next(new ErrorResponse("Unauthorized", 401, []));
     }
-    const { employeeId } = req.params;
+
+    const employeeId = req.params.id;
     if (!employeeId) {
       return next(new ErrorResponse("Employee ID is required", 400, []));
     }
 
     const { name, role, socialLink, status }: UpdateEmployeeDTO = req.body;
 
-    // Fetch existing company
+    const imageFile = (req as any).files?.find(
+      (f: any) => f.fieldname === "image"
+    );
+
+    const hasBodyUpdate = name || role || socialLink || status;
+    const hasFileUpdate = !!imageFile;
+
+    if (!hasBodyUpdate && !hasFileUpdate) {
+      return next(new ErrorResponse("update data is empty", 400, []));
+    }
+
     const existing = await employeeRepository.findEmployee(employeeId);
-    if (!existing) {
-      return next(new ErrorResponse("Company not found", 404, []));
+    if (!existing || existing.error) {
+      return next(new ErrorResponse("Employee not found", 404, []));
     }
 
     const updatePayload: Partial<IEmployeeDoc> = {};
@@ -131,24 +139,21 @@ export const updateEmployee = asyncHandler(
     if (role && role !== existing.data.role) {
       updatePayload.role = role;
     }
+
     if (socialLink && socialLink !== existing.data.socialLink) {
       updatePayload.socialLink = socialLink;
     }
+
     if (status && status !== existing.data.status) {
       updatePayload.status = status;
     }
 
-    let imageUrl = existing.data.image;
-
-    const imageFile = (req as any).files?.find(
-      (f: any) => f.fieldname === "image"
-    );
     if (imageFile) {
-      imageUrl = await uploadService.uploadFile({
+      const imageUrl = await uploadService.uploadFile({
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
-        refId: existing.data.id,
+        refId: existing.data._id,
       });
 
       if (imageUrl && imageUrl !== existing.data.image) {
@@ -156,10 +161,8 @@ export const updateEmployee = asyncHandler(
       }
     }
 
-    const updated = await employeeRepository.updateEmployee(
-      employeeId,
-      updatePayload
-    );
+    const updated = await employeeRepository.updateEmployee(employeeId, updatePayload);
+
     if (updated.error) {
       return next(new ErrorResponse(updated.message, updated.code, []));
     }
@@ -173,6 +176,7 @@ export const updateEmployee = asyncHandler(
     });
   }
 );
+
 
 /**
  * @name getEmployees

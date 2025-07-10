@@ -107,13 +107,13 @@ export const getCompany = asyncHandler(
   }
 );
 
+
 /**
  * @name updateCompany
  * @description Updates a company
  * @route PATCH /companies/:id
  * @access Private
  */
-
 export const updateCompany = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req as any).user?.id;
@@ -132,17 +132,27 @@ export const updateCompany = asyncHandler(
       contact,
     }: UpdateCompanyDTO = req.body;
 
-    // Validation
-    const validate = await validationService.validateUpdateCompany(req.body);
-    if (validate.error) {
-      return next(
-        new ErrorResponse(validate.message, 400, [])
-      );
+    const files = (req as any).files || [];
+    const logoFile = files.find((f: any) => f.fieldname === "logo");
+
+    const hasBodyUpdate =
+      name || description || brochureUrl || status || websiteUrl || contact;
+    const hasFileUpdate = !!logoFile;
+
+    if (!hasBodyUpdate && !hasFileUpdate) {
+      return next(new ErrorResponse("update data is empty", 400, []));
     }
 
-    // Fetch existing company
+    // Validate body if body fields exist
+    if (hasBodyUpdate) {
+      const validate = await validationService.validateUpdateCompany(req.body);
+      if (validate.error) {
+        return next(new ErrorResponse(validate.message, 400, []));
+      }
+    }
+
     const existing = await companyRepository.findCompany(companyId);
-    if (!existing) {
+    if (!existing || existing.error) {
       return next(new ErrorResponse("Company not found", 404, []));
     }
 
@@ -162,28 +172,25 @@ export const updateCompany = asyncHandler(
     if (description && description !== existing.data.description) {
       updatePayload.description = description;
     }
+
     if (status && status !== existing.data.status) {
       updatePayload.status = status;
     }
+
     if (websiteUrl && websiteUrl !== existing.data.websiteUrl) {
       updatePayload.websiteUrl = websiteUrl;
     }
+
     if (contact && contact !== existing.data.contact) {
       updatePayload.contact = contact;
     }
+
     if (brochureUrl && brochureUrl !== existing.data.brochureUrl) {
       updatePayload.brochureUrl = brochureUrl;
     }
 
-    // Extract existing URLs
-    let logoUrl = existing.data.logo;
-    
-    const files = (req as any).files || [];
-    const logoFile = files.find((f: any) => f.fieldname === "logo");
-  
-    // Handle logo upload
     if (logoFile) {
-      logoUrl = await uploadService.uploadFile({
+      const logoUrl = await uploadService.uploadFile({
         stream: logoFile.stream,
         mimeType: logoFile.mimeType,
         originalFileName: logoFile.fileName,
@@ -195,12 +202,7 @@ export const updateCompany = asyncHandler(
       }
     }
 
-
-    // Update company
-    const updated = await companyRepository.updateCompany(
-      companyId,
-      updatePayload
-    );
+    const updated = await companyRepository.updateCompany(companyId, updatePayload);
     if (updated.error) {
       return next(new ErrorResponse(updated.message, updated.code!, []));
     }

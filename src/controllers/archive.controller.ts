@@ -192,11 +192,22 @@ export const updateArchive = asyncHandler(
       status,
     }: UpdateArchiveDTO = req.body;
 
+    const files = (req as any).files || [];
+    const imageFile = files.find((f: any) => f.fieldname === "image");
+    const resourceFile = files.find((f: any) => f.fieldname === "resourceLink");
+
+    const hasBodyUpdate =
+      title || category || content || link || author || (tags && tags.length > 0) || status;
+
+    const hasFileUpdate = imageFile || resourceFile;
+
+    if (!hasBodyUpdate && !hasFileUpdate) {
+      return next(new ErrorResponse("update data is empty", 400, []));
+    }
+
     const validate = await validationService.validateUpdateArchive(req.body);
     if (validate.error) {
-      return next(
-        new ErrorResponse(validate.message, 400, [])
-      );
+      return next(new ErrorResponse(validate.message, 400, []));
     }
 
     const existing = await archiveRepository.findArchive(archiveId);
@@ -205,18 +216,19 @@ export const updateArchive = asyncHandler(
     }
 
     const updatePayload: Partial<IArchiveDoc> = {};
-        // Title and slug update
-        if (title && title !== existing.data.title) {
-          updatePayload.title = title;
-    
-          const slug = await generateSlug({
-            input: title,
-            slugExistsFn: archiveRepository.slugExists.bind(archiveRepository),
-          });
-    
-          updatePayload.slug = slug;
-        }
-    
+
+    // Title and slug update
+    if (title && title !== existing.data.title) {
+      updatePayload.title = title;
+
+      const slug = await generateSlug({
+        input: title,
+        slugExistsFn: archiveRepository.slugExists.bind(archiveRepository),
+      });
+
+      updatePayload.slug = slug;
+    }
+
     if (category && category !== existing.data.category) {
       updatePayload.category = category;
     }
@@ -236,15 +248,9 @@ export const updateArchive = asyncHandler(
       updatePayload.status = status;
     }
 
-    let imageUrl = existing.data.image;
-    let resourceUrl = existing.data.resourceLink;
-
-    const files = (req as any).files || [];
-    const imageFile = files.find((f: any) => f.fieldname === "image");
-    const resourceFile = files.find((f: any) => f.fieldname === "resourceLink");
-
+    // Upload image if provided
     if (imageFile) {
-      imageUrl = await uploadService.uploadFile({
+      const imageUrl = await uploadService.uploadFile({
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
@@ -256,21 +262,21 @@ export const updateArchive = asyncHandler(
       }
     }
 
+    // Upload resource file if provided
     if (resourceFile) {
-      resourceUrl = await uploadService.uploadFile({
+      const resourceUrl = await uploadService.uploadFile({
         stream: resourceFile.stream,
         mimeType: resourceFile.mimeType,
         originalFileName: resourceFile.fileName,
         refId: existing.data._id,
       });
 
-      if (resourceUrl && resourceUrl !== existing.data.resource) {
+      if (resourceUrl && resourceUrl !== existing.data.resourceLink) {
         updatePayload.resourceLink = resourceUrl;
       }
     }
 
     const updated = await archiveRepository.updateArchive(archiveId, updatePayload);
-
     if (updated.error) {
       return next(new ErrorResponse(updated.message, updated.code, []));
     }
@@ -284,6 +290,7 @@ export const updateArchive = asyncHandler(
     });
   }
 );
+
 
 /**
  * @name getArchive

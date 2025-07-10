@@ -104,10 +104,12 @@ export const createProject = asyncHandler(
  * @route PATCH /projects/:id
  * @access Private
  */
-
 export const updateProject = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const projectId = req.params.id;
+    if (!projectId) {
+      return next(new ErrorResponse("Project ID is required", 400, []));
+    }
 
     const {
       title,
@@ -118,22 +120,35 @@ export const updateProject = asyncHandler(
       sponsorUrl,
     }: UpdateProjectDTO = req.body;
 
-    // Validate input
-    const validate = await validationService.validateUpdateProject(req.body);
-    if (validate.error) {
-      return next(
-        new ErrorResponse("Validation Error", 400, [validate.message])
-      );
+    const imageFile = (req as any).files?.find(
+      (f: any) => f.fieldname === "file" || f.fieldname === "image"
+    );
+
+    const hasBodyUpdate =
+      title || content || websiteUrl || volunteerUrl || partnerUrl || sponsorUrl;
+    const hasFileUpdate = !!imageFile;
+
+    if (!hasBodyUpdate && !hasFileUpdate) {
+      return next(new ErrorResponse("update data is empty", 400, []));
     }
 
-    const found = await await projectRepository.findProject(projectId);
+    // Validate only if body fields exist
+    if (hasBodyUpdate) {
+      const validate = await validationService.validateUpdateProject(req.body);
+      if (validate.error) {
+        return next(
+          new ErrorResponse("Validation Error", 400, [validate.message])
+        );
+      }
+    }
+
+    const found = await projectRepository.findProject(projectId);
     if (found.error) {
       return next(new ErrorResponse(found.message, 404, []));
     }
 
     const updatePayload: Partial<IProjectDoc> = {};
 
-    // Title and slug update
     if (title && title !== found.data.title) {
       updatePayload.title = title;
 
@@ -154,39 +169,30 @@ export const updateProject = asyncHandler(
     if (volunteerUrl && volunteerUrl !== found.data.volunteerUrl) {
       updatePayload.volunteerUrl = volunteerUrl;
     }
-
-    if (sponsorUrl && sponsorUrl !== found.data.sponsorUrl) {
-      updatePayload.sponsorUrl = sponsorUrl;
-    }
     if (partnerUrl && partnerUrl !== found.data.partnerUrl) {
       updatePayload.partnerUrl = partnerUrl;
     }
-
-    // Handle image upload if present
-    let imageUrl = found.data.image;
-    const imageFile = (req as any).files?.find(
-      (f: any) => f.fieldname === "file" || f.fieldname === "image"
-    );
+    if (sponsorUrl && sponsorUrl !== found.data.sponsorUrl) {
+      updatePayload.sponsorUrl = sponsorUrl;
+    }
 
     if (imageFile) {
-      imageUrl = await uploadService.uploadFile({
+      const imageUrl = await uploadService.uploadFile({
         stream: imageFile.stream,
         mimeType: imageFile.mimeType,
         originalFileName: imageFile.fileName,
         refId: found.data._id,
       });
-      
+
       if (imageUrl && imageUrl !== found.data.image) {
         updatePayload.image = imageUrl;
       }
     }
 
-    // Update project
     const updated = await projectRepository.updateProject(projectId, updatePayload);
- if (updated.error) {
+    if (updated.error) {
       return next(new ErrorResponse(updated.message, updated.code, []));
     }
-
 
     res.status(200).json({
       error: false,
@@ -197,6 +203,7 @@ export const updateProject = asyncHandler(
     });
   }
 );
+
 
 /**
  * @name getProjectById
