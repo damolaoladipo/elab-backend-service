@@ -3,6 +3,7 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import { PassThrough } from "stream";
+import ErrorResponse from "../utils/error.util";
 
 interface UploadFileOptions {
   stream: PassThrough;
@@ -39,11 +40,10 @@ class UploadService {
     const { stream, mimeType, originalFileName, refId } = data;
 
     // 1. Validate supported image types
-    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
+    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/svg"];
     if (!allowedMimeTypes.includes(mimeType)) {
-      throw new Error(
-        "Unsupported image format. Only JPG, PNG, and WebP allowed."
-      );
+      throw new ErrorResponse("Unsupported image format. Only JPG, PNG, and WebP allowed.", 400, []);
+      
     }
 
     // 2. Create unique file key
