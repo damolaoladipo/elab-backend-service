@@ -5,7 +5,6 @@ import ENV from "../utils/env.util";
 import errorHandler from "../middlewares/error.mdw";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
-import fileUpload from "express-fileupload";
 import path from "path";
 import expressSanitize from "express-mongo-sanitize";
 import helmet from "helmet";

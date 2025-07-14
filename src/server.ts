@@ -14,7 +14,6 @@ connect()
 
 const PORT = process.env.PORT as string
  
-
 const server = app.listen(PORT, () => {
     console.log(colors.bold.yellow (`eLab website server is running in ${process.env.NODE_ENV} mode`)) ;
 })

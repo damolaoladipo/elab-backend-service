@@ -9,9 +9,9 @@ export interface CreateStoreDTO {
   excerpt?: string;
   url?: string;
   author?: string;
-  color?: string;
+  color?: Array<string>;
   pageCount?: number;
-  size?: string;
+  size?: Array<string>;
 }
 
 export interface UpdateStoreDTO extends Partial<CreateStoreDTO> {}

@@ -297,9 +297,9 @@ export interface IStoreDoc extends Document {
   description: string;
   url: string;
   status: string;
-  color?: string;
+  color?: Array<string>;
   pageCount?: number;
-  size?: string;
+  size?: Array<string>;
     
   //relationships
   user: IUserDoc | ObjectId;

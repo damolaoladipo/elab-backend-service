@@ -18,7 +18,7 @@ const StoreSchema = new Schema<IStoreDoc>(
     status: { type: String },
     color: { type: String },
     pageCount: { type: Number },
-    size: { type: String },
+    size: [{ type: String }],
 
     user: { type: Schema.Types.ObjectId, ref: DbModelsType.USER, index: true },
   },
