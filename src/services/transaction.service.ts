@@ -1,7 +1,7 @@
 import { IResult } from "../utils/interface.util";
 import Transaction from "../models/Transaction.model";
 import { Paystack } from "paystack-sdk";
-import { config } from "../config/paystack.config";
+import { config } from "../config/config";
 
 export const paystack = new Paystack(config.testSecretkey);
 

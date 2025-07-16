@@ -1,4 +1,4 @@
-import { EmailService, ENVType } from "../utils/enums.util";
+import { EmailDriver, ENVType } from "../utils/enums.util";
 import { EmailConfig } from "../utils/interface.util";
 
 export const config = {
@@ -20,7 +20,7 @@ export function getEmailConfig(): EmailConfig {
 
   if (env === ENVType.PRODUCTION) {
     return {
-      service: EmailService.MAILSEND,
+      service: EmailDriver.MAILSEND,
       fromEmail: process.env.MAIL_FROM_EMAIL!,
       fromName: process.env.MAIL_FROM_NAME!,
       replyTo: process.env.MAIL_REPLY_TO,
@@ -34,7 +34,7 @@ export function getEmailConfig(): EmailConfig {
 
   if (env === ENVType.STAGING) {
     return {
-      service: EmailService.MAILSEND,
+      service: EmailDriver.MAILSEND,
       fromEmail: process.env.MAIL_FROM_EMAIL!,
       fromName: process.env.MAIL_FROM_NAME!,
       replyTo: process.env.MAIL_REPLY_TO,
@@ -48,7 +48,7 @@ export function getEmailConfig(): EmailConfig {
 
   if (env === ENVType.DEVELOPMENT) {
     return {
-      service: EmailService.MAILSEND,
+      service: EmailDriver.MAILSEND,
       fromEmail: process.env.EMAIL_FROM_EMAIL!,
       fromName: process.env.EMAIL_FROM_NAME as string,
       replyTo: process.env.EMAIL_REPLY_TO as string,

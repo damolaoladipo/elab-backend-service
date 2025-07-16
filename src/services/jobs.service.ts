@@ -1,10 +1,9 @@
 import { Agenda } from "agenda";
-import config from "./index";
+import { getMongoURI } from "../utils/helper.util";
 
-const mongoUrl = config.DATABASE.replace("<password>", config.DATABASE_PASSWORD);
 
 const agenda = new Agenda({
-  db: { address: mongoUrl, collection: "jobs" },
+  db: { address: getMongoURI(), collection: "jobs" },
   processEvery: "30 seconds",
 });
 

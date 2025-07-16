@@ -1,5 +1,5 @@
 import slugify from "slugify";
-import { AppChannel } from "./enums.util";
+import { AppChannel, ENVType } from "./enums.util";
 import { ISlugOptions } from "./interface.util";
 
 /**
@@ -161,6 +161,25 @@ export const generateSlug = async (data: ISlugOptions): Promise<string> => {
 
 
 
+export function getMongoURI(): string {
+  const env = process.env.NODE_ENV as string;
+
+  if (env === ENVType.PRODUCTION) {
+    return process.env.MONGODB_URI! as string;
+  }
+
+  if (env === ENVType.STAGING) {
+    return process.env.MONGODB_STAGING_URI!;
+  }
+
+  if (env === ENVType.DEVELOPMENT) {
+    return process.env.MONGODB_STAGING_URI!;
+  }
+
+  throw new Error("No valid MONGO URI found for current environment");
+}
+
+
 
 export default {
   generateRandomChars,
@@ -169,5 +188,6 @@ export default {
   generatePassword,
   generateApiKey,
   detectPlatform,
-  generateSlug
+  generateSlug,
+  getMongoURI,
 };

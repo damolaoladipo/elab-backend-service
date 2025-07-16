@@ -1,5 +1,5 @@
 import axios from "axios";
-import { paystackConfig } from "../config/paystack.config";
+import { paystackConfig } from "../config/config";
 
 class PaystackService {
   private readonly headers = {

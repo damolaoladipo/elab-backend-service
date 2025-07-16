@@ -428,3 +428,17 @@ export interface EmailConfig {
   sendingDomain?: string;
   clientUrl?: string;
 }
+
+export interface EmailOptions {
+  subject?: string;
+  salute?: string;
+  buttonUrl?: string;
+  buttonText?: string;
+  emailBody?: string;
+  emailBodies?: string[];
+  bodyOne?: string;
+  bodyTwo?: string;
+  bodyThree?: string;
+  preheaderText?: string;
+  status?: string;
+}

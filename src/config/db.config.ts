@@ -1,6 +1,7 @@
 import mongoose, { ConnectOptions } from "mongoose";
 import { ENVType } from "../utils/enums.util";
 import colors from "colors";
+import { getMongoURI } from "../utils/helper.util";
 
 const options: ConnectOptions = {
   autoIndex: true,
@@ -13,30 +14,16 @@ const options: ConnectOptions = {
 };
 
 const connectDB = async () => {
-  
-  let dataBaseURI: string | undefined;
-
-  if (process.env.NODE_ENV === ENVType.PRODUCTION) {
-    dataBaseURI = process.env.MONGODB_URI as string;
-  } else if (process.env.NODE_ENV === ENVType.STAGING) {
-    dataBaseURI = process.env.MONGODB_STAGING_URI as string;
-  } else if (process.env.NODE_ENV === ENVType.DEVELOPMENT) {
-    dataBaseURI = process.env.MONGODB_STAGING_URI as string;
-  }
-
-  if (!dataBaseURI) {
-    throw new Error("Database URI is not defined for the current environment.");
-  }
+  let dataBaseURI = getMongoURI();
 
   try {
-    const dbConn = await mongoose.connect(
-      dataBaseURI as string,
-      options
-    );
+    const dbConn = await mongoose.connect(dataBaseURI, options);
 
     console.log(
       colors.cyan.bold.underline(
-        `eLab website ${process.env.NODE_ENV?.toUpperCase()} database connected: ${dbConn.connection.host}`
+        `eLab website ${process.env.NODE_ENV?.toUpperCase()} database connected: ${
+          dbConn.connection.host
+        }`
       )
     );
   } catch (error) {
