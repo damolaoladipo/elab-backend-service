@@ -18,30 +18,7 @@ export const getPaystackPublicKey = asyncHandler(
   }
 );
 
-/**
- * @desc Initiate payment for a store item via Paystack
- * @route POST /api/payments/initiate
- * @access Private
- */
-export const initiateStorePayment = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const user = (req as any).user;
-    if (!user) {
-      return next(new ErrorResponse("Error", 401, ["Unauthorized user"]));
-    }
-    const { storeId } = req.body;
 
-    const result = await transactionService.initiatePurchase(storeId, user);
-
-    res.status(200).json({
-      error: false,
-      errors: [],
-      data: result,
-      message: "Payment initialized successfully",
-      status: 200,
-    });
-  }
-);
 
 /**
  * @desc Verify a completed Paystack transaction
@@ -77,24 +54,7 @@ export const verifyStorePayment = asyncHandler(
   }
 );
 
-/**
- * @desc Handle Paystack webhook for store purchases
- * @route POST /api/payments/webhook
- * @access Public (Paystack only)
- */
-export const handleStoreWebhook = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const rawBody = req.body as Buffer;
-    const signature = req.headers["x-paystack-signature"] as string;
 
-    await transactionService.handleWebhook(rawBody, signature);
-
-    res.status(200).json({
-      error: false,
-      errors: [],
-      data: null,
-      message: "Webhook processed successfully",
-      status: 200,
-    });
-  }
-);
+//get one payment
+// get all payments
+// verify payments

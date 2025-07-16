@@ -72,20 +72,17 @@ export enum VerifyOTP {
 
 
 export enum EmailDriver {
-  SENDGRID = "sendgrid",
-  AWS = "aws",
   MAILTRAP = "mailtrap",
+  MAILSEND = "mailsend",
 }
 
 export enum EmailTemplate {
   WELCOME = "welcome",
-  USER_INVITE = "user-invite",
+  PAYMENT_SUCCESSFUL = "payment-successful",
   PASSWORD_RESET = "password-reset",
   PASSWORD_CHANGED = "password-changed",
   EMAIL_VERIFICATION = "email-verification",
-  INVITE = "invite",
-  OTP = "otp",
-  VERIFY_EMAIL = "verify-email",
+  GENERIC = "generic"
 }
 
 
@@ -111,6 +108,9 @@ export enum TransactionStatus {
   CANCELLED = 'cancelled'
 }
 
+export enum EmailService {
+
+}
 
 
 export enum EmailType {

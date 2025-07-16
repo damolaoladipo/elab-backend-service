@@ -1,5 +1,13 @@
 import { Document, ObjectId } from "mongoose";
-import { EmailType, OtpType, PasswordType, TransactionsType, UserType, WysiwygBlockType } from "./enums.util";
+import {
+  EmailDriver,
+  EmailType,
+  OtpType,
+  PasswordType,
+  TransactionsType,
+  UserType,
+  WysiwygBlockType,
+} from "./enums.util";
 
 export type Nullable<T> = T | null;
 export interface IRoleDoc extends Document {
@@ -17,7 +25,7 @@ export interface IRoleDoc extends Document {
   createdAt: string;
   updatedAt: string;
   _version: number;
-  _id: ObjectId; 
+  _id: ObjectId;
   id: ObjectId;
 }
 
@@ -52,7 +60,7 @@ export interface IUserDoc extends Document {
 
   isSuper: boolean;
   isAdmin: boolean;
-  
+
   isActive: boolean;
   isActivated: boolean;
   isDeactivated: boolean;
@@ -72,7 +80,6 @@ export interface IUserDoc extends Document {
   _id: ObjectId;
   id: ObjectId;
 }
-
 
 export interface IResult<T = any> {
   error: boolean;
@@ -115,7 +122,6 @@ export interface IOptions {
   password: string;
   user: string;
 }
-
 
 export interface ITransactionDoc extends Document {
   type: TransactionsType;
@@ -175,14 +181,13 @@ export interface IEmailRequest {
   attachments?: any[];
 }
 
-
 // eLab Interfaces
 
 export interface IEventDoc extends Document {
   title: string;
   slug: string;
   image: string;
-  content: IWysiwygContent[]
+  content: IWysiwygContent[];
   features?: IWysiwygContent[];
   joinUrl?: string;
   planUrl?: string;
@@ -191,7 +196,7 @@ export interface IEventDoc extends Document {
 
   //relationships
   user: IUserDoc | ObjectId;
-  
+
   // time stamps
   createdAt: Date;
   updatedAt: Date;
@@ -203,16 +208,16 @@ export interface IEventDoc extends Document {
 export interface IProjectDoc extends Document {
   title: string;
   slug: string;
-  image: string;  //upload file
-  content: IWysiwygContent
+  image: string; //upload file
+  content: IWysiwygContent;
   websiteUrl?: string;
   volunteerUrl?: string;
   partnerUrl?: string;
   sponsorUrl?: string;
-  
+
   //relationships
   user: IUserDoc | ObjectId;
-  
+
   // time stamps
   createdAt: Date;
   updatedAt: Date;
@@ -221,24 +226,22 @@ export interface IProjectDoc extends Document {
   id: ObjectId;
 }
 
-
-
 export interface IArchiveDoc extends Document {
   title: string;
   slug: string;
-  category: string;  // news, press release, insight or resource
-  image?: string;  //upload file
-  content?: IWysiwygContent
+  category: string; // news, press release, insight or resource
+  image?: string; //upload file
+  content?: IWysiwygContent;
   link?: string;
   author?: string;
-  resourceLink?: string // upload file for resoruces
-  
+  resourceLink?: string; // upload file for resoruces
+
   tags: Array<string>;
-  status: string; // published, draft, archived 
+  status: string; // published, draft, archived
 
   //relationships
   user: IUserDoc | ObjectId;
-  
+
   // time stamps
   createdAt: Date;
   updatedAt: Date;
@@ -248,7 +251,7 @@ export interface IArchiveDoc extends Document {
 }
 
 export interface IWysiwygContent {
-  type: WysiwygBlockType
+  type: WysiwygBlockType;
   content?: string; // for text-based blocks
   level?: number; // for heading levels (e.g. h1 = 1, h2 = 2)
   language?: string; // for code blocks (e.g. "javascript", "markdown")
@@ -257,9 +260,6 @@ export interface IWysiwygContent {
   href?: string; // for links
   items?: string[]; // for list blocks
 }
-
-
-
 
 export interface IVentureDoc extends Document {
   name: string;
@@ -270,11 +270,10 @@ export interface IVentureDoc extends Document {
   websiteUrl: string;
   brochureUrl: string;
   contact: string;
-  
-  
+
   //relationships
   user: IUserDoc | ObjectId;
-  
+
   // time stamps
   createdAt: Date;
   updatedAt: Date;
@@ -300,10 +299,10 @@ export interface IStoreDoc extends Document {
   color?: Array<string>;
   pageCount?: number;
   size?: Array<string>;
-    
+
   //relationships
   user: IUserDoc | ObjectId;
-  
+
   // time stamps
   createdAt: Date;
   updatedAt: Date;
@@ -318,18 +317,17 @@ export interface IEmployeeDoc extends Document {
   role: string;
   image: string; //upload file
   status: string; // e.g. "active", "inactive", "on leave"
-  socialLink?: string
+  socialLink?: string;
 
   // relationships
   user: ObjectId | any;
-    // time stamps
+  // time stamps
   createdAt: Date;
   updatedAt: Date;
   _version: number;
   _id: ObjectId;
   id: ObjectId;
 }
-
 
 export interface ITransactionDoc extends Document {
   type: TransactionsType;
@@ -372,4 +370,61 @@ export interface ITransactionDoc extends Document {
 export interface ISlugOptions {
   input: string;
   slugExistsFn: (slug: string) => Promise<boolean>;
+}
+
+export interface IJobDoc extends Document {
+  name: string;
+  email: string;
+  data: Record<string, any>;
+}
+
+
+export interface IEmailJob {
+  user: IUserDoc;
+  subject: string;
+  payload: Record<string, any>;
+  driver: EmailDriver;
+  template?: string;
+  code?: string;
+  metadata?: any;
+  options?: {
+    subject?: string;
+    salute?: string;
+    buttonUrl?: string;
+    buttonText?: string;
+    emailBody?: string;
+    emailBodies?: Array<string>;
+    bodyOne?: string;
+    bodyTwo?: string;
+    bodyThree?: string;
+    otpType?: OtpType;
+    status?: string;
+  };
+}
+
+
+export interface IPaymentJob {
+  reference: string;
+  type: "verify" | "refund";
+}
+
+export interface IJobPayload {
+  email?: IEmailJob;
+  payment?: IPaymentJob;
+}
+
+export interface EmailConfig {
+  fromEmail: string;
+  fromName: string;
+  replyTo?: string;
+  service: EmailDriver;
+  apiKey?: string;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpUser?: string;
+  smtpPass?: string;
+  templateId?: string;
+  isTestMode?: boolean;
+  sendingDomain?: string;
+  clientUrl?: string;
 }
