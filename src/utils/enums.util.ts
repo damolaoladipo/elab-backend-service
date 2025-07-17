@@ -126,5 +126,6 @@ export enum TransactionsType {
   REFUND = "refund",
   ONETIME = "onetime",
   UPGRADE = "upgrade",
-  PAYMENT_METHOD_UPDATE = "payment-method-update"
+  PAYMENT_METHOD_UPDATE = "payment-method-update",
+  PURCHASE = "purchase"
 }

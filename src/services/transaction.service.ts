@@ -2,6 +2,8 @@ import { IResult } from "../utils/interface.util";
 import Transaction from "../models/Transaction.model";
 import { Paystack } from "paystack-sdk";
 import { config } from "../config/config";
+import storeRepository from "../repositories/store.repository";
+import { v4 as uuidv4 } from 'uuid';
 
 export const paystack = new Paystack(config.testSecretkey);
 
@@ -16,67 +18,77 @@ class TransactionService {
     let result: IResult = { error: false, message: "", code: 200, data: {} };
 
     try {
-      const payment = await paystack.transaction.verify(reference);
+      const txn = await paystack.transaction.verify(reference);
 
-      if (!payment.status || !payment.data) {
-        return {
-          error: true,
-          message: payment.message || "Payment verification failed",
-          code: 400,
-          data: {},
-        };
+      console.log("ref data", txn);
+
+      if (txn.data?.status !== "success") {
+        result.error = true;
+        result.code = 400;
+        result.message = txn.message;
+        result.data = {};
+        return result;
       }
 
-      const trx = payment.data;
-      const meta = trx.metadata;
-
-      if (!meta || !meta.storeId || !meta.userId || !meta.category) {
-        return {
-          error: true,
-          message: "Invalid or missing payment metadata",
-          code: 400,
-          data: {},
-        };
-      }
-
-      const existing = await Transaction.findOne({ reference: trx.reference });
+      const existing = await Transaction.findOne({
+        reference: txn.data.reference,
+      });
       if (existing) {
-        return {
-          error: false,
-          message: "Transaction already recorded",
-          code: 200,
-          data: existing,
-        };
+        result.error = false;
+        result.code = 200;
+        result.message = "Transaction already recorded";
+        result.data = existing;
+        return result;
       }
+
+      const referrer = txn.data.metadata?.referrer;
+
+      let storeId: string | null = null;
+
+      if (typeof referrer === "string") {
+        const url = new URL(referrer);
+        const parts = url.pathname.split("/");
+        storeId = parts.pop() || null;
+      }
+
+      const purchasedItem = storeId;
+
+      const store = await storeRepository.findStore(purchasedItem as string);
+      if (!store) {
+        throw new Error("Store item not found");
+      }
+
+      const txnRef = uuidv4()
 
       const transaction = await Transaction.create({
         type: "purchase",
-        medium: "store",
-        resource: "store",
-        entity: meta.storeId,
-        reference: trx.reference,
-        currency: trx.currency,
-        providerRef: trx.id,
+        medium: txn.data.channel,
+        resource: `elab store item - ${store.data.name}`,
+        entity: store.data.id,
+        reference: txnRef,
+        currency: txn.data.currency,
+        providerRef: txn.data.reference,
         providerName: "paystack",
-        description: `${meta.category} purchase`,
-        narration: `${meta.category} - ${meta.storeId}`,
-        amount: trx.amount / 100,
-        unitAmount: trx.amount,
-        fee: trx.fees / 100,
-        unitFee: trx.fees,
-        status: trx.status,
-        reason: trx.gateway_response,
-        message: trx.message,
-        providerData: [trx],
-        metadata: [meta],
-        channel: trx.channel,
-        slug: trx.reference,
-        card: trx.authorization,
-        user: meta.userId,
+        description: `Purchased of ${store.data.name}`,
+        narration: `${store.data.name} purchase`,
+        amount: txn.data.amount / 100,
+        unitAmount: txn.data.amount,
+        fee: txn.data.fees / 100,
+        unitFee: txn.data.fees,
+        status: txn.data.status,
+        reason: txn.data.gateway_response,
+        message: txn.data.message,
+        providerData: txn.data.customer,
+        metadata: txn.data.metadata,
+        channel: txn.data.channel,
+        slug: store.data.slug,
+        card: txn.data.authorization,
+        user: txn.data.customer.customer_code,
       });
 
       result.message = "Transaction verified successfully";
       result.data = transaction;
+
       return result;
     } catch (err: any) {
       return {

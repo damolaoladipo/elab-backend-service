@@ -1,7 +1,7 @@
 import mongoose, { Schema, Model } from "mongoose";
 import { ITransactionDoc } from "../utils/interface.util";
 import { DbModelsType, TransactionsType } from "../utils/enums.util";
-
+import slugify from "slugify";
 
 const TransactionSchema = new Schema<ITransactionDoc>(
   {
@@ -10,7 +10,7 @@ const TransactionSchema = new Schema<ITransactionDoc>(
       enum: Object.values(TransactionsType),
       index: true,
     },
-    medium: { type: String},
+    medium: { type: String },
     resource: { type: String },
     entity: { type: String },
     reference: { type: String, unique: true, required: true },
@@ -29,9 +29,9 @@ const TransactionSchema = new Schema<ITransactionDoc>(
     providerData: [{ type: Schema.Types.Mixed }],
     metadata: [{ type: Schema.Types.Mixed }],
     channel: { type: String },
-    slug: { type: String, unique: true },
+    slug: { type: String },
     card: {
-      authCode: { type: String, select: false},
+      authCode: { type: String, select: false },
       cardBin: { type: String },
       cardLast: { type: String },
       expiryMonth: { type: String },
@@ -42,12 +42,7 @@ const TransactionSchema = new Schema<ITransactionDoc>(
     },
 
     // Relationships
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: DbModelsType.USER,
-      required: true,
-      index: true,
-    },
+    user: { type: String },
   },
   {
     timestamps: true,

@@ -148,7 +148,7 @@ export interface ITransactionDoc extends Document {
   card: IDebitCard;
 
   // relationships
-  user: ObjectId | any;
+  user: any;
 
   // timestamps
   createdAt: string;
