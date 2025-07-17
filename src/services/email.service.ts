@@ -1,17 +1,17 @@
-import { renderFile } from "ejs";
+import pug from "pug";
 import appRootPath from "app-root-path";
-import sgMail from "@sendgrid/mail";
 import { MailerSend, EmailParams, Sender, Recipient } from "mailersend";
-import { SendEmailDTO } from "../dtos/email.dto";
-import { EmailDriver, EmailTemplate } from "../utils/enums.util";
-import { EmailConfig, IEmailJob, IResult, EmailOptions } from "../utils/interface.util";
-import { EMAIL_CONFIG } from "../config/config";
+import { MailtrapClient } from "mailtrap";
+import { IUserDoc, IResult, EmailConfig } from "../utils/interface.util";
+import { EmailDriver } from "../utils/enums.util";
+import { EMAIL_CONFIG } from "../config/email.config";
 
+const BASE_FOLDER = `${appRootPath.path}/src/views/emails`;
 
-const BASE_FOLDER = `${appRootPath.path}/src`;
 class EmailService {
   private config: EmailConfig;
   private mailersend?: MailerSend;
+  private mailtrap?: MailtrapClient;
 
   constructor() {
     this.config = EMAIL_CONFIG;
@@ -22,130 +22,100 @@ class EmailService {
         break;
 
       case EmailDriver.MAILTRAP:
-        sgMail.setApiKey(this.config.apiKey!);
+        this.mailtrap = new MailtrapClient({ token: this.config.apiKey! });
         break;
     }
   }
 
-  /**
-   * Dispatch email using the configured service
-   * @param data Email data to be sent
-   * @param driver Email service driver
-   */
-  private async dispatch(data: IEmailJob): Promise<IResult> {
+  private renderTemplate(
+    template: string,
+    locals: Record<string, any>
+  ): string {
+    const templatePath = `${BASE_FOLDER}/${template}.pug`;
+    return pug.renderFile(templatePath, locals);
+  }
+
+  public async dispatch(
+    user: IUserDoc,
+    subject: string,
+    template: string,
+    locals: Record<string, any> = {}
+  ): Promise<IResult> {
     const result: IResult = { error: false, message: "", code: 200, data: {} };
 
     try {
-      const templatePath = `${BASE_FOLDER}/views/emails/${data.template}.ejs`;
-
-      const html = await new Promise<string>((resolve, reject) => {
-        renderFile(
-          templatePath,
-          {
-            ...data.payload,
-            user: data.user,
-            code: data.code,
-            subject: data.subject,
-          },
-          {},
-          (err, str) => {
-            if (err || !str)
-              return reject(err || new Error("Failed to render template"));
-            resolve(str);
-          }
-        );
-      });
+      const html = this.renderTemplate(template, { ...locals, user, subject });
 
       const sendFnMap: Partial<Record<EmailDriver, () => Promise<void>>> = {
-
         [EmailDriver.MAILSEND]: async () => {
           const params = new EmailParams()
             .setFrom(new Sender(this.config.fromEmail!, this.config.fromName!))
-            .setTo([new Recipient(data.user.email)])
-            .setReplyTo(new Sender(this.config.replyTo as string))
-            .setSubject(data.subject)
+            .setTo([new Recipient(user.email)])
+            .setReplyTo(new Sender(this.config.replyTo!))
+            .setSubject(subject)
             .setHtml(html);
 
           await this.mailersend!.email.send(params);
         },
 
+        [EmailDriver.MAILTRAP]: async () => {
+          const payload = {
+            from: {
+              email: this.config.fromEmail!,
+              name: this.config.fromName!,
+            },
+            to: [{ email: user.email }],
+            subject,
+            html,
+          };
+
+          await this.mailtrap!.send(payload);
+        },
       };
 
       const sendFn = sendFnMap[this.config.service];
       if (!sendFn)
         throw new Error(`Email driver "${this.config.service}" not supported`);
+
       await sendFn();
 
-      result.message = `Email sent to ${data.user.email}`;
-      result.data = { template: data.template };
-    } catch (error) {
-      console.error("Dispatch email error:", error);
+      result.message = `Email sent to ${user.email}`;
+      result.data = { template };
+    } catch (err) {
+      console.error("Email send error:", err);
       result.error = true;
       result.message = "Failed to send email";
       result.code = 500;
-      result.data = {
-        error: error instanceof Error ? error.message : String(error),
-      };
+      result.data = { error: err instanceof Error ? err.message : String(err) };
     }
 
     return result;
   }
 
-  /**
-   * Send email using the specified driver and user data
-   * @param config Configuration for sending email
-   * @returns Result of the email sending operation
-   */
-  public async sendEmail(config: SendEmailDTO): Promise<IResult> {
-    const result: IResult = { error: false, message: "", code: 200, data: {} };
-
-    try {
-      const { driver, user, options, code, metadata, template } = config;
-      const _template = template || EmailTemplate.GENERIC;
-      const fromName = this.config.fromName || process.env.EMAIL_FROM_NAME!;
-      const subject = options?.subject || "Troott Notification";
-      const salute = options?.salute || "Hi there";
-      const url = options?.buttonUrl || "";
-      const buttonText = options?.buttonText || "Take Action";
-
-      const emailContent: IEmailJob = {
-        user,
-        subject: subject,
-        driver: driver,
-        template: _template,
-        code: code,
-        metadata,
-        payload: {
-          email: user.email,
-          fromName: fromName,
-          emailTitle: subject,
-          emailSalute: salute,
-          preheaderText: subject.toLowerCase(),
-          bodyOne: options?.bodyOne,
-          bodyTwo: options?.bodyTwo,
-          bodyThree: options?.bodyThree,
-          buttonText,
-          buttonUrl: url,
-        },
-        options: options as EmailOptions,
-      };
-
-      await this.dispatch(emailContent);
-      result.message = `Email sent successfully to ${user.email}`;
-      result.data = emailContent;
-    } catch (error) {
-      console.error("Error sending email:", error);
-      result.error = true;
-      result.message = "Failed to send email.";
-      result.code = 500;
-      result.data = {
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-    }
-
-    return result;
+  // Examples
+  public async paymentConfirmationEmail(
+    user: IUserDoc, itemName: string, price: number
+  ) {
+    return this.dispatch(
+      user, "Payment Successful", "store-item-confirmation", { itemName, price }
+    );
   }
 
+  public  async sendVerification(user: IUserDoc) {
+    await this.dispatch(user, "verification", "Welcome to The Assembly.");
+  }
+
+  public async welcomeEmail(user: IUserDoc) {
+    return this.dispatch(user, "Welcome to Troott", "welcome");
+  }
+
+  public async otpEmail(user: IUserDoc, code: string) {
+    return this.dispatch(user, "Your OTP Code", "otp", { code });
+  }
+
+  public async sendUsAMessage(user: IUserDoc) {
+    await this.dispatch(user, "sendUsAMessage", "Message to Us", {});
+  }
 }
 
 const emailService = new EmailService();

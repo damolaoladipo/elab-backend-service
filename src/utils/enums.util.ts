@@ -24,6 +24,7 @@ export enum DbModelsType {
   COMPANY = "company",
   EMPLOYEE = "employee",
   EVENT = "event",
+  JOB = "job",
   PERMISSION = "permission",
   PROJECT = "project",
   RESOURCE = "resource",

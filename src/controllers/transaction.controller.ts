@@ -18,8 +18,6 @@ export const getPaystackPublicKey = asyncHandler(
   }
 );
 
-
-
 /**
  * @desc Verify a completed Paystack transaction
  * @route GET /api/payments/verify?reference=ref_123
@@ -27,7 +25,6 @@ export const getPaystackPublicKey = asyncHandler(
  */
 export const verifyStorePayment = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    
     const { reference } = req.query;
     if (!reference) {
       return next(
@@ -53,7 +50,6 @@ export const verifyStorePayment = asyncHandler(
     });
   }
 );
-
 
 //get one payment
 // get all payments

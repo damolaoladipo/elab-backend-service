@@ -1,31 +1,12 @@
 import mongoose, { Schema, Model } from "mongoose";
-import { IRoleDoc } from "../utils/interface.util";
-import slugify from "slugify";
-import { DbModelsType, UserType } from "../utils/enums.util";
+import { IJobDoc } from "../utils/interface.util";
+import { DbModelsType } from "../utils/enums.util";
 
-const RoleSchema = new mongoose.Schema<IRoleDoc>(
+const JobSchema = new mongoose.Schema<IJobDoc>(
   {
-    name: {
-      type: String,
-      required: [true, "please add a role name"],
-      default: UserType.USER,
-      enum: Object.values(UserType),
-      unique: true,
-    },
-    description: {
-      type: String,
-      required: [true, "please add a role description"],
-      maxlength: [400, "role description cannot be more than 400 characters"],
-    },
-    slug: { type: String, default: "" },
-
-    permissions: [{ type: String, ref: DbModelsType.PERMISSION }],
-    users: [
-      {
-        type: Schema.Types.Mixed,
-        ref: DbModelsType.USER,
-      },
-    ],
+    name: { type: String },
+    email: { type: String },
+    data: { type: Object },
   },
   {
     timestamps: true,
@@ -39,31 +20,10 @@ const RoleSchema = new mongoose.Schema<IRoleDoc>(
   }
 );
 
+JobSchema.set("toJSON", { virtuals: true, getters: true });
 
-RoleSchema.set("toJSON", { virtuals: true, getters: true });
-
-RoleSchema.pre<IRoleDoc>("save", async function (next) {
-  this.slug = slugify(this.name, { lower: true, replacement: "-" });
-
-  next();
-});
-
-RoleSchema.pre<IRoleDoc>("insertMany", async function (next) {
-  this.slug = slugify(this.name, { lower: true, replacement: "-" });
-  next();
-});
-
-RoleSchema.methods.getAll = async () => {
-  return await Role.find({});
-};
-
-RoleSchema.methods.findByName = async (name: string) => {
-  const role = await Role.findOne({ name: name });
-  return role ? role : null;
-};
-
-const Role: Model<IRoleDoc> = mongoose.model<IRoleDoc>(
-  DbModelsType.ROLE,
-  RoleSchema
+const Job: Model<IJobDoc> = mongoose.model<IJobDoc>(
+  DbModelsType.JOB,
+  JobSchema
 );
-export default Role;
+export default Job;

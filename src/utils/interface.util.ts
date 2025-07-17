@@ -442,3 +442,10 @@ export interface EmailOptions {
   preheaderText?: string;
   status?: string;
 }
+
+
+export interface IJobDoc extends Document {
+  name: string
+  email: string
+  data: Record<string, any>
+}
