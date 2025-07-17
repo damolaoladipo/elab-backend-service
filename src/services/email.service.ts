@@ -24,6 +24,9 @@ class EmailService {
 
       case EmailDriver.MAILTRAP:
         this.mailtrap = new MailtrapClient({ token: this.config.apiKey! });
+              if (!process.env.EMAIL_FROM_EMAIL || !process.env.EMAIL_FROM_NAME) {
+          throw new Error("FROM_EMAIL and FROM_NAME must be set in .env");
+        }
         break;
     }
   }
@@ -65,8 +68,8 @@ class EmailService {
         [EmailDriver.MAILTRAP]: async () => {
           const payload = {
             from: {
-              email: this.config.fromEmail!,
-              name: this.config.fromName!,
+              email: this.config.fromEmail as string,
+              name: this.config.fromName as string,
             },
             to: [{ email: user.email }],
             subject,

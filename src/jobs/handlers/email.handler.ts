@@ -1,20 +1,22 @@
 import emailService from "../../services/email.service";
-import { log } from "console";
 
 const emailHandlers = {
   paymentConfirmationEMail: async (job: any) => {
     const { data } = job.attrs;
+    const { user, payload } = data;
 
-    log("sending confirmation email");
-    const { user, payload, options, driver, template, subject } = data;
-
-    await emailService.dispatch(user, "payment-confirmation", "Payment Complete", {
-      name: user.name,
-      amount: "$100",
-    });
+    await emailService.dispatch(
+      user,
+       "Your payment is confirmed",
+      "payment-confirmation",
+     
+      { ...payload }
+    );
   },
+
   
-   sendUsAMessage: async (job: any) => {
+
+  sendUsAMessage: async (job: any) => {
     const { data } = job.attrs;
     const { user } = data || {};
 

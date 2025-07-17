@@ -146,6 +146,8 @@ export interface ITransactionDoc extends Document {
   channel: string;
   slug: string;
   card: IDebitCard;
+  transactionDate: string
+  userEmail: string
 
   // relationships
   user: any;

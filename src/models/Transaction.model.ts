@@ -40,6 +40,8 @@ const TransactionSchema = new Schema<ITransactionDoc>(
       token: { type: String },
       provider: { type: String },
     },
+    transactionDate: { type: String },
+    userEmail: { type: String },
 
     // Relationships
     user: { type: String },

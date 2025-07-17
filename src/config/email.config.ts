@@ -11,8 +11,8 @@ export const getEmailConfig = (): EmailConfig => {
     case EmailDriver.MAILERSEND:
       return {
         service: EmailDriver.MAILERSEND,
-        fromEmail: process.env.MAILERSEND_FROM_EMAIL!,
-        fromName: process.env.MAILERSEND_FROM_NAME!,
+        fromEmail: process.env.FROM_EMAIL!,
+        fromName: process.env.FROM_NAME!,
         apiKey: process.env.MAILERSEND_API_KEY!,
         clientUrl: process.env.CLIENT_URL,
         isTestMode: env === ENVType.DEVELOPMENT, // or use MAILERSEND_TEST_MODE
@@ -22,9 +22,9 @@ export const getEmailConfig = (): EmailConfig => {
     case EmailDriver.MAILTRAP:
       return {
         service: EmailDriver.MAILTRAP,
-        fromEmail: process.env.MAILTRAP_FROM_EMAIL!,
-        fromName: process.env.MAILTRAP_FROM_NAME!,
-        apiKey: process.env.MAILTRAP_API_KEY!,
+        fromEmail: process.env.EMAIL_FROM_EMAIL as string,
+        fromName: process.env.EMAIL_FROM_NAME as string,
+        apiKey: process.env.MAILTRAP_API_KEY! as string,
         smtpHost: process.env.MAILTRAP_SMTP_HOST!,
         smtpPort: Number(process.env.MAILTRAP_SMTP_PORT || 587),
         smtpUser: process.env.MAILTRAP_SMTP_USER!,

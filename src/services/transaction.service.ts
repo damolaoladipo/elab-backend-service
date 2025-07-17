@@ -3,7 +3,10 @@ import Transaction from "../models/Transaction.model";
 import { Paystack } from "paystack-sdk";
 import { config } from "../config/config";
 import storeRepository from "../repositories/store.repository";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
+import emailJobSchedular from "../jobs/scheduler/email.scheduler";
+import { DateTime } from "luxon";
+import { EmailDriver } from "../utils/enums.util";
 
 export const paystack = new Paystack(config.testSecretkey);
 
@@ -19,8 +22,6 @@ class TransactionService {
 
     try {
       const txn = await paystack.transaction.verify(reference);
-
-      console.log("ref data", txn);
 
       if (txn.data?.status !== "success") {
         result.error = true;
@@ -58,12 +59,12 @@ class TransactionService {
         throw new Error("Store item not found");
       }
 
-      const txnRef = uuidv4()
+      const txnRef = uuidv4();
 
       const transaction = await Transaction.create({
         type: "purchase",
         medium: txn.data.channel,
-        resource: `elab store item - ${store.data.name}`,
+        resource: store.data.name,
         entity: store.data.id,
         reference: txnRef,
         currency: txn.data.currency,
@@ -83,7 +84,28 @@ class TransactionService {
         channel: txn.data.channel,
         slug: store.data.slug,
         card: txn.data.authorization,
-        user: txn.data.customer.customer_code,
+        user: txn.data.customer.first_name,
+        transactionDate: txn.data.paid_at,
+      });
+
+      await emailJobSchedular.sendPaymentConfirmationEMail({
+        user: {
+          email: txn.data.customer.email,
+          name: txn.data.customer.first_name,
+        },
+        template: "payment-confirmation",
+        subject: "Your payment is confirmed",
+        driver: EmailDriver.MAILTRAP,
+        payload: {
+          name: txn.data.customer.first_name,
+          date: DateTime.now().toFormat("dd/MM/yyyy HH:mm"),
+          desc: transaction.description,
+          item: transaction.resource,
+          totalAmount: new Intl.NumberFormat("en-NG", {
+            style: "currency",
+            currency: "NGN",
+          }).format(transaction.amount),
+        },
       });
 
       result.message = "Transaction verified successfully";

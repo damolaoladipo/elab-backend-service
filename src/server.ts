@@ -2,11 +2,14 @@ import app from "./config/app.config";
 import colors from "colors";
 import connectDB from "./config/db.config";
 import seedData from "./config/seeds/seeder.seed";
+import agenda from "./services/jobs.service";
 
 const connect = async () : Promise<void> => {
 
     await connectDB()
     await seedData()
+    await agenda.start();
+
 }
 
 connect()
