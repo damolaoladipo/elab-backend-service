@@ -1,38 +1,41 @@
 import { EmailDriver, ENVType } from "../utils/enums.util";
 import { EmailConfig } from "../utils/interface.util";
+import 'dotenv/config';
 
-export function getEmailConfig(): EmailConfig {
-  const env = process.env.NODE_ENV as ENVType;
-  const service = process.env.EMAIL_SERVICE as EmailDriver;
 
-  const baseConfig = {
-    service,
-    fromEmail: process.env.MAIL_FROM_EMAIL!,
-    fromName: process.env.MAIL_FROM_NAME!,
-    replyTo: process.env.MAIL_REPLY_TO,
-    sendingDomain: process.env.EMAIL_DOMAIN,
-    clientUrl:
-      env === ENVType.DEVELOPMENT
-        ? process.env.CLIENT_LOCAL_URL!
-        : process.env.CLIENT_APP_URL!,
-    isTestMode: env === ENVType.DEVELOPMENT,
-  };
+const env = process.env.NODE_ENV as ENVType;
+const driver = process.env.EMAIL_DRIVER?.toLowerCase() as string;
 
-  if (service === EmailDriver.MAILTRAP) {
-    return {
-      ...baseConfig,
-      apiKey: process.env.MAILTRAP_API_KEY!,
-    };
+export const getEmailConfig = (): EmailConfig => {
+  switch (driver) {
+    case EmailDriver.MAILERSEND:
+      return {
+        service: EmailDriver.MAILERSEND,
+        fromEmail: process.env.MAILERSEND_FROM_EMAIL!,
+        fromName: process.env.MAILERSEND_FROM_NAME!,
+        apiKey: process.env.MAILERSEND_API_KEY!,
+        clientUrl: process.env.CLIENT_URL,
+        isTestMode: env === ENVType.DEVELOPMENT, // or use MAILERSEND_TEST_MODE
+        sendingDomain: process.env.MAILERSEND_DOMAIN,
+      };
+
+    case EmailDriver.MAILTRAP:
+      return {
+        service: EmailDriver.MAILTRAP,
+        fromEmail: process.env.MAILTRAP_FROM_EMAIL!,
+        fromName: process.env.MAILTRAP_FROM_NAME!,
+        apiKey: process.env.MAILTRAP_API_KEY!,
+        smtpHost: process.env.MAILTRAP_SMTP_HOST!,
+        smtpPort: Number(process.env.MAILTRAP_SMTP_PORT || 587),
+        smtpUser: process.env.MAILTRAP_SMTP_USER!,
+        smtpPass: process.env.MAILTRAP_SMTP_PASS!,
+        clientUrl: process.env.CLIENT_URL,
+        isTestMode: true, // Mailtrap is only for dev/test
+      };
+
+    default:
+      throw new Error(`Unsupported email service provider: ${driver}`);
   }
-
-  if (service === EmailDriver.MAILSEND) {
-    return {
-      ...baseConfig,
-      apiKey: process.env.MAILSEND_API_KEY!,
-    };
-  }
-
-  throw new Error("Unsupported email service provider");
-}
+};
 
 export const EMAIL_CONFIG = getEmailConfig();

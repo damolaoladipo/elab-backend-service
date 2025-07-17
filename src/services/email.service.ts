@@ -5,6 +5,7 @@ import { MailtrapClient } from "mailtrap";
 import { IUserDoc, IResult, EmailConfig } from "../utils/interface.util";
 import { EmailDriver } from "../utils/enums.util";
 import { EMAIL_CONFIG } from "../config/email.config";
+import { convert } from "html-to-text";
 
 const BASE_FOLDER = `${appRootPath.path}/src/views/emails`;
 
@@ -17,7 +18,7 @@ class EmailService {
     this.config = EMAIL_CONFIG;
 
     switch (this.config.service) {
-      case EmailDriver.MAILSEND:
+      case EmailDriver.MAILERSEND:
         this.mailersend = new MailerSend({ apiKey: this.config.apiKey! });
         break;
 
@@ -35,6 +36,8 @@ class EmailService {
     return pug.renderFile(templatePath, locals);
   }
 
+  
+
   public async dispatch(
     user: IUserDoc,
     subject: string,
@@ -45,15 +48,16 @@ class EmailService {
 
     try {
       const html = this.renderTemplate(template, { ...locals, user, subject });
+      const text = convert(html); 
 
       const sendFnMap: Partial<Record<EmailDriver, () => Promise<void>>> = {
-        [EmailDriver.MAILSEND]: async () => {
+        [EmailDriver.MAILERSEND]: async () => {
           const params = new EmailParams()
             .setFrom(new Sender(this.config.fromEmail!, this.config.fromName!))
             .setTo([new Recipient(user.email)])
             .setReplyTo(new Sender(this.config.replyTo!))
             .setSubject(subject)
-            .setHtml(html);
+            .setHtml(text);
 
           await this.mailersend!.email.send(params);
         },

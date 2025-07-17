@@ -74,7 +74,7 @@ export enum VerifyOTP {
 
 export enum EmailDriver {
   MAILTRAP = "mailtrap",
-  MAILSEND = "mailsend",
+  MAILERSEND = "mailersend",
 }
 
 export enum EmailTemplate {

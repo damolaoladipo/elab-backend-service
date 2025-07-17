@@ -21,7 +21,6 @@ import {
 import emailService from "../services/email.service";
 import tokenService from "../services/token.service";
 import { IUserDoc } from "../utils/interface.util";
-import otpService from "../services/otp.service";
 import userRepository from "../repositories/user.repository";
 
 /**
@@ -242,75 +241,75 @@ export const logoutUser = asyncHandler(
   }
 );
 
-/**
- * @name forgotPassword
- * @description Allows user request OTP to reset their password
- * @route POST /auth/forgot-password
- * @access  Public
- */
-export const forgotPassword = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { email } = req.body;
+// /**
+//  * @name forgotPassword
+//  * @description Allows user request OTP to reset their password
+//  * @route POST /auth/forgot-password
+//  * @access  Public
+//  */
+// export const forgotPassword = asyncHandler(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const { email } = req.body;
 
-    if (!userService.checkEmail(email)) {
-      return next(new ErrorResponse("Invalid email format.", 400, []));
-    }
+//     if (!userService.checkEmail(email)) {
+//       return next(new ErrorResponse("Invalid email format.", 400, []));
+//     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) {
-      return next(
-        new ErrorResponse("Error", 404, ["User with this email does not exist"])
-      );
-    }
+//     const user = await User.findOne({ email: email.toLowerCase() });
+//     if (!user) {
+//       return next(
+//         new ErrorResponse("Error", 404, ["User with this email does not exist"])
+//       );
+//     }
 
-    // Check if account is locked or deactivated}
-    if (await userService.checkLockedStatus(user)) {
-      return next(
-        new ErrorResponse("Error", 423, [
-          "Account is locked. Please try again later",
-        ])
-      );
-    }
+//     // Check if account is locked or deactivated}
+//     if (await userService.checkLockedStatus(user)) {
+//       return next(
+//         new ErrorResponse("Error", 423, [
+//           "Account is locked. Please try again later",
+//         ])
+//       );
+//     }
 
-    if (user.isDeactivated) {
-      return next(
-        new ErrorResponse("Error", 403, ["Account has been deactivated"])
-      );
-    }
+//     if (user.isDeactivated) {
+//       return next(
+//         new ErrorResponse("Error", 403, ["Account has been deactivated"])
+//       );
+//     }
 
-    const OTP = await userService.generateOTPCode(user, OtpType.FORGOTPASSWORD);
+//     const OTP = await userService.generateOTPCode(user, OtpType.FORGOTPASSWORD);
 
-    if (OTP) {
-      const sendOTP = await otpService.sendOTPEmail({
-        driver: EmailDriver.SENDGRID,
-        user: user,
-        template: EmailTemplate.VERIFY_EMAIL,
-        code: OTP,
-        options: {
-          otpType: VerifyOTP.PASSWORD_RESET,
-          salute: `${user.firstName}`,
-          bodyOne:
-            "You are receiving this email because you requested a password reset. Your OTP code will expire in 10 minutes.",
-          bodyTwo: "Please enter the code below to reset your password.",
-        },
-      });
+//     if (OTP) {
+//       const sendOTP = await otpService.sendOTPEmail({
+//         // driver: EmailDriver.SENDGRID,
+//         // user: user,
+//         // template: EmailTemplate.VERIFY_EMAIL,
+//         // code: OTP,
+//         // options: {
+//         //   otpType: VerifyOTP.PASSWORD_RESET,
+//         //   salute: `${user.firstName}`,
+//         //   bodyOne:
+//         //     "You are receiving this email because you requested a password reset. Your OTP code will expire in 10 minutes.",
+//         //   bodyTwo: "Please enter the code below to reset your password.",
+//         // },
+//       });
 
-      if (sendOTP.error) {
-        return next(
-          new ErrorResponse("Error", sendOTP.code!, [sendOTP.message])
-        );
-      }
-    }
+//       if (sendOTP.error) {
+//         return next(
+//           new ErrorResponse("Error", sendOTP.code!, [sendOTP.message])
+//         );
+//       }
+//     }
 
-    res.status(200).json({
-      error: false,
-      errors: [],
-      data: {},
-      message: "Password reset OTP sent to your email",
-      status: 200,
-    });
-  }
-);
+//     res.status(200).json({
+//       error: false,
+//       errors: [],
+//       data: {},
+//       message: "Password reset OTP sent to your email",
+//       status: 200,
+//     });
+//   }
+// );
 
 /**
  * @name resetPassword
@@ -346,7 +345,7 @@ export const resetPassword = asyncHandler(
 
     await userService.encryptUserPassword(user, newPassword);
 
-    const sendEmail = await emailService.sendPasswordResetNotificationEmail(
+    const sendEmail = await emailService.otpEmail(
       user,
       email
     );
@@ -409,52 +408,52 @@ export const verifyEmail = asyncHandler(
  * @route POST /auth/resend-otp
  * @access Public
  */
-export const resendEmail = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { email }: resendOtpDTO = req.body;
+// export const resendEmail = asyncHandler(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const { email }: resendOtpDTO = req.body;
 
-    if (!email) {
-      return next(
-        new ErrorResponse("Error", 400, ["Email and reset code are required"])
-      );
-    }
+//     if (!email) {
+//       return next(
+//         new ErrorResponse("Error", 400, ["Email and reset code are required"])
+//       );
+//     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) {
-      return next(new ErrorResponse("Error", 400, ["user doesn't exist"]));
-    }
+//     const user = await User.findOne({ email: email.toLowerCase() });
+//     if (!user) {
+//       return next(new ErrorResponse("Error", 400, ["user doesn't exist"]));
+//     }
 
-    const OTP = await userService.generateOTPCode(user, OtpType.GENERIC);
+//     const OTP = await userService.generateOTPCode(user, OtpType.GENERIC);
 
-    if (OTP) {
-      const sendOTP = await otpService.sendOTPEmail({
-        driver: EmailDriver.SENDGRID,
-        user: user,
-        template: EmailTemplate.VERIFY_EMAIL,
-        code: OTP,
-        options: {
-          otpType: VerifyOTP.REGISTER,
-          salute: `${user.firstName}`,
-          bodyOne:
-            "Verify your troott account using the One-Time Password code below",
-        },
-      });
+//     if (OTP) {
+//       const sendOTP = await otpService.sendOTPEmail({
+//         driver: EmailDriver.SENDGRID,
+//         user: user,
+//         template: EmailTemplate.VERIFY_EMAIL,
+//         code: OTP,
+//         options: {
+//           otpType: VerifyOTP.REGISTER,
+//           salute: `${user.firstName}`,
+//           bodyOne:
+//             "Verify your troott account using the One-Time Password code below",
+//         },
+//       });
 
-      if (sendOTP.error) {
-        return next(
-          new ErrorResponse("Error", sendOTP.code!, [sendOTP.message])
-        );
-      }
-    }
+//       if (sendOTP.error) {
+//         return next(
+//           new ErrorResponse("Error", sendOTP.code!, [sendOTP.message])
+//         );
+//       }
+//     }
 
-    return res.status(200).json({
-      error: false,
-      message: "OTP has been sent to your email!",
-      data: {},
-      status: 200,
-    });
-  }
-);
+//     return res.status(200).json({
+//       error: false,
+//       message: "OTP has been sent to your email!",
+//       data: {},
+//       status: 200,
+//     });
+//   }
+// );
 
 
 
