@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import transactionService from "../services/transaction.service";
 import asyncHandler from "../middlewares/async.mdw";
 import ErrorResponse from "../utils/error.util";
+import transactionRepository from "../repositories/transaction.repository";
 
 /**
  * @name getPaystackPublicKey
@@ -51,6 +52,50 @@ export const verifyStorePayment = asyncHandler(
   }
 );
 
-//get one payment
-// get all payments
-// verify payments
+/**
+ * @name getTransaction
+ * @description Get transaction by slug
+ * @param {string} slug OR Id - The slug or ID of the emplyee
+ * @route GET /emplyee/slug/:slug
+ * @access Public
+ */
+export const getTransaction = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { slug } = req.params;
+
+    const transaction = await transactionRepository.findTransaction(slug);
+    if (transaction.error) {
+      return next(
+        new ErrorResponse(transaction.message, transaction.code!, [])
+      );
+    }
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: transaction.data,
+      message: transaction.message,
+      status: transaction.code,
+    });
+  }
+);
+
+/**
+ * @name gettransactions
+ * @description Fetches all transactions
+ * @route GET /transactions
+ * @access Public
+ */
+export const getAllTransactions = asyncHandler(
+  async (_req: Request, res: Response) => {
+    const result = await transactionRepository.getTransactions();
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: result,
+      message: "all transactions fetched",
+      status: 200,
+    });
+  }
+);

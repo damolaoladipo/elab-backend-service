@@ -108,7 +108,7 @@ class TransactionService {
         },
       });
 
-      result.message = "Transaction verified successfully";
+      result.message = "payment successful";
       result.data = transaction;
 
       return result;
