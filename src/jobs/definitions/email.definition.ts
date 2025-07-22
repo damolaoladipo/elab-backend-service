@@ -7,6 +7,8 @@ const emailDefinitions = (agenda: any) => {
 
     agenda.define("reset password email", emailHandlers.resetPasswordEmail)
 
+    agenda.define("newsletter welcome", emailHandlers.NewsletterWelcomeEmail)
+
     agenda.define("send us a message", emailHandlers.sendUsAMessage);
 }
 

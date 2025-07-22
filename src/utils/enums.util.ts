@@ -28,6 +28,7 @@ export enum DbModelsType {
   PERMISSION = "permission",
   PROJECT = "project",
   RESOURCE = "resource",
+  NEWSLETTER = "newsletter",
   ROLE = "role",
   SUBSCRIPTION = "subscription",
   STORE = "store",

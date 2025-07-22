@@ -16,6 +16,10 @@ const emailJobSchedular = {
   sendUsAMessage: async (data: any) => {
     Job.now("send us a message", data);
   },
+
+  sendNewsletterWelcomeEmail: async (data: any) => {
+    Job.now("newsletter welcome", data)
+  }
 };
 
 export default emailJobSchedular;

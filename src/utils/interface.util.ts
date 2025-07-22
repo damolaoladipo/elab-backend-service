@@ -451,3 +451,15 @@ export interface IJobDoc extends Document {
   email: string
   data: Record<string, any>
 }
+
+export interface INewsletterDoc extends Document {
+  email: string;
+  subscribedAt: Date;
+  isSubsribed: boolean
+
+  createdAt: Date;
+  updatedAt: Date;
+  _version: number;
+  _id: ObjectId;
+  id: ObjectId;
+}

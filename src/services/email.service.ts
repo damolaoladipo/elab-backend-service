@@ -134,6 +134,10 @@ public async passwordResetSuccessEmail(user: IUserDoc) {
     return this.dispatch(user, "Welcome to Troott", "welcome");
   }
 
+  public async NewsletterWelcomeEmail(user: any) {
+    return this.dispatch(user, "Welcome to our newsletter!", "newsletter welcome")
+  }
+
   public async otpEmail(user: IUserDoc, code: string) {
     return this.dispatch(user, "Your OTP Code", "otp", { code });
   }

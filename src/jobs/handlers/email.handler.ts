@@ -41,6 +41,20 @@ const emailHandlers = {
   },
 
 
+    NewsletterWelcomeEmail: async (job: any) => {
+    const { data } = job.attrs;
+    const { user, payload } = data;
+
+    await emailService.dispatch(
+      user,
+       "Thank you for suscribing",
+      "reset-password",
+     
+      { ...payload }
+    );
+  },
+
+
   
 
   sendUsAMessage: async (job: any) => {
