@@ -111,7 +111,7 @@ class EmailService {
   public async forgotPasswordEmail(user: IUserDoc, resetLink: string) {
   return this.dispatch(
     user,
-    "Reset Your Password",
+    "Reset your password",
     "forgot-password",
     { resetLink }
   );
@@ -120,7 +120,7 @@ class EmailService {
 public async passwordResetSuccessEmail(user: IUserDoc) {
   return this.dispatch(
     user,
-    "Your Password Was Reset",
+    "Your password was reset successfully",
     "reset-password"
   );
 }

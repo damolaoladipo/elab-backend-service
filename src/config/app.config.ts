@@ -52,7 +52,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-app.set("view engine", "ejs");
+app.set("view engine", "pug");
 app.set("views", path.join(__dirname, "../views")); 
 
 

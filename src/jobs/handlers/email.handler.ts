@@ -20,7 +20,7 @@ const emailHandlers = {
 
     await emailService.dispatch(
       user,
-       "Your payment is confirmed",
+       "Reset your password",
       "forgot-password",
      
       { ...payload }
@@ -33,7 +33,7 @@ const emailHandlers = {
 
     await emailService.dispatch(
       user,
-       "Your payment is confirmed",
+       "Your password was reset successfully",
       "reset-password",
      
       { ...payload }

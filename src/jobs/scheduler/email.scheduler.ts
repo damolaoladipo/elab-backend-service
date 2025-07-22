@@ -6,11 +6,11 @@ const emailJobSchedular = {
   },
 
    sendForgotPasswordEmail: async (data: any) => {
-    Job.now("Forgot passqword email", data);
+    Job.now("forgot password email", data);
   },
 
   sendResetPasswordEmail: async (data: any) => {
-    Job.now("Reset passqword email", data);
+    Job.now("reset password email", data);
   },
 
   sendUsAMessage: async (data: any) => {

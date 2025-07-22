@@ -278,7 +278,7 @@ export const forgotPassword = asyncHandler(
     const OTP = await userService.generateOTPCode(user, OtpType.FORGOTPASSWORD);
 
     if (OTP) {
-      const resetURL = `${process.env.FRONTEND_BASE_URL}/auth/reset-password?token=${OTP}`;
+      const resetURL = `${process.env.FRONTEND_BASE_URL}/auth/reset-password/${OTP}`;
 
       await emailJobSchedular.sendForgotPasswordEmail({
         user: {
@@ -292,7 +292,7 @@ export const forgotPassword = asyncHandler(
           name: user.firstName,
           date: DateTime.now().toFormat("dd/MM/yyyy HH:mm"),
           resetLink: resetURL,
-          expiry: "10 minutes", // or however long your OTP is valid
+          expiry: "10 minutes", 
         },
       });
     }
@@ -352,7 +352,7 @@ export const resetPassword = asyncHandler(
         name: user.firstName,
       },
       template: "reset-password",
-      subject: "Your password was successfully reset",
+      subject: "Your password was reset successfully",
       driver: EmailDriver.MAILTRAP,
       payload: {
         name: user.firstName,
