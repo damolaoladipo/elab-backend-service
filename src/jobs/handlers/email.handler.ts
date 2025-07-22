@@ -14,6 +14,33 @@ const emailHandlers = {
     );
   },
 
+  forgotPasswordEmail: async (job: any) => {
+    const { data } = job.attrs;
+    const { user, payload } = data;
+
+    await emailService.dispatch(
+      user,
+       "Your payment is confirmed",
+      "forgot-password",
+     
+      { ...payload }
+    );
+  },
+
+    resetPasswordEmail: async (job: any) => {
+    const { data } = job.attrs;
+    const { user, payload } = data;
+
+    await emailService.dispatch(
+      user,
+       "Your payment is confirmed",
+      "reset-password",
+     
+      { ...payload }
+    );
+  },
+
+
   
 
   sendUsAMessage: async (job: any) => {

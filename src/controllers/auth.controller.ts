@@ -22,6 +22,8 @@ import emailService from "../services/email.service";
 import tokenService from "../services/token.service";
 import { IUserDoc } from "../utils/interface.util";
 import userRepository from "../repositories/user.repository";
+import emailJobSchedular from "../jobs/scheduler/email.scheduler";
+import { DateTime } from "luxon";
 
 /**
  * @name registerUser
@@ -241,75 +243,69 @@ export const logoutUser = asyncHandler(
   }
 );
 
-// /**
-//  * @name forgotPassword
-//  * @description Allows user request OTP to reset their password
-//  * @route POST /auth/forgot-password
-//  * @access  Public
-//  */
-// export const forgotPassword = asyncHandler(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     const { email } = req.body;
+/**
+ * @name forgotPassword
+ * @description Allows user request OTP to reset their password
+ * @route POST /auth/forgot-password
+ * @access  Public
+ */
+export const forgotPassword = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
 
-//     if (!userService.checkEmail(email)) {
-//       return next(new ErrorResponse("Invalid email format.", 400, []));
-//     }
+    if (!userService.checkEmail(email)) {
+      return next(new ErrorResponse("Invalid email format.", 400, []));
+    }
 
-//     const user = await User.findOne({ email: email.toLowerCase() });
-//     if (!user) {
-//       return next(
-//         new ErrorResponse("Error", 404, ["User with this email does not exist"])
-//       );
-//     }
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return next(
+        new ErrorResponse("User with this email does not exist", 404, [])
+      );
+    }
 
-//     // Check if account is locked or deactivated}
-//     if (await userService.checkLockedStatus(user)) {
-//       return next(
-//         new ErrorResponse("Error", 423, [
-//           "Account is locked. Please try again later",
-//         ])
-//       );
-//     }
+    // Check if account is locked or deactivated}
+    if (await userService.checkLockedStatus(user)) {
+      return next(
+        new ErrorResponse("Account is locked. Please try again later", 423, [])
+      );
+    }
 
-//     if (user.isDeactivated) {
-//       return next(
-//         new ErrorResponse("Error", 403, ["Account has been deactivated"])
-//       );
-//     }
+    if (user.isDeactivated) {
+      return next(new ErrorResponse("Account has been deactivated", 403, []));
+    }
 
-//     const OTP = await userService.generateOTPCode(user, OtpType.FORGOTPASSWORD);
+    const OTP = await userService.generateOTPCode(user, OtpType.FORGOTPASSWORD);
 
-//     if (OTP) {
-//       const sendOTP = await otpService.sendOTPEmail({
-//         // driver: EmailDriver.SENDGRID,
-//         // user: user,
-//         // template: EmailTemplate.VERIFY_EMAIL,
-//         // code: OTP,
-//         // options: {
-//         //   otpType: VerifyOTP.PASSWORD_RESET,
-//         //   salute: `${user.firstName}`,
-//         //   bodyOne:
-//         //     "You are receiving this email because you requested a password reset. Your OTP code will expire in 10 minutes.",
-//         //   bodyTwo: "Please enter the code below to reset your password.",
-//         // },
-//       });
+    if (OTP) {
+      const resetURL = `${process.env.FRONTEND_BASE_URL}/auth/reset-password?token=${OTP}`;
 
-//       if (sendOTP.error) {
-//         return next(
-//           new ErrorResponse("Error", sendOTP.code!, [sendOTP.message])
-//         );
-//       }
-//     }
+      await emailJobSchedular.sendForgotPasswordEmail({
+        user: {
+          email: user.email,
+          name: user.firstName,
+        },
+        template: "forgot-password", // must match your pug file
+        subject: "Reset your password",
+        driver: EmailDriver.MAILTRAP,
+        payload: {
+          name: user.firstName,
+          date: DateTime.now().toFormat("dd/MM/yyyy HH:mm"),
+          resetLink: resetURL,
+          expiry: "10 minutes", // or however long your OTP is valid
+        },
+      });
+    }
 
-//     res.status(200).json({
-//       error: false,
-//       errors: [],
-//       data: {},
-//       message: "Password reset OTP sent to your email",
-//       status: 200,
-//     });
-//   }
-// );
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: {},
+      message: "Password reset link has been sent to your email",
+      status: 200,
+    });
+  }
+);
 
 /**
  * @name resetPassword
@@ -319,14 +315,19 @@ export const logoutUser = asyncHandler(
  */
 export const resetPassword = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { email, newPassword }: ResetPasswordDTO = req.body;
+    const { email, newPassword, token }: ResetPasswordDTO = req.body;
 
-    if (!email || !newPassword) {
+    if (!email || !newPassword || !token) {
       return next(
         new ErrorResponse("Error", 400, [
-          "Email, OTP, and new password are required",
+          "Email, token, and new password are required",
         ])
       );
+    }
+
+    const isValidToken = await userService.verifyOTPCode(token);
+    if (!isValidToken) {
+      return next(new ErrorResponse("Invalid or expired token", 401, []));
     }
 
     const passCheck = await userService.checkPassword(newPassword);
@@ -345,15 +346,19 @@ export const resetPassword = asyncHandler(
 
     await userService.encryptUserPassword(user, newPassword);
 
-    const sendEmail = await emailService.otpEmail(
-      user,
-      email
-    );
-    if (sendEmail.error) {
-      return next(
-        new ErrorResponse("Error", sendEmail.code, [sendEmail.message])
-      );
-    }
+    await emailJobSchedular.sendResetPasswordEmail({
+      user: {
+        email: user.email,
+        name: user.firstName,
+      },
+      template: "reset-password",
+      subject: "Your password was successfully reset",
+      driver: EmailDriver.MAILTRAP,
+      payload: {
+        name: user.firstName,
+        date: DateTime.now().toFormat("dd/MM/yyyy HH:mm"),
+      },
+    });
 
     res.status(200).json({
       error: false,
@@ -364,9 +369,6 @@ export const resetPassword = asyncHandler(
     });
   }
 );
-
-
-
 
 /**
  * @name verifyOTP
@@ -455,8 +457,6 @@ export const verifyEmail = asyncHandler(
 //   }
 // );
 
-
-
 /**
  * @name getUser
  * @description Get the current logged-in user
@@ -465,11 +465,12 @@ export const verifyEmail = asyncHandler(
  */
 export const getUser = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    
     const userId = (req as any).user?.id;
 
     if (!userId) {
-      return next(new ErrorResponse("Unauthorized", 401, ["User not authenticated"]));
+      return next(
+        new ErrorResponse("Unauthorized", 401, ["User not authenticated"])
+      );
     }
 
     const user = await userRepository.findUser(userId);
@@ -516,4 +517,3 @@ export const getUser = asyncHandler(
     });
   }
 );
-

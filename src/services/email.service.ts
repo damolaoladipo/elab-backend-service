@@ -108,6 +108,24 @@ class EmailService {
     );
   }
 
+  public async forgotPasswordEmail(user: IUserDoc, resetLink: string) {
+  return this.dispatch(
+    user,
+    "Reset Your Password",
+    "forgot-password",
+    { resetLink }
+  );
+}
+
+public async passwordResetSuccessEmail(user: IUserDoc) {
+  return this.dispatch(
+    user,
+    "Your Password Was Reset",
+    "reset-password"
+  );
+}
+
+
   public  async sendVerification(user: IUserDoc) {
     await this.dispatch(user, "verification", "Welcome to The Assembly.");
   }

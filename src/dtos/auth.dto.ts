@@ -29,6 +29,7 @@ export interface resendOtpDTO {
 export interface ResetPasswordDTO {
   email: string;
   newPassword: string;
+  token: string
 }
 
 export interface ChangePasswordDTO  {

@@ -12,7 +12,7 @@ export const sendEmailJob = async (job: Job) => {
     return;
   }
 
-  await emailService.sendEmail({
+  await emailService.dispatch({
     driver: data.driver,
     user: data.user,
     template: data.template,
