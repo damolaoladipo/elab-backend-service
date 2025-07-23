@@ -6,11 +6,11 @@ import {
   getSubscriber,
 } from "../../../controllers/newsletter.controller";
 
-const NewsletterRouter = Router();
+const newsletterRouter = Router();
 
-NewsletterRouter.post("/subscribe", subscribeToNewsletter);
-NewsletterRouter.post("/unsubscribe", unsubscribeFromNewsletter);
-NewsletterRouter.get("/", getAllSubscribers);
-NewsletterRouter.get("/:id", getSubscriber);
+newsletterRouter.post("/subscribe", subscribeToNewsletter);
+newsletterRouter.post("/unsubscribe", unsubscribeFromNewsletter);
+newsletterRouter.get("/", getAllSubscribers);
+newsletterRouter.get("/:id", getSubscriber);
 
-export default NewsletterRouter;
+export default newsletterRouter;

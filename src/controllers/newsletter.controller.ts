@@ -21,13 +21,6 @@ export const subscribeToNewsletter = asyncHandler(
       return next(new ErrorResponse("Invalid email format.", 400, []));
     }
 
-    const existingSubscriber = await NewsletterRepository.findOne(email.toLowerCase());
-    if (existingSubscriber.error) {
-      return next(
-        new ErrorResponse(existingSubscriber.message, existingSubscriber.code, [])
-      );
-    }
-
     const subscriber =await NewsletterRepository.create(email.toLowerCase());
     if (subscriber.error) {
       return next(

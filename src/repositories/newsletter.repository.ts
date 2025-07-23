@@ -2,14 +2,12 @@ import { Model } from "mongoose";
 import Newsletter from "../models/newsletter.model";
 import { INewsletterDoc, IResult } from "../utils/interface.util";
 
-
 class NewsletterRepository {
   private model: Model<INewsletterDoc>;
 
   constructor() {
-      this.model = Newsletter;
-    }
-  
+    this.model = Newsletter;
+  }
 
   /**
    * @name create
@@ -32,7 +30,10 @@ class NewsletterRepository {
         return result;
       }
 
-      const newEntry = await this.model.create({ email, subscribedAt: new Date(), });
+      const newEntry = await this.model.create({
+        email,
+        subscribedAt: new Date(),
+      });
       result.data = newEntry.toJSON();
       result.message = "Subscribed successfully";
     } catch (err) {
@@ -91,7 +92,10 @@ class NewsletterRepository {
   /**
    * @name findOne
    */
-  public async findOne(email: string): Promise<IResult> {
+  public async findOne(
+    email: string,
+    throwIfNotFound = false
+  ): Promise<IResult> {
     const result: IResult = {
       error: false,
       message: "",
@@ -100,17 +104,12 @@ class NewsletterRepository {
     };
 
     const entry = await this.model.findOne({ email });
-    if (!entry) {
-      result.error = true;
-      result.code = 404;
-      result.message = "Subscriber not found";
-      return result;
+    if (entry) {
+      result.data = entry.toJSON();
+      result.message = "Subscriber fetched";
     }
-
-    result.data = entry.toJSON();
-    result.message = "Subscriber fetched";
     return result;
   }
 }
 
-export default new NewsletterRepository()
+export default new NewsletterRepository();
