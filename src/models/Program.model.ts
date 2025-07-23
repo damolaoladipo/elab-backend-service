@@ -5,7 +5,7 @@ import slugify from "slugify";
 
 const ProgramSchema = new Schema<IProgramDoc>(
   {
-    title: { type: String, required: true },
+    title: { type: String },
     slug: { type: String, default: "" },
     image: { type: String },
     description: { type: Schema.Types.Mixed, default: [] },

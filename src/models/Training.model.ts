@@ -5,13 +5,13 @@ import slugify from "slugify";
 
 const TrainingSchema = new Schema<ITrainingDoc>(
   {
-    title: { type: String, required: true },
+    title: { type: String },
     slug: { type: String, default: "" },
-    subtitle: { type: String, required: true },
+    subtitle: { type: String },
     image: { type: String },
     description: { type: Schema.Types.Mixed, default: [] },
     outcome: { type: Schema.Types.Mixed, default: [] },
-    cta: { type: String, required: true },
+    cta: { type: String },
     user: { type: Schema.Types.ObjectId, ref: DbModelsType.USER, index: true },
   },
   {
