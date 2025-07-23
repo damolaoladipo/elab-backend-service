@@ -17,7 +17,7 @@ import userRepository from "../repositories/user.repository";
 export const createTraining = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req as any).user?.id;
-    if (!userId) return next(new ErrorResponse("Unauthorized", 401, []));
+    if (!userId) return next(new ErrorResponse("Unauthorized User", 401, []));
 
     const {
       title,

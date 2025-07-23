@@ -21,7 +21,7 @@ export const createProject = asyncHandler(
     const userId = (req as any).user?.id;
     if (!userId) {
       return next(
-        new ErrorResponse("Unauthorized", 401, ["Unauthorized user"])
+        new ErrorResponse("Unauthorized User", 401, [])
       );
     }
 
