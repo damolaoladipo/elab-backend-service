@@ -5,25 +5,23 @@ import User from "../models/User.model";
 import {
   LoginDTO,
   RegisterUserDTO,
-  resendOtpDTO,
   ResetPasswordDTO,
   verifyOtpDTO,
 } from "../dtos/auth.dto";
 import userService from "../services/user.service";
 import {
   EmailDriver,
-  EmailTemplate,
   OtpType,
   PasswordType,
   UserType,
-  VerifyOTP,
 } from "../utils/enums.util";
-import emailService from "../services/email.service";
 import tokenService from "../services/token.service";
 import { IUserDoc } from "../utils/interface.util";
 import userRepository from "../repositories/user.repository";
 import emailJobSchedular from "../jobs/scheduler/email.scheduler";
 import { DateTime } from "luxon";
+import uploadService from "../services/upload.service";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * @name registerUser
@@ -513,6 +511,46 @@ export const getUser = asyncHandler(
         lastLogin,
       },
       message: "User profile retrieved",
+      status: 200,
+    });
+  }
+);
+
+
+/**
+ * @name uploadTrainingImage
+ * @description Upload image for a specific training
+ * @route PATCH /trainings/:id/upload-image
+ * @access Private
+ */
+export const uploadImage = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return next(new ErrorResponse("Unauthorized", 401, []));
+    }
+     const imageFile = (req as any).files?.find((f: any) => f.fieldname === "image");
+    if (!imageFile) {
+      return next(new ErrorResponse("No image file uploaded", 400, []));
+    }
+
+    const imageUrl = await uploadService.uploadFile({
+      stream: imageFile.stream,
+      mimeType: imageFile.mimeType,
+      originalFileName: imageFile.fileName,
+      refId: uuidv4(),
+    });
+
+    if (!imageUrl) {
+      return next(new ErrorResponse("Image upload failed", 500, []));
+    }
+
+    res.status(200).json({
+      error: false,
+      errors: [],
+      data: { image: imageUrl },
+      message: "Image uploaded successfully.",
       status: 200,
     });
   }

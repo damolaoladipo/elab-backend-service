@@ -6,8 +6,10 @@ import {
   logoutUser,
   registerUser,
   resetPassword,
+  uploadImage,
 } from "../../../controllers/auth.controller";
 import Protect from "../../../middlewares/checkAuth.mdw";
+import uploadFile from "../../../middlewares/upload.mdw";
 
 const authRouter = Router({ mergeParams: true });
 
@@ -17,6 +19,8 @@ authRouter.post("/forgot-password", forgotPassword);
 authRouter.post("/reset-password/:token", resetPassword);
 authRouter.post("/logout", logoutUser);
 authRouter.get("/user", Protect, getUser);
+authRouter.post("/image", Protect, uploadFile, uploadImage);
+
 authRouter.get("/reset-password", (req, res) => {
   res.render("emails/reset-password", {
     title: "Reset Password",

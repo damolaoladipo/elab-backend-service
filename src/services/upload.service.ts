@@ -40,7 +40,7 @@ class UploadService {
     const { stream, mimeType, originalFileName, refId } = data;
 
     // 1. Validate supported image types
-    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/svg"];
+    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/svg",   "image/svg+xml", "*"];
     if (!allowedMimeTypes.includes(mimeType)) {
       throw new ErrorResponse("Unsupported image format. Only JPG, PNG, and WebP allowed.", 400, []);
       
@@ -49,7 +49,7 @@ class UploadService {
     // 2. Create unique file key
     const ext = path.extname(originalFileName);
     const fileId = uuidv4();
-    const uniqueFileName = `events/${fileId}${ext}`;
+    const uniqueFileName = `events/${originalFileName}-${fileId}${ext}`;
 
     // 3. Upload to S3
     const upload = new Upload({
@@ -69,7 +69,6 @@ class UploadService {
       throw new Error("Failed to upload file to S3");
     }
     //await upload.done();
-
     // 4. Generate public URL
     //const fileUrl = `https://${process.env.AWS_CLOUDFRONT_URL}/${uniqueFileName}`;
     const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${uniqueFileName}`;
