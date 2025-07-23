@@ -463,3 +463,42 @@ export interface INewsletterDoc extends Document {
   _id: ObjectId;
   id: ObjectId;
 }
+
+export interface IProgramDoc extends Document {
+  title: string;
+  slug: string;
+  image: string;
+  description: IWysiwygContent[];
+  joinUrl?: string;
+  partnerUrl?: string;
+
+  //relationships
+  user: IUserDoc | ObjectId;
+
+  // time stamps
+  createdAt: Date;
+  updatedAt: Date;
+  _version: number;
+  _id: ObjectId;
+  id: ObjectId;
+}
+
+export interface ITrainingDoc extends Document {
+  title: string;
+  slug: string;
+  subtitle: string;
+  image?: string;
+  description: IWysiwygContent[];
+  outcome: IWysiwygContent[];
+  cta: string; 
+
+    //relationships
+  user: IUserDoc | ObjectId;
+
+  // time stamps
+  createdAt: Date;
+  updatedAt: Date;
+  _version: number;
+  _id: ObjectId;
+  id: ObjectId;
+}

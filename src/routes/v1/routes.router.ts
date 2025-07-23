@@ -8,6 +8,7 @@ import archiveRoutes from "./routers/archive.router";
 import employeeRoutes from "./routers/employee.router";
 import transactionRoutes from "./routers/transaction.router";
 import newsletterRoutes from "./routers/newsletter.router";
+import programRoutes from "./routers/program.router";
 
 
 const router = express.Router();
@@ -21,5 +22,6 @@ router.use("/store", storeRoutes)
 router.use("/venture", companyRoutes)
 router.use("/payment", transactionRoutes)
 router.use("/newsletter", newsletterRoutes)
+router.use("/program", programRoutes)
 
 export default router;

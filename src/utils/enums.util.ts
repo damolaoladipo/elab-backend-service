@@ -27,11 +27,13 @@ export enum DbModelsType {
   JOB = "job",
   PERMISSION = "permission",
   PROJECT = "project",
+  PROGRAM = "program",
   RESOURCE = "resource",
   NEWSLETTER = "newsletter",
   ROLE = "role",
   SUBSCRIPTION = "subscription",
   STORE = "store",
+  TRAINING = "training",
   TRANSACTION = "transaction",
   USER = "user",
 }
