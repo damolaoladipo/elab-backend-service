@@ -28,12 +28,12 @@ const ProgramSchema = new Schema<IProgramDoc>(
 ProgramSchema.pre<IProgramDoc>("save", async function (next) {
   if (!this.isModified("title")) return next();
 
-  const rawSlug = slugify(this.title, { lower: true, strict: true });
+  const rawSlug = slugify(this.title as string, { lower: true, strict: true });
 
   let slug = rawSlug;
   let count = 1;
+  
   const Program = this.constructor as mongoose.Model<IProgramDoc>;
-
   while (await Program.exists({ slug })) {
     slug = `${rawSlug}-${count++}`;
   }

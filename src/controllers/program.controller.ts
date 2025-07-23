@@ -21,8 +21,6 @@ export const createProgram = asyncHandler(
 
     const {
       title,
-      slug,
-      image,
       description,
       joinUrl,
       partnerUrl,
@@ -30,8 +28,7 @@ export const createProgram = asyncHandler(
 
     const data = {
       title,
-      slug,
-      image,
+      image: "",
       description,
       joinUrl,
       partnerUrl,

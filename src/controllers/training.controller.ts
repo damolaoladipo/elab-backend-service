@@ -21,7 +21,6 @@ export const createTraining = asyncHandler(
 
     const {
       title,
-      slug,
       subtitle,
       image,
       description,
@@ -31,7 +30,6 @@ export const createTraining = asyncHandler(
 
     const data: Partial<ITrainingDoc> = {
       title,
-      slug,
       subtitle,
       image: image || "",
       description,
