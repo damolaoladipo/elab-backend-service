@@ -12,7 +12,7 @@ class ProgramRepository {
   public async getPrograms(): Promise<IResult> {
     const result: IResult = { error: false, message: "", code: 200, data: {} };
 
-    const programs = await this.model.find({}).populate("uploadedBy", "fullName email").lean();
+    const programs = await this.model.find({})
     if (!programs.length) {
       result.error = true;
       result.code = 404;

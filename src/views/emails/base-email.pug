@@ -1,47 +1,95 @@
 doctype html
 html(lang="en")
-	head
-		meta(charset="UTF-8")
-		meta(http-equiv="X-UA-Compatible" content="IE=edge")
-		meta(name="viewport" content="width=device-width, initial-scale=1.0")
-		// GOOGLE FONT (INTER)
-		link(rel="preconnect" href="https://fonts.googleapis.com")
-		link(rel="preconnect" href="https://fonts.gstatic.com" crossorigin)
-		link(href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet")
-		title Ennovate Lab
-	body(style="padding: 50px auto 50px; font-family: Bricolage Grotesque; background: #fff;")
-		table(style="padding: 50px auto 50px; font-family: Bricolage Grotesque; margin: 0 auto 0; background: #fff;")
-			tr
-				td(style="padding: 50px auto 50px; font-family: Bricolage Grotesque; width: 100%; margin: 0px auto 0px; background: #fff;")
-					// HEADER SECTION STARTS
-					table(style="height: 120px; background-color: #fff; text-align: center; border-radius: 20px 20px 0 0; width: 600px; padding: 20px 0 15px; margin: 50px auto 0px; ")
-						tr
-							td
-								img(src="https://the-assembly-api-staging.s3.us-east-1.amazonaws.com/general/assembly-logo-full.png" alt="the assembly logo" width="25%")
-					// CONTENT SECTION STARTS
-					block content
-					// CONTENT SECTION ENDS
-					// FOOTER SECTION STARTS
-					table(style="background:#000; text-align: center; border-radius: 20px; margin: 15px auto 50px; color: #fff; cursor: pointer; width: 100%; padding: 30px 30px; ")
-						tr(style="text-align: left; background: transparent; border-radius: 0px 0px 10px 10px; ")
-							td
-								span
-									a(href="https://theassembly.city" style="padding: 3px 3px 3px 0px; border: 0; font-weight: 500; cursor: pointer; margin: 0px auto 40px; text-decoration: none; color: #fff; font-size: 1rem;")
-										| &copy; #{new Date().getFullYear()} Ennovate lab.
-								br
-								span(style="font-size: .7rem; color: #fff;")
-									| Transforming underserved communities.
-							td(style="text-align: right; padding-top: 3px")
-								span
-									a(href="https://web.facebook.com/61576880371258/" style="padding: 5px 5px; border: 0; font-weight: 700; cursor: pointer; margin: 0px auto 45px; text-decoration: none; color: #ffffff; ")
-										img(src="https://the-assembly-api-staging.s3.us-east-1.amazonaws.com/general/icons/facebook.png" alt="facebook logo icon" width="20rem")
-								span
-									a(href="https://www.instagram.com/theassemblycity/" style="padding: 5px 5px; border: 0; font-weight: 700; cursor: pointer; margin: 0px auto 45px; text-decoration: none; color: #ffffff; ")
-										img(src="https://the-assembly-api-staging.s3.us-east-1.amazonaws.com/general/icons/instagram.png" alt="instagram logo icon" width="20rem")
-								span
-									a(href="https://www.linkedin.com/company/the-assembly-city/" style="padding: 5px 5px; border: 0; font-weight: 700; cursor: pointer; margin: 0px auto 45px; text-decoration: none; color: #ffffff; ")
-								span
-									a(href="https://x.com/TheAssemblyCity" style="padding: 5px 5px; border: 0; font-weight: 700; cursor: pointer; margin: 0px auto 45px; text-decoration: none; color: #ffffff; ")
-										img(src="https://the-assembly-api-staging.s3.us-east-1.amazonaws.com/general/icons/twitter.png" alt="linkedin logo icon" width="20rem")
-						// FOOTER SOCIAL MEDIA LINKS ENDS
-					// FOOTER SECTION ENDS
+  head
+    meta(charset="UTF-8")
+    meta(http-equiv="X-UA-Compatible" content="IE=edge")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Ennovate Lab
+
+    // Fonts
+    link(rel="preconnect" href="https://fonts.googleapis.com")
+    link(rel="preconnect" href="https://fonts.gstatic.com" crossorigin)
+    link(href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600&family=Bricolage+Grotesque:wght@400;600&display=swap" rel="stylesheet")
+
+    style.
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Bricolage Grotesque', sans-serif;
+        background: #fff;
+      }
+      .email-container {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      }
+      .header {
+        background-color: #000;
+        border-radius: 20px 20px 0 0;
+        padding: 20px;
+        text-align: center;
+      }
+      .header img {
+        width: 120px;
+        max-width: 100%;
+      }
+      .footer {
+        background-color: #000;
+        color: #fff;
+        text-align: center;
+        border-radius: 0 0 20px 20px;
+        padding: 30px;
+      }
+      .footer img {
+        height: 24px;
+        width: 24px;
+        margin: 0 8px;
+      }
+      .footer p {
+        font-size: 12px;
+        margin-top: 15px;
+      }
+      @media only screen and (max-width: 620px) {
+        .email-container {
+          width: 100% !important;
+        }
+        .footer {
+          padding: 20px;
+        }
+      }
+
+  body
+    table.email-container(align="center" cellpadding="0" cellspacing="0" role="presentation")
+      tr
+        td
+          // HEADER
+          table(width="100%" cellpadding="0" cellspacing="0" class="header")
+            tr
+              td
+                img(src="https://elab-web-api.s3.us-east-2.amazonaws.com/events/eLab-logo.svg-a63c2927-93dc-4939-a425-85fcdde28913.svg" alt="Ennovate Lab Logo")
+
+          // CONTENT
+          block content
+
+          // FOOTER
+          table(width="100%" cellpadding="0" cellspacing="0" class="footer")
+            tr
+              td
+                a(href="#")
+                  img(src="https://elab-web-api.s3.us-east-2.amazonaws.com/events/linkedin.svg-91265a95-a70b-4518-aea4-161fabb732b0.svg" alt="LinkedIn")
+                a(href="#")
+                  img(src="https://elab-web-api.s3.us-east-2.amazonaws.com/events/facebook.svg-6d4bf6db-8060-4a16-9f6b-cdea8130c7cf.svg" alt="Facebook")
+                a(href="#")
+                  img(src="https://elab-web-api.s3.us-east-2.amazonaws.com/events/instagram.svg-aabda46c-05b3-4c3a-be0e-927453363e18.svg" alt="Instagram")
+                a(href="#")
+                  img(src="https://elab-web-api.s3.us-east-2.amazonaws.com/events/x.svg-875b7dba-47f3-4f84-86d7-915e22f770b2.svg" alt="X")
+                a(href="#")
+                  img(src="https://elab-web-api.s3.us-east-2.amazonaws.com/events/youtube.svg-ec13a206-ff09-4021-a417-ac47813597b7.svg" alt="YouTube")
+                a(href="#")
+                  img(src="https://elab-web-api.s3.us-east-2.amazonaws.com/events/whatsapp.svg-e1ba0cdf-230f-41a9-ae35-86a1904c58ec.svg" alt="WhatsApp")
+
+                p
+                  | &copy; #{new Date().getFullYear()} Ennovate Lab.
