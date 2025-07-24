@@ -7,6 +7,7 @@ const StoreSchema = new Schema<IStoreDoc>(
   {
     name: { type: String, required: true },
     slug: { type: String, default: "" },
+    discount: { type: Number},
     price: { type: Number, required: true },
     discountedPrice: { type: Number },
     image: { type: String },

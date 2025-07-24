@@ -169,11 +169,13 @@ export const updateStore = asyncHandler(
     if (!userId) {
       return next(new ErrorResponse("Unauthorized", 401, []));
     }
+
     const storeId = req.params.id;
     if (!storeId) {
       return next(new ErrorResponse("Store ID is required", 400, []));
     }
 
+    // Destructure update fields from body
     const {
       name,
       price,
@@ -189,14 +191,16 @@ export const updateStore = asyncHandler(
       status,
     }: UpdateStoreDTO = req.body;
 
+    // Check if an image file was uploaded
     const imageFile = (req as any).files?.find(
       (file: any) => file.fieldname === "image"
     );
 
+    // Check if there's anything to update
     const hasBodyUpdate =
       name ||
-      price ||
-      discount ||
+      price !== undefined ||
+      discount !== undefined ||
       category ||
       author ||
       excerpt ||
@@ -206,13 +210,14 @@ export const updateStore = asyncHandler(
       pageCount ||
       size ||
       status;
+
     const hasFileUpdate = !!imageFile;
 
     if (!hasBodyUpdate && !hasFileUpdate) {
       return next(new ErrorResponse("Update data is empty", 400, []));
     }
 
-    // Fetch existing company
+    // Fetch the existing store item
     const existing = await storeRepository.findStore(storeId);
     if (existing.error) {
       return next(new ErrorResponse(existing.message, existing.code, []));
@@ -220,6 +225,7 @@ export const updateStore = asyncHandler(
 
     const updatePayload: Partial<IStoreDoc> = {};
 
+    // Update name and slug if changed
     if (name && name !== existing.data.name) {
       updatePayload.name = name;
 
@@ -231,19 +237,39 @@ export const updateStore = asyncHandler(
       updatePayload.slug = slug;
     }
 
-    if (price && price !== existing.data.price) {
+    const isPriceChanged = price !== undefined && price !== existing.data.price;
+    if (isPriceChanged) {
       updatePayload.price = price;
     }
-    if (discount && discount !== existing.data.discount) {
+
+    const isDiscountChanged =
+      discount !== undefined && discount !== existing.data.discount;
+    if (isDiscountChanged) {
       updatePayload.discount = discount;
     }
 
+    const finalPrice = price !== undefined ? price : existing.data.price;
+
+    const finalDiscount =
+      discount !== undefined
+        ? discount
+        : existing.data.discount !== undefined
+        ? existing.data.discount
+        : 0;
+
+    updatePayload.discountedPrice = finalDiscount
+      ? finalPrice - (finalPrice * finalDiscount) / 100
+      : finalPrice;
+
+    // Other fields
     if (category && category !== existing.data.category) {
       updatePayload.category = category;
     }
+
     if (author && author !== existing.data.author) {
       updatePayload.author = author;
     }
+
     if (excerpt && excerpt !== existing.data.excerpt) {
       updatePayload.excerpt = excerpt;
     }
@@ -251,9 +277,11 @@ export const updateStore = asyncHandler(
     if (description && description !== existing.data.description) {
       updatePayload.description = description;
     }
+
     if (url && url !== existing.data.url) {
       updatePayload.url = url;
     }
+
     if (color && color !== existing.data.color) {
       updatePayload.color = color;
     }
@@ -261,13 +289,16 @@ export const updateStore = asyncHandler(
     if (pageCount && pageCount !== existing.data.pageCount) {
       updatePayload.pageCount = pageCount;
     }
+
     if (size && size !== existing.data.size) {
       updatePayload.size = size;
     }
+
     if (status && status !== existing.data.status) {
       updatePayload.status = status;
     }
 
+    // Upload and update image if provided
     if (imageFile) {
       const imageUrl = await uploadService.uploadFile({
         stream: imageFile.stream,
@@ -281,11 +312,13 @@ export const updateStore = asyncHandler(
       }
     }
 
+    // Apply the update to the database
     const updated = await storeRepository.updateStore(storeId, updatePayload);
     if (updated.error) {
       return next(new ErrorResponse(updated.message, updated.code, []));
     }
 
+    // Send response
     res.status(200).json({
       error: false,
       errors: [],
