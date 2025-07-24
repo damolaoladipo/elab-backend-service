@@ -43,7 +43,7 @@ export const createEmployee = asyncHandler(
         originalFileName: imageFile.fileName,
         refId: created.data.id,
       });
-
+      
       await employeeRepository.updateEmployee(created.data.id, {
         image: imageUrl,
       });

@@ -87,7 +87,8 @@ export const updateTraining = asyncHandler(
     const userId = (req as any).user?.id;
     if (!userId) return next(new ErrorResponse("Unauthorized", 401, []));
 
-    const trainingId = req.params.id;
+    const trainingId = req.params.trainingId;
+    console.log("params:", req.params);
     if (!trainingId) return next(new ErrorResponse("Training ID is required", 400, []));
 
     const {

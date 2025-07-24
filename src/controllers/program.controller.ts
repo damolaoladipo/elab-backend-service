@@ -88,7 +88,9 @@ export const updateProgram = asyncHandler(
     const userId = (req as any).user?.id;
     if (!userId) return next(new ErrorResponse("Unauthorized", 401, []));
 
+
     const programId = req.params.id;
+    console.log("params:", req.params);
     if (!programId)
       return next(new ErrorResponse("Program ID is required", 400, []));
 
