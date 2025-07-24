@@ -1,0 +1,34 @@
+extends base-email
+
+block content
+  table(align="center" style="padding: 30px;")
+    tr
+      td
+        h2(style="color: #000; margin-top: 0;") Your Digital Order Is Complete
+
+        p Hi #{firstName},
+
+        p Your order has arrived! Your digital product is ready and available for you to access immediately.
+
+        p Here’s your order summary:
+
+        ul(style="padding-left: 20px; line-height: 1.6;")
+          li Order Number: #{orderNumber}
+          li Product name: #{productName}
+          li Price: #{price}
+
+        p Enjoy your new resource!
+
+        p Whether you’re reading, learning, or exploring—we hope it sparks something meaningful. And if you have any trouble accessing your content, just hit reply and we’ll get it sorted.
+
+        p Thanks again for your support.
+
+        p Your curiosity and creativity make our work possible.
+
+        p
+          strong With purpose,
+          br
+          | The Ennovate Lab Team
+
+        p
+          | We transform underserved communities through technology, entrepreneurship, and placemaking.

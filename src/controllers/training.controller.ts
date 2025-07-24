@@ -274,7 +274,7 @@ export const getTrainings = asyncHandler(async (_req: Request, res: Response) =>
  */
 export const deleteTraining = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const trainingId = req.params.id;
+    const trainingId = req.params.trainingId;
     const existing = await trainingRepository.findTraining(trainingId);
     if (existing.error) {
       return next(new ErrorResponse(existing.message, existing.code, []));

@@ -24,7 +24,7 @@ class EmailService {
 
       case EmailDriver.MAILTRAP:
         this.mailtrap = new MailtrapClient({ token: this.config.apiKey! });
-              if (!process.env.EMAIL_FROM_EMAIL || !process.env.EMAIL_FROM_NAME) {
+        if (!process.env.EMAIL_FROM_EMAIL || !process.env.EMAIL_FROM_NAME) {
           throw new Error("FROM_EMAIL and FROM_NAME must be set in .env");
         }
         break;
@@ -39,8 +39,6 @@ class EmailService {
     return pug.renderFile(templatePath, locals);
   }
 
-  
-
   public async dispatch(
     user: IUserDoc,
     subject: string,
@@ -51,7 +49,7 @@ class EmailService {
 
     try {
       const html = this.renderTemplate(template, { ...locals, user, subject });
-      const text = convert(html); 
+      const text = convert(html);
 
       const sendFnMap: Partial<Record<EmailDriver, () => Promise<void>>> = {
         [EmailDriver.MAILERSEND]: async () => {
@@ -101,32 +99,33 @@ class EmailService {
 
   // Examples
   public async paymentConfirmationEmail(
-    user: IUserDoc, itemName: string, price: number
+    user: IUserDoc,
+    itemName: string,
+    price: number
   ) {
     return this.dispatch(
-      user, "Payment Successful", "store-item-confirmation", { itemName, price }
+      user,
+      "Payment Successful",
+      "store-item-confirmation",
+      { itemName, price }
     );
   }
 
   public async forgotPasswordEmail(user: IUserDoc, resetLink: string) {
-  return this.dispatch(
-    user,
-    "Reset your password",
-    "forgot-password",
-    { resetLink }
-  );
-}
+    return this.dispatch(user, "Reset your password", "forgot-password", {
+      resetLink,
+    });
+  }
 
-public async passwordResetSuccessEmail(user: IUserDoc) {
-  return this.dispatch(
-    user,
-    "Your password was reset successfully",
-    "reset-password"
-  );
-}
+  public async passwordResetSuccessEmail(user: IUserDoc) {
+    return this.dispatch(
+      user,
+      "Your password was reset successfully",
+      "reset-password"
+    );
+  }
 
-
-  public  async sendVerification(user: IUserDoc) {
+  public async sendVerification(user: IUserDoc) {
     await this.dispatch(user, "verification", "Welcome to The Assembly.");
   }
 
@@ -135,7 +134,11 @@ public async passwordResetSuccessEmail(user: IUserDoc) {
   }
 
   public async NewsletterWelcomeEmail(user: any) {
-    return this.dispatch(user, "Welcome to our newsletter!", "newsletter welcome")
+    return this.dispatch(
+      user,
+      "Welcome to our newsletter!",
+      "newsletter welcome"
+    );
   }
 
   public async otpEmail(user: IUserDoc, code: string) {
