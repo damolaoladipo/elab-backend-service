@@ -32,6 +32,9 @@ export const createStore = asyncHandler(
       status,
     }: CreateStoreDTO = req.body;
 
+    const parsedColor = typeof color === "string" ? JSON.parse(color) : color;
+    const parsedSize = typeof size === "string" ? JSON.parse(size) : size;
+
     const discountedPrice = discount ? price - (price * discount) / 100 : price;
 
     const data = {
@@ -44,9 +47,9 @@ export const createStore = asyncHandler(
       excerpt,
       description,
       url,
-      color,
+      color: parsedColor || [],
       pageCount,
-      size,
+      size: parsedSize || {},
       status,
       image: "",
       user: userId,
@@ -162,6 +165,7 @@ export const unpublishStore = asyncHandler(
  * @route PATCH /store/:id
  * @access Private
  */
+
 export const updateStore = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req as any).user?.id;
@@ -175,7 +179,6 @@ export const updateStore = asyncHandler(
       return next(new ErrorResponse("Store ID is required", 400, []));
     }
 
-    // Destructure update fields from body
     const {
       name,
       price,
@@ -191,12 +194,13 @@ export const updateStore = asyncHandler(
       status,
     }: UpdateStoreDTO = req.body;
 
-    // Check if an image file was uploaded
+    const parsedColor = typeof color === "string" ? JSON.parse(color) : color;
+    const parsedSize = typeof size === "string" ? JSON.parse(size) : size;
+
     const imageFile = (req as any).files?.find(
       (file: any) => file.fieldname === "image"
     );
 
-    // Check if there's anything to update
     const hasBodyUpdate =
       name ||
       price !== undefined ||
@@ -206,9 +210,9 @@ export const updateStore = asyncHandler(
       excerpt ||
       description ||
       url ||
-      color ||
+      parsedColor ||
       pageCount ||
-      size ||
+      parsedSize ||
       status;
 
     const hasFileUpdate = !!imageFile;
@@ -217,7 +221,6 @@ export const updateStore = asyncHandler(
       return next(new ErrorResponse("Update data is empty", 400, []));
     }
 
-    // Fetch the existing store item
     const existing = await storeRepository.findStore(storeId);
     if (existing.error) {
       return next(new ErrorResponse(existing.message, existing.code, []));
@@ -225,31 +228,23 @@ export const updateStore = asyncHandler(
 
     const updatePayload: Partial<IStoreDoc> = {};
 
-    // Update name and slug if changed
     if (name && name !== existing.data.name) {
       updatePayload.name = name;
-
       const slug = await generateSlug({
         input: name,
         slugExistsFn: storeRepository.slugExists.bind(storeRepository),
       });
-
       updatePayload.slug = slug;
     }
 
     const isPriceChanged = price !== undefined && price !== existing.data.price;
-    if (isPriceChanged) {
-      updatePayload.price = price;
-    }
+    if (isPriceChanged) updatePayload.price = price;
 
     const isDiscountChanged =
       discount !== undefined && discount !== existing.data.discount;
-    if (isDiscountChanged) {
-      updatePayload.discount = discount;
-    }
+    if (isDiscountChanged) updatePayload.discount = discount;
 
     const finalPrice = price !== undefined ? price : existing.data.price;
-
     const finalDiscount =
       discount !== undefined
         ? discount
@@ -261,7 +256,6 @@ export const updateStore = asyncHandler(
       ? finalPrice - (finalPrice * finalDiscount) / 100
       : finalPrice;
 
-    // Other fields
     if (category && category !== existing.data.category) {
       updatePayload.category = category;
     }
@@ -282,23 +276,22 @@ export const updateStore = asyncHandler(
       updatePayload.url = url;
     }
 
-    if (color && color !== existing.data.color) {
-      updatePayload.color = color;
+    if (parsedColor && JSON.stringify(parsedColor) !== JSON.stringify(existing.data.color)) {
+      updatePayload.color = parsedColor;
     }
 
     if (pageCount && pageCount !== existing.data.pageCount) {
       updatePayload.pageCount = pageCount;
     }
 
-    if (size && size !== existing.data.size) {
-      updatePayload.size = size;
+    if (parsedSize && JSON.stringify(parsedSize) !== JSON.stringify(existing.data.size)) {
+      updatePayload.size = parsedSize;
     }
 
     if (status && status !== existing.data.status) {
       updatePayload.status = status;
     }
 
-    // Upload and update image if provided
     if (imageFile) {
       const imageUrl = await uploadService.uploadFile({
         stream: imageFile.stream,
@@ -312,13 +305,11 @@ export const updateStore = asyncHandler(
       }
     }
 
-    // Apply the update to the database
     const updated = await storeRepository.updateStore(storeId, updatePayload);
     if (updated.error) {
       return next(new ErrorResponse(updated.message, updated.code, []));
     }
 
-    // Send response
     res.status(200).json({
       error: false,
       errors: [],
